@@ -1,10 +1,11 @@
-function Version(version) {
+function Version(version, name="elasticsearch") {
   var checkVersion = new RegExp('(\\d+)\\.(\\d+)\\.(\\d+)\\.*');
   var major;
   var minor;
   var patch;
   var value = version;
   var valid = false;
+  var distribution = name;
 
   if (checkVersion.test(value)) {
     valid = true;
@@ -32,6 +33,10 @@ function Version(version) {
 
   this.getValue = function() {
     return value;
+  };
+
+  this.isElasticsearch = function() {
+    return distribution == "elasticsearch";
   };
 
   this.isGreater = function(other) {
