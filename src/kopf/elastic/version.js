@@ -1,4 +1,4 @@
-function Version(version, name="elasticsearch") {
+function Version(version, name) {
   var checkVersion = new RegExp('(\\d+)\\.(\\d+)\\.(\\d+)\\.*');
   var major;
   var minor;

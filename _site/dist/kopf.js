@@ -3494,7 +3494,7 @@ function Token(token, startOffset, endOffset, position) {
   this.position = position;
 }
 
-function Version(version, name="elasticsearch") {
+function Version(version, name) {
   var checkVersion = new RegExp('(\\d+)\\.(\\d+)\\.(\\d+)\\.*');
   var major;
   var minor;
@@ -4647,7 +4647,7 @@ kopf.factory('ElasticService', ['$http', '$q', '$timeout', '$location',
               DebugService.debug('Attemping to connect with [' + host + '/]');
               instance.connect(host + '/');
             } else {
-              distribution = isDefined(data.version.distribution) ? data.version.distribution : "elasticsearch";
+              var distribution = isDefined(data.version.distribution) ? data.version.distribution : "elasticsearch";
               instance.setVersion(data.version.number, distribution);
               instance.connected = true;
               if (!instance.autoRefreshStarted) {
@@ -4661,7 +4661,7 @@ kopf.factory('ElasticService', ['$http', '$q', '$timeout', '$location',
           function(data) {
             if (data.status == 503) {
               DebugService.debug('No active master, switching to basic mode');
-              distribution = isDefined(data.version.distribution) ? data.version.distribution : "elasticsearch";
+              var distribution = isDefined(data.version.distribution) ? data.version.distribution : "elasticsearch";
               instance.setVersion(data.version.number, distribution);
               instance.connected = true;
               instance.setBrokenCluster(true);
