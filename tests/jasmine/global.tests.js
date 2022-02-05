@@ -115,7 +115,7 @@ describe('GlobalController', function() {
     this.ElasticService.cluster = '';
     this.scope.$digest();
     expect(this.AlertService.warn).toHaveBeenCalledWith(
-        'This version of kopf is not compatible with your ES version',
+        'This version is not compatible with your elasticsearch version',
         'Upgrading to newest supported version is recommeded'
     );
   });
