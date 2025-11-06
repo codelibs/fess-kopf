@@ -95,7 +95,7 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
       var root = ExternalSettingsService.getOpenSearchRootPath();
       var withCredentials = ExternalSettingsService.withCredentials();
       this.connection = new OpenSearchConnection(host + root, withCredentials);
-      DebugService.debug('Elasticseach connection:', this.connection);
+      DebugService.debug('OpenSearch connection:', this.connection);
       this.clusterRequest('GET', '/', {}, {},
           function(data) {
             if (data.OK) { // detected https://github.com/Asquera/elasticsearch-http-basic

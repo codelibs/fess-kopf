@@ -13,11 +13,11 @@ kopf.controller('GlobalController', ['$scope', '$location', '$sce', '$window',
         },
         function(newValue, oldValue) {
           var version = OpenSearchService.getVersion();
-          if (version && version.isValid() && version.isElasticsearch()) {
+          if (version && version.isValid()) {
             var major = version.getMajor();
             if (major < parseInt($scope.version.charAt(0))) {
               AlertService.warn(
-                  'This version is not compatible with your elasticsearch version',
+                  'This version is not compatible with your OpenSearch version',
                   'Upgrading to newest supported version is recommended'
               );
             }

@@ -1,9 +1,10 @@
-function Version(version) {
+function Version(version, distribution) {
   var checkVersion = new RegExp('(\\d+)\\.(\\d+)\\.(\\d+)\\.*');
   var major;
   var minor;
   var patch;
   var value = version;
+  var dist = distribution || 'opensearch';
   var valid = false;
 
   if (checkVersion.test(value)) {
