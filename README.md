@@ -3,79 +3,79 @@
 [![Test](https://github.com/codelibs/fess-kopf/actions/workflows/test.yml/badge.svg)](https://github.com/codelibs/fess-kopf/actions/workflows/test.yml)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Fess KOPFは、[Fess](https://fess.codelibs.org/)に統合されたOpenSearch専用のシンプルなWeb管理ツールです。JavaScript + AngularJS + jQuery + Bootstrapで構築されています。
+Fess KOPF is a simple web administration tool for OpenSearch, integrated with [Fess](https://fess.codelibs.org/). Built with JavaScript + AngularJS + jQuery + Bootstrap.
 
-## 概要
+## Overview
 
-このプロジェクトは、[elasticsearch-kopf](https://github.com/lmenezes/elasticsearch-kopf)からフォークされ、OpenSearch 2.x/3.xに対応するようにFess専用にカスタマイズされました。
+This project is a fork of [elasticsearch-kopf](https://github.com/lmenezes/elasticsearch-kopf), customized specifically for Fess and adapted to work exclusively with OpenSearch 2.x and 3.x.
 
-## サポートバージョン
+## Supported Versions
 
-| OpenSearch | Fess     | 状態       |
-|-----------|----------|-----------|
-| 2.x       | 15.x     | サポート中  |
-| 3.x       | 15.x     | サポート中  |
+| OpenSearch | Fess     | Status     |
+|-----------|----------|------------|
+| 2.x       | 15.x     | Supported  |
+| 3.x       | 15.x     | Supported  |
 
-**注意**: このツールはOpenSearchのみをサポートしており、Elasticsearchには対応していません。
+**Note**: This tool supports OpenSearch only and does not support Elasticsearch.
 
-## 主な機能
+## Key Features
 
-- **クラスタ概要**: クラスタの状態、ノード、インデックスをリアルタイムで監視
-- **インデックス管理**: インデックスの作成、削除、開閉、設定変更
-- **エイリアス管理**: インデックスエイリアスの作成と管理
-- **スナップショット**: スナップショットの作成、復元、管理
-- **インデックステンプレート**: テンプレートの作成と編集
-- **アナライザーテスト**: テキスト解析のテストと検証
-- **RESTクライアント**: OpenSearch APIへの直接アクセス
-- **CAT API**: CAT APIのブラウザベースインターフェース
-- **ホットスレッド解析**: ノードのスレッド分析
+- **Cluster Overview**: Real-time monitoring of cluster state, nodes, and indices
+- **Index Management**: Create, delete, open, close indices and modify settings
+- **Alias Management**: Create and manage index aliases
+- **Snapshots**: Create, restore, and manage snapshots
+- **Index Templates**: Create and edit index templates
+- **Analyzer Testing**: Test and validate text analysis
+- **REST Client**: Direct access to OpenSearch API
+- **CAT API**: Browser-based interface for CAT API
+- **Hot Threads Analysis**: Node thread analysis
 
-## 削除された機能
+## Removed Features
 
-OpenSearch 2.x/3.xでは以下の機能がサポートされていないため削除されました:
+The following features have been removed as they are not supported in OpenSearch 2.x/3.x:
 
-- Percolatorクエリ (Elasticsearch 5.xで廃止)
-- インデックスWarmer (Elasticsearch 5.xで廃止)
-- Benchmark API (Elasticsearch 5.xで削除)
+- Percolator queries (deprecated in Elasticsearch 5.x)
+- Index warmers (deprecated in Elasticsearch 5.x)
+- Benchmark API (removed in Elasticsearch 5.x)
 
-## インストール
+## Installation
 
-### 開発環境のセットアップ
+### Development Setup
 
 ```bash
-# リポジトリのクローン
+# Clone the repository
 git clone https://github.com/codelibs/fess-kopf.git
 cd fess-kopf
 
-# 依存関係のインストール
+# Install dependencies
 npm install
 
-# ビルド
+# Build
 npm run build
 ```
 
-### 開発サーバーの起動
+### Development Server
 
 ```bash
 npm install
 grunt server
 ```
 
-ブラウザで <http://localhost:9000/_site> にアクセスしてください。
+Open your browser and navigate to <http://localhost:9000/_site>.
 
-## Fessとの統合
+## Integration with Fess
 
-Fess KOPFはFessに直接統合されるように設計されています。ビルドされた`_site/`ディレクトリのファイルは、FessのWebインターフェースを通じて提供されます。
+Fess KOPF is designed to be integrated directly into Fess. The built files in the `_site/` directory are served through Fess's web interface.
 
-Fessインスタンスを通じて以下のURLでKOPFインターフェースにアクセスできます:
+Access the KOPF interface through your Fess instance at:
 
 ```
 http://your-fess-instance/_plugin/kopf/
 ```
 
-## 設定
+## Configuration
 
-`kopf_external_settings.json`ファイルでFess KOPFを設定できます:
+Configure Fess KOPF using the `kopf_external_settings.json` file:
 
 ```json
 {
@@ -86,142 +86,142 @@ http://your-fess-instance/_plugin/kopf/
 }
 ```
 
-### 設定オプション
+### Configuration Options
 
-- **opensearch_root_path**: OpenSearchのルートパス (デフォルト: "")
-- **with_credentials**: クロスオリジンリクエストで認証情報を含めるか (デフォルト: false)
-- **theme**: UIテーマ (`fess`, `light`, `dark`)
-- **refresh_rate**: クラスタ情報の更新間隔（ミリ秒）
+- **opensearch_root_path**: OpenSearch root path (default: "")
+- **with_credentials**: Include credentials in cross-origin requests (default: false)
+- **theme**: UI theme (`fess`, `light`, `dark`)
+- **refresh_rate**: Cluster information refresh interval in milliseconds
 
-### テーマ
+### Themes
 
-- `fess` (デフォルト) - Fess専用テーマ
-- `light` - ライトテーマ
-- `dark` - ダークテーマ
+- `fess` (default) - Fess-themed interface
+- `light` - Light theme
+- `dark` - Dark theme
 
-## 開発
+## Development
 
-### ビルド
+### Build
 
 ```bash
-# 本番用ビルド
+# Production build
 npm run build
 
-# 開発サーバー起動（ホットリロード付き）
+# Development server with hot reload
 grunt server
 ```
 
-### テスト
+### Testing
 
 ```bash
-# テスト実行
+# Run tests
 npm test
 
-# カバレッジ付きテスト
+# Run tests with coverage
 npm run test:coverage
 
-# コードリント
+# Run linter
 npm run lint
 ```
 
-### プロジェクト構造
+### Project Structure
 
 ```
 fess-kopf/
 ├── src/
 │   ├── kopf/
-│   │   ├── opensearch/      # OpenSearch関連モデル
-│   │   ├── controllers/     # AngularJSコントローラー
-│   │   ├── services/        # AngularJSサービス
-│   │   ├── models/          # データモデル
-│   │   ├── filters/         # AngularJSフィルター
-│   │   ├── directives/      # AngularJSディレクティブ
-│   │   └── css/             # スタイルシート
-│   └── lib/                 # サードパーティライブラリ
-├── _site/                   # ビルド出力
-├── tests/                   # テストファイル
-└── Gruntfile.js             # ビルド設定
+│   │   ├── opensearch/      # OpenSearch-related models
+│   │   ├── controllers/     # AngularJS controllers
+│   │   ├── services/        # AngularJS services
+│   │   ├── models/          # Data models
+│   │   ├── filters/         # AngularJS filters
+│   │   ├── directives/      # AngularJS directives
+│   │   └── css/             # Stylesheets
+│   └── lib/                 # Third-party libraries
+├── _site/                   # Build output
+├── tests/                   # Test files
+└── Gruntfile.js             # Build configuration
 ```
 
-## 使用方法
+## Usage
 
-### クラスタ接続
+### Connecting to Cluster
 
-1. Fess経由でKOPFにアクセス
-2. OpenSearchクラスタに自動接続
-3. クラスタの状態がダッシュボードに表示されます
+1. Access KOPF through Fess
+2. Automatically connects to OpenSearch cluster
+3. Cluster state is displayed on the dashboard
 
-### インデックス管理
+### Index Management
 
-1. 「cluster」タブでクラスタ概要を表示
-2. インデックスをクリックして詳細表示
-3. 右クリックメニューから操作を選択:
+1. Click on the "cluster" tab to view cluster overview
+2. Click on an index to view details
+3. Select an operation from the right-click menu:
    - Open/Close
    - Delete
    - Refresh
    - Optimize (Force Merge)
    - Clear Cache
 
-### インデックスの作成
+### Creating an Index
 
-1. 「more」→「create index」を選択
-2. インデックス名を入力
-3. シャード数、レプリカ数を設定
-4. オプションでマッピングと設定を追加
-5. 「Create」をクリック
+1. Select "more" → "create index"
+2. Enter index name
+3. Set number of shards and replicas
+4. Optionally add mappings and settings
+5. Click "Create"
 
-### スナップショットの作成
+### Creating a Snapshot
 
-1. 「more」→「snapshot」を選択
-2. リポジトリを作成（初回のみ）
-3. 「Create Snapshot」をクリック
-4. スナップショット名と対象インデックスを選択
-5. 「Create」をクリック
+1. Select "more" → "snapshot"
+2. Create a repository (first time only)
+3. Click "Create Snapshot"
+4. Select snapshot name and target indices
+5. Click "Create"
 
-### REST APIの使用
+### Using the REST API
 
-1. 「rest」タブを選択
-2. HTTPメソッドを選択（GET, POST, PUT, DELETE）
-3. APIパスを入力（例: `_search`, `_cat/indices`）
-4. リクエストボディを入力（オプション）
-5. 「Send Request」をクリック
+1. Select the "rest" tab
+2. Choose HTTP method (GET, POST, PUT, DELETE)
+3. Enter API path (e.g., `_search`, `_cat/indices`)
+4. Enter request body (optional)
+5. Click "Send Request"
 
-## トラブルシューティング
+## Troubleshooting
 
-### 接続エラー
+### Connection Errors
 
-OpenSearchに接続できない場合:
+If you cannot connect to OpenSearch:
 
-1. OpenSearchが起動しているか確認
-2. ネットワーク設定を確認
-3. CORS設定を確認（OpenSearchの`opensearch.yml`）:
+1. Verify OpenSearch is running
+2. Check network settings
+3. Verify CORS settings (in OpenSearch's `opensearch.yml`):
    ```yaml
    http.cors.enabled: true
    http.cors.allow-origin: "*"
    ```
 
-### パフォーマンスの問題
+### Performance Issues
 
-クラスタ情報の読み込みが遅い場合:
+If cluster information loads slowly:
 
-1. リフレッシュレートを増やす（設定で`refresh_rate`を調整）
-2. 大規模クラスタの場合、ブラウザのメモリを確認
+1. Increase refresh rate (adjust `refresh_rate` in settings)
+2. For large clusters, check browser memory
 
-## 貢献
+## Contributing
 
-プルリクエストを歓迎します！大きな変更の場合は、まずissueを開いて変更内容を議論してください。
+Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
 
-## ライセンス
+## License
 
-MIT License - 詳細は[LICENSE](LICENSE)ファイルを参照してください。
+MIT License - see the [LICENSE](LICENSE) file for details.
 
-## クレジット
+## Credits
 
-- オリジナル[elasticsearch-kopf](https://github.com/lmenezes/elasticsearch-kopf) by Leonardo Menezes
-- OpenSearch対応とFess統合 by [CodeLibs Project](https://www.codelibs.org/)
+- Original [elasticsearch-kopf](https://github.com/lmenezes/elasticsearch-kopf) by Leonardo Menezes
+- OpenSearch adaptation and Fess integration by [CodeLibs Project](https://www.codelibs.org/)
 
-## 関連リンク
+## Related Links
 
-- [Fess](https://fess.codelibs.org/) - エンタープライズ検索サーバー
-- [OpenSearch](https://opensearch.org/) - オープンソース検索エンジン
-- [CodeLibs](https://www.codelibs.org/) - Fess開発プロジェクト
+- [Fess](https://fess.codelibs.org/) - Enterprise Search Server
+- [OpenSearch](https://opensearch.org/) - Open Source Search Engine
+- [CodeLibs](https://www.codelibs.org/) - Fess Development Project
