@@ -1,7 +1,7 @@
 kopf.controller('PercolatorController', ['$scope', 'ConfirmDialogService',
-  'AlertService', 'AceEditorService', 'ElasticService',
+  'AlertService', 'AceEditorService', 'OpenSearchService',
   function($scope, ConfirmDialogService, AlertService, AceEditorService,
-           ElasticService) {
+           OpenSearchService) {
     $scope.editor = undefined;
     $scope.pagination = new PercolatorsPage(0, 0, 0, []);
 
@@ -14,10 +14,10 @@ kopf.controller('PercolatorController', ['$scope', 'ConfirmDialogService',
 
     $scope.$watch(
         function() {
-          return ElasticService.cluster;
+          return OpenSearchService.cluster;
         },
         function(filter, previous) {
-          $scope.indices = ElasticService.getIndices();
+          $scope.indices = OpenSearchService.getIndices();
         },
         true
     );
@@ -59,10 +59,10 @@ kopf.controller('PercolatorController', ['$scope', 'ConfirmDialogService',
           query.sourceAsJSON(),
           'Delete',
           function() {
-            ElasticService.deletePercolatorQuery(query.index, query.id,
+            OpenSearchService.deletePercolatorQuery(query.index, query.id,
                 function(response) {
                   var refreshIndex = query.index;
-                  ElasticService.refreshIndex(refreshIndex,
+                  OpenSearchService.refreshIndex(refreshIndex,
                       function(response) {
                         AlertService.success('Query successfully deleted',
                             response);
@@ -98,10 +98,10 @@ kopf.controller('PercolatorController', ['$scope', 'ConfirmDialogService',
         AlertService.error('Query must be defined');
         return;
       }
-      ElasticService.createPercolatorQuery($scope.new_query,
+      OpenSearchService.createPercolatorQuery($scope.new_query,
           function(response) {
             var refreshIndex = $scope.new_query.index;
-            ElasticService.refreshIndex(refreshIndex,
+            OpenSearchService.refreshIndex(refreshIndex,
                 function(response) {
                   AlertService.success('Percolator Query successfully created',
                       response);
@@ -135,7 +135,7 @@ kopf.controller('PercolatorController', ['$scope', 'ConfirmDialogService',
         if (queries.length > 0) {
           body.query = {bool: {must: queries}};
         }
-        ElasticService.fetchPercolateQueries($scope.index, body,
+        OpenSearchService.fetchPercolateQueries($scope.index, body,
             function(percolators) {
               $scope.pagination = percolators;
             },
@@ -149,7 +149,7 @@ kopf.controller('PercolatorController', ['$scope', 'ConfirmDialogService',
     };
 
     $scope.initializeController = function() {
-      $scope.indices = ElasticService.getIndices();
+      $scope.indices = OpenSearchService.getIndices();
       $scope.initEditor();
     };
 

@@ -1,5 +1,5 @@
-kopf.factory('PageService', ['ElasticService', 'DebugService', '$rootScope',
-  '$document', function(ElasticService, DebugService, $rootScope, $document) {
+kopf.factory('PageService', ['OpenSearchService', 'DebugService', '$rootScope',
+  '$document', function(OpenSearchService, DebugService, $rootScope, $document) {
 
     var instance = this;
 
@@ -16,7 +16,7 @@ kopf.factory('PageService', ['ElasticService', 'DebugService', '$rootScope',
 
     $rootScope.$watch(
         function() {
-          return ElasticService.cluster;
+          return OpenSearchService.cluster;
         },
         function(cluster, oldValue) {
           instance.setPageTitle(cluster ? cluster.name : undefined);

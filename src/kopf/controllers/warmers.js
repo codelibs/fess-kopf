@@ -1,8 +1,8 @@
 kopf.controller('WarmersController', [
   '$scope', 'ConfirmDialogService', 'AlertService', 'AceEditorService',
-  'ElasticService',
+  'OpenSearchService',
   function($scope, ConfirmDialogService, AlertService, AceEditorService,
-           ElasticService) {
+           OpenSearchService) {
     $scope.editor = undefined;
     $scope.indices = [];
     $scope.index = null;
@@ -15,10 +15,10 @@ kopf.controller('WarmersController', [
 
     $scope.$watch(
         function() {
-          return ElasticService.cluster;
+          return OpenSearchService.cluster;
         },
         function(filter, previous) {
-          $scope.indices = ElasticService.getIndices();
+          $scope.indices = OpenSearchService.getIndices();
         },
         true
     );
@@ -38,7 +38,7 @@ kopf.controller('WarmersController', [
         $scope.editor.format();
         if (!isDefined($scope.editor.error)) {
           $scope.warmer.source = $scope.editor.getValue();
-          ElasticService.registerWarmer($scope.warmer,
+          OpenSearchService.registerWarmer($scope.warmer,
               function(response) {
                 $scope.loadIndexWarmers();
                 AlertService.success('Warmer successfully created', response);
@@ -59,7 +59,7 @@ kopf.controller('WarmersController', [
           warmer.source,
           'Delete',
           function() {
-            ElasticService.deleteWarmer(warmer, // FIXME: better send name + id
+            OpenSearchService.deleteWarmer(warmer, // FIXME: better send name + id
                 function(response) {
                   AlertService.success('Warmer successfully deleted', response);
                   $scope.loadIndexWarmers();
@@ -74,7 +74,7 @@ kopf.controller('WarmersController', [
 
     $scope.loadIndexWarmers = function() {
       if (isDefined($scope.index)) {
-        ElasticService.getIndexWarmers($scope.index, '',
+        OpenSearchService.getIndexWarmers($scope.index, '',
             function(warmers) {
               $scope.paginator.setCollection(warmers);
               $scope.page = $scope.paginator.getPage();
@@ -92,7 +92,7 @@ kopf.controller('WarmersController', [
     };
 
     $scope.initializeController = function() {
-      $scope.indices = ElasticService.getIndices();
+      $scope.indices = OpenSearchService.getIndices();
       $scope.initEditor();
     };
 

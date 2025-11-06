@@ -1,4 +1,4 @@
-kopf.factory('ElasticService', ['$http', '$q', '$timeout', '$location',
+kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
   'ExternalSettingsService', 'DebugService', 'AlertService',
   function($http, $q, $timeout, $location, ExternalSettingsService,
            DebugService, AlertService) {
@@ -85,16 +85,16 @@ kopf.factory('ElasticService', ['$http', '$q', '$timeout', '$location',
     };
 
     /**
-     * Connects to Elasticsearch instance and triggers auto polling of cluster
+     * Connects to OpenSearch instance and triggers auto polling of cluster
      * state
      *
-     * @param {string} host - Elasticsearch url
+     * @param {string} host - OpenSearch url
      */
     this.connect = function(host) {
       this.reset();
-      var root = ExternalSettingsService.getElasticsearchRootPath();
+      var root = ExternalSettingsService.getOpenSearchRootPath();
       var withCredentials = ExternalSettingsService.withCredentials();
-      this.connection = new ESConnection(host + root, withCredentials);
+      this.connection = new OpenSearchConnection(host + root, withCredentials);
       DebugService.debug('Elasticseach connection:', this.connection);
       this.clusterRequest('GET', '/', {}, {},
           function(data) {
@@ -104,7 +104,7 @@ kopf.factory('ElasticService', ['$http', '$q', '$timeout', '$location',
               instance.connect(host + '/');
             } else {
               var distribution = isDefined(data.version.distribution) ?
-                  data.version.distribution : 'elasticsearch';
+                  data.version.distribution : 'opensearch';
               instance.setVersion(data.version.number, distribution);
               instance.connected = true;
               if (!instance.autoRefreshStarted) {
@@ -119,7 +119,7 @@ kopf.factory('ElasticService', ['$http', '$q', '$timeout', '$location',
             if (data.status == 503) {
               DebugService.debug('No active master, switching to basic mode');
               var distribution = isDefined(data.version.distribution) ?
-                  data.version.distribution : 'elasticsearch';
+                  data.version.distribution : 'opensearch';
               instance.setVersion(data.version.number, distribution);
               instance.connected = true;
               instance.setBrokenCluster(true);
@@ -141,8 +141,8 @@ kopf.factory('ElasticService', ['$http', '$q', '$timeout', '$location',
     this.setVersion = function(version, distribution) {
       this.version = new Version(version, distribution);
       if (!this.version.isValid()) {
-        DebugService.debug('Invalid Elasticsearch version[' + version + ']');
-        throw 'Invalid Elasticsearch version[' + version + ']';
+        DebugService.debug('Invalid OpenSearch version[' + version + ']');
+        throw 'Invalid OpenSearch version[' + version + ']';
       }
     };
 

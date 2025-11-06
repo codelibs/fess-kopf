@@ -1,6 +1,6 @@
 kopf.controller('BenchmarkController', ['$scope', '$location', '$timeout',
-  'AlertService', 'ElasticService',
-  function($scope, $location, $timeout, AlertService, ElasticService) {
+  'AlertService', 'OpenSearchService',
+  function($scope, $location, $timeout, AlertService, OpenSearchService) {
 
     $scope.bench = new Benchmark();
     $scope.competitor = new Competitor();
@@ -8,7 +8,7 @@ kopf.controller('BenchmarkController', ['$scope', '$location', '$timeout',
     $scope.types = [];
 
     $scope.initializeController = function() {
-      $scope.indices = ElasticService.getIndices();
+      $scope.indices = OpenSearchService.getIndices();
     };
 
     $scope.addCompetitor = function() {
@@ -33,7 +33,7 @@ kopf.controller('BenchmarkController', ['$scope', '$location', '$timeout',
       $('#benchmark-result').html('');
       try {
         var json = $scope.bench.toJson();
-        ElasticService.executeBenchmark(json,
+        OpenSearchService.executeBenchmark(json,
             function(response) {
               $scope.result = JSONTree.create(response);
               $('#benchmark-result').html($scope.result);

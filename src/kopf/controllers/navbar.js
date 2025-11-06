@@ -1,13 +1,13 @@
 kopf.controller('NavbarController', ['$scope', '$location',
-  'ExternalSettingsService', 'ElasticService', 'AlertService',
+  'ExternalSettingsService', 'OpenSearchService', 'AlertService',
   'HostHistoryService',
-  function($scope, $location, ExternalSettingsService, ElasticService,
+  function($scope, $location, ExternalSettingsService, OpenSearchService,
            AlertService, HostHistoryService) {
 
     $scope.new_refresh = '' + ExternalSettingsService.getRefreshRate();
     $scope.theme = ExternalSettingsService.getTheme();
     $scope.new_host = '';
-    $scope.current_host = ElasticService.getHost();
+    $scope.current_host = OpenSearchService.getHost();
     $scope.host_history = HostHistoryService.getHostHistory();
 
     $scope.clusterStatus = undefined;
@@ -16,23 +16,23 @@ kopf.controller('NavbarController', ['$scope', '$location',
 
     $scope.$watch(
         function() {
-          return ElasticService.getHost();
+          return OpenSearchService.getHost();
         },
         function(newValue, oldValue) {
-          $scope.current_host = ElasticService.getHost();
+          $scope.current_host = OpenSearchService.getHost();
         }
     );
 
     $scope.$watch(
         function() {
-          return ElasticService.cluster;
+          return OpenSearchService.cluster;
         },
         function(newValue, oldValue) {
-          if (isDefined(ElasticService.cluster)) {
-            $scope.clusterStatus = ElasticService.cluster.status;
-            $scope.clusterName = ElasticService.cluster.name;
-            $scope.fetchedAt = ElasticService.cluster.fetched_at;
-            $scope.clientName = ElasticService.cluster.clientName;
+          if (isDefined(OpenSearchService.cluster)) {
+            $scope.clusterStatus = OpenSearchService.cluster.status;
+            $scope.clusterName = OpenSearchService.cluster.name;
+            $scope.fetchedAt = OpenSearchService.cluster.fetched_at;
+            $scope.clientName = OpenSearchService.cluster.clientName;
           } else {
             $scope.clusterStatus = undefined;
             $scope.clusterName = undefined;
@@ -50,14 +50,14 @@ kopf.controller('NavbarController', ['$scope', '$location',
 
     $scope.connectToHost = function(host) {
       try {
-        ElasticService.connect(host);
-        HostHistoryService.addToHistory(ElasticService.connection);
+        OpenSearchService.connect(host);
+        HostHistoryService.addToHistory(OpenSearchService.connection);
         $scope.host_history = HostHistoryService.getHostHistory();
       } catch (error) {
         AlertService.error('Error while connecting to new target host', error);
       } finally {
-        $scope.current_host = ElasticService.connection.host;
-        ElasticService.refresh();
+        $scope.current_host = OpenSearchService.connection.host;
+        OpenSearchService.refresh();
       }
     };
 

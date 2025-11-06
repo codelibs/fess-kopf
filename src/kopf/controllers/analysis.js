@@ -1,6 +1,6 @@
 kopf.controller('AnalysisController', ['$scope', '$location', '$timeout',
-  'AlertService', 'ElasticService',
-  function($scope, $location, $timeout, AlertService, ElasticService) {
+  'AlertService', 'OpenSearchService',
+  function($scope, $location, $timeout, AlertService, OpenSearchService) {
 
     $scope.indices = null;
 
@@ -21,10 +21,10 @@ kopf.controller('AnalysisController', ['$scope', '$location', '$timeout',
 
     $scope.$watch(
         function() {
-          return ElasticService.cluster;
+          return OpenSearchService.cluster;
         },
         function(filter, previous) {
-          $scope.indices = ElasticService.getOpenIndices();
+          $scope.indices = OpenSearchService.getOpenIndices();
         },
         true
     );
@@ -39,7 +39,7 @@ kopf.controller('AnalysisController', ['$scope', '$location', '$timeout',
       $scope.field_type = '';
       $scope.field_field = '';
       if (notEmpty(index)) {
-        ElasticService.getIndexMetadata(index,
+        OpenSearchService.getIndexMetadata(index,
             function(metadata) {
               $scope.field_index_metadata = metadata;
             },
@@ -60,7 +60,7 @@ kopf.controller('AnalysisController', ['$scope', '$location', '$timeout',
     $scope.loadIndexAnalyzers = function(index) {
       $scope.analyzer_analyzer = '';
       if (notEmpty(index)) {
-        ElasticService.getIndexMetadata(index,
+        OpenSearchService.getIndexMetadata(index,
             function(metadata) {
               $scope.analyzer_index_metadata = metadata;
             },
@@ -75,7 +75,7 @@ kopf.controller('AnalysisController', ['$scope', '$location', '$timeout',
     $scope.analyzeByField = function() {
       if ($scope.field_field.length > 0 && $scope.field_text.length > 0) {
         $scope.field_tokens = null;
-        ElasticService.analyzeByField($scope.field_index.name,
+        OpenSearchService.analyzeByField($scope.field_index.name,
             $scope.field_field, $scope.field_text,
             function(response) {
               $scope.field_tokens = response;
@@ -92,7 +92,7 @@ kopf.controller('AnalysisController', ['$scope', '$location', '$timeout',
       if (notEmpty($scope.analyzer_analyzer) &&
           notEmpty($scope.analyzer_text)) {
         $scope.analyzer_tokens = null;
-        ElasticService.analyzeByAnalyzer($scope.analyzer_index.name,
+        OpenSearchService.analyzeByAnalyzer($scope.analyzer_index.name,
             $scope.analyzer_analyzer, $scope.analyzer_text,
             function(response) {
               $scope.analyzer_tokens = response;
@@ -106,7 +106,7 @@ kopf.controller('AnalysisController', ['$scope', '$location', '$timeout',
     };
 
     $scope.initializeController = function() {
-      $scope.indices = ElasticService.getOpenIndices();
+      $scope.indices = OpenSearchService.getOpenIndices();
     };
 
   }

@@ -1,8 +1,8 @@
 kopf.controller('RestController', ['$scope', '$location', '$timeout',
-  'ExplainService', 'AlertService', 'AceEditorService', 'ElasticService',
+  'ExplainService', 'AlertService', 'AceEditorService', 'OpenSearchService',
   'ClipboardService',
   function($scope, $location, $timeout, ExplainService, AlertService,
-           AceEditorService, ElasticService, ClipboardService) {
+           AceEditorService, OpenSearchService, ClipboardService) {
     $scope.request = new Request(
         decodeURIComponent($location.search().path || ''),
         decodeURIComponent($location.search().method || 'GET'),
@@ -29,7 +29,7 @@ kopf.controller('RestController', ['$scope', '$location', '$timeout',
 
     $scope.copyAsCURLCommand = function() {
       var method = $scope.request.method;
-      var host = ElasticService.getHost();
+      var host = OpenSearchService.getHost();
       var path = encodeURI($scope.request.path);
       if (path.substring(0, 1) !== '/') {
         path = '/' + path;
@@ -105,7 +105,7 @@ kopf.controller('RestController', ['$scope', '$location', '$timeout',
           AlertService.info('You are executing a GET request with body ' +
               'content. Maybe you meant to use POST or PUT?');
         }
-        ElasticService.clusterRequest($scope.request.method,
+        OpenSearchService.clusterRequest($scope.request.method,
             path, {}, $scope.request.body,
             function(response) {
               successCallback(response);
@@ -117,7 +117,7 @@ kopf.controller('RestController', ['$scope', '$location', '$timeout',
                 AlertService.error('Request was not successful');
                 _handleResponse(error);
               } else {
-                var url = ElasticService.connection.host + path;
+                var url = OpenSearchService.connection.host + path;
                 AlertService.error(url + ' is unreachable');
               }
             }
@@ -169,7 +169,7 @@ kopf.controller('RestController', ['$scope', '$location', '$timeout',
     $scope.initializeController = function() {
       $scope.initEditor();
       $scope.history = $scope.loadHistory();
-      ElasticService.getClusterMapping(
+      OpenSearchService.getClusterMapping(
           function(mapping) {
             $scope.mapping = mapping;
             $scope.updateOptions($scope.request.path);

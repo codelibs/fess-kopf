@@ -1,13 +1,13 @@
 /**
  * Tests for Version class
- * Tests OpenSearch 2.x/3.x detection and version comparison
+ * Tests OpenSearch 2.x/3.x version detection and comparison
  */
 
 // Load the Version class
 const fs = require('fs');
 const path = require('path');
 const versionCode = fs.readFileSync(
-  path.join(__dirname, '../src/kopf/elastic/version.js'),
+  path.join(__dirname, '../src/kopf/opensearch/version.js'),
   'utf8'
 );
 
@@ -37,54 +37,37 @@ describe('Version', () => {
       const version = new Version('invalid');
       expect(version.isValid()).toBe(false);
     });
-  });
 
-  describe('Distribution detection', () => {
-    test('should detect Elasticsearch as default', () => {
-      const version = new Version('7.10.2');
-      expect(version.isElasticsearch()).toBe(true);
-      expect(version.isOpenSearch()).toBe(false);
-      expect(version.getDistribution()).toBe('elasticsearch');
-    });
-
-    test('should detect OpenSearch when specified', () => {
-      const version = new Version('2.11.1', 'opensearch');
-      expect(version.isOpenSearch()).toBe(true);
-      expect(version.isElasticsearch()).toBe(false);
-      expect(version.getDistribution()).toBe('opensearch');
-    });
-
-    test('should detect Elasticsearch when explicitly specified', () => {
-      const version = new Version('8.0.0', 'elasticsearch');
-      expect(version.isElasticsearch()).toBe(true);
-      expect(version.isOpenSearch()).toBe(false);
+    test('should parse version with build metadata', () => {
+      const version = new Version('2.11.1-SNAPSHOT');
+      expect(version.isValid()).toBe(true);
+      expect(version.getMajor()).toBe(2);
+      expect(version.getMinor()).toBe(11);
+      expect(version.getPatch()).toBe(1);
     });
   });
 
   describe('OpenSearch version checks', () => {
     test('should detect OpenSearch 2.x or later', () => {
-      const version2 = new Version('2.0.0', 'opensearch');
+      const version2 = new Version('2.0.0');
       expect(version2.isOpenSearch2OrLater()).toBe(true);
 
-      const version211 = new Version('2.11.1', 'opensearch');
+      const version211 = new Version('2.11.1');
       expect(version211.isOpenSearch2OrLater()).toBe(true);
 
-      const version1 = new Version('1.3.0', 'opensearch');
+      const version1 = new Version('1.3.0');
       expect(version1.isOpenSearch2OrLater()).toBe(false);
     });
 
     test('should detect OpenSearch 3.x or later', () => {
-      const version3 = new Version('3.0.0', 'opensearch');
+      const version3 = new Version('3.0.0');
       expect(version3.isOpenSearch3OrLater()).toBe(true);
 
-      const version2 = new Version('2.11.1', 'opensearch');
-      expect(version2.isOpenSearch3OrLater()).toBe(false);
-    });
+      const version4 = new Version('4.0.0');
+      expect(version4.isOpenSearch3OrLater()).toBe(true);
 
-    test('should return false for Elasticsearch versions', () => {
-      const esVersion = new Version('8.0.0', 'elasticsearch');
-      expect(esVersion.isOpenSearch2OrLater()).toBe(false);
-      expect(esVersion.isOpenSearch3OrLater()).toBe(false);
+      const version2 = new Version('2.11.1');
+      expect(version2.isOpenSearch3OrLater()).toBe(false);
     });
   });
 
@@ -119,20 +102,27 @@ describe('Version', () => {
 
   describe('Real-world scenarios', () => {
     test('Fess 15 with OpenSearch 2.11.1', () => {
-      const version = new Version('2.11.1', 'opensearch');
+      const version = new Version('2.11.1');
       expect(version.isValid()).toBe(true);
-      expect(version.isOpenSearch()).toBe(true);
       expect(version.isOpenSearch2OrLater()).toBe(true);
       expect(version.getMajor()).toBe(2);
     });
 
     test('Fess 15 with OpenSearch 3.0.0', () => {
-      const version = new Version('3.0.0', 'opensearch');
+      const version = new Version('3.0.0');
       expect(version.isValid()).toBe(true);
-      expect(version.isOpenSearch()).toBe(true);
       expect(version.isOpenSearch2OrLater()).toBe(true);
       expect(version.isOpenSearch3OrLater()).toBe(true);
       expect(version.getMajor()).toBe(3);
+    });
+
+    test('OpenSearch 2.17.0 compatibility', () => {
+      const version = new Version('2.17.0');
+      expect(version.isValid()).toBe(true);
+      expect(version.isOpenSearch2OrLater()).toBe(true);
+      expect(version.isOpenSearch3OrLater()).toBe(false);
+      expect(version.getMajor()).toBe(2);
+      expect(version.getMinor()).toBe(17);
     });
   });
 });

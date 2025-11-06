@@ -1,5 +1,5 @@
-kopf.controller('CatController', ['$scope', 'ElasticService', 'AlertService',
-  function($scope, ElasticService, AlertService) {
+kopf.controller('CatController', ['$scope', 'OpenSearchService', 'AlertService',
+  function($scope, OpenSearchService, AlertService) {
 
     $scope.apis = [
       'aliases',
@@ -24,7 +24,7 @@ kopf.controller('CatController', ['$scope', 'ElasticService', 'AlertService',
 
     $scope.execute = function() {
       if ($scope.api.length > 0) {
-        ElasticService.executeCatRequest(
+        OpenSearchService.executeCatRequest(
             $scope.api,
             function(result) {
               $scope.result = result;

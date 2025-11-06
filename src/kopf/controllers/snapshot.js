@@ -1,6 +1,6 @@
 kopf.controller('SnapshotController', ['$scope', 'ConfirmDialogService',
-  'AlertService', 'ElasticService',
-  function($scope, ConfirmDialogService, AlertService, ElasticService) {
+  'AlertService', 'OpenSearchService',
+  function($scope, ConfirmDialogService, AlertService, OpenSearchService) {
     // registered snapshot
     $scope.showSpecialIndices = false;
     $scope.repositories = [];
@@ -25,7 +25,7 @@ kopf.controller('SnapshotController', ['$scope', 'ConfirmDialogService',
 
     $scope.$watch(
         function() {
-          return ElasticService.cluster;
+          return OpenSearchService.cluster;
         },
         function(filter, previous) {
           $scope.loadIndices();
@@ -34,7 +34,7 @@ kopf.controller('SnapshotController', ['$scope', 'ConfirmDialogService',
     );
 
     $scope.loadIndices = function() {
-      var indices = $scope.indices = ElasticService.getIndices();
+      var indices = $scope.indices = OpenSearchService.getIndices();
       if (!$scope.showSpecialIndices) {
         indices = indices.filter(function(idx) { return !idx.special; });
       }
@@ -61,7 +61,7 @@ kopf.controller('SnapshotController', ['$scope', 'ConfirmDialogService',
     };
 
     $scope.executeDeleteRepository = function(repository) {
-      ElasticService.deleteRepository(repository.name,
+      OpenSearchService.deleteRepository(repository.name,
           function(response) {
             AlertService.success('Repository successfully deleted', response);
             if (notEmpty($scope.snapshot_repository) &&
@@ -101,7 +101,7 @@ kopf.controller('SnapshotController', ['$scope', 'ConfirmDialogService',
       $scope.optionalParam(body, $scope.restore_snap, 'rename_replacement');
       $scope.optionalParam(body, $scope.restore_snap, 'rename_pattern');
 
-      ElasticService.restoreSnapshot($scope.snapshot_repository,
+      OpenSearchService.restoreSnapshot($scope.snapshot_repository,
           $scope.snapshot.name, JSON.stringify(body),
           function(response) {
             AlertService.success('Snapshot Restored Started');
@@ -117,7 +117,7 @@ kopf.controller('SnapshotController', ['$scope', 'ConfirmDialogService',
     $scope.createRepository = function() {
       try {
         $scope.repository_form.validate();
-        ElasticService.createRepository($scope.repository_form.name,
+        OpenSearchService.createRepository($scope.repository_form.name,
             $scope.repository_form.asJson(),
             function(response) {
               AlertService.success('Repository created');
@@ -133,7 +133,7 @@ kopf.controller('SnapshotController', ['$scope', 'ConfirmDialogService',
     };
 
     $scope.loadRepositories = function() {
-      ElasticService.getRepositories(
+      OpenSearchService.getRepositories(
           function(response) {
             $scope.repositories = response;
           },
@@ -170,7 +170,7 @@ kopf.controller('SnapshotController', ['$scope', 'ConfirmDialogService',
 
       $scope.optionalParam(body, $scope.new_snap, 'ignore_unavailable');
 
-      ElasticService.createSnapshot($scope.new_snap.repository.name,
+      OpenSearchService.createSnapshot($scope.new_snap.repository.name,
           $scope.new_snap.name, JSON.stringify(body),
           function(response) {
             AlertService.success('Snapshot created');
@@ -188,7 +188,7 @@ kopf.controller('SnapshotController', ['$scope', 'ConfirmDialogService',
           snapshot,
           'Delete',
           function() {
-            ElasticService.deleteSnapshot(
+            OpenSearchService.deleteSnapshot(
                 $scope.snapshot_repository,
                 snapshot.name,
                 function(response) {
@@ -205,7 +205,7 @@ kopf.controller('SnapshotController', ['$scope', 'ConfirmDialogService',
     };
 
     $scope.fetchSnapshots = function(repository) {
-      ElasticService.getSnapshots(repository,
+      OpenSearchService.getSnapshots(repository,
           function(response) {
             $scope.paginator.setCollection(response);
             $scope.page = $scope.paginator.getPage();

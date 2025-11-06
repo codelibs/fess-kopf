@@ -1,7 +1,7 @@
 kopf.controller('ClusterHealthController', ['$scope', '$location', '$timeout',
-  '$sce', '$http', 'AlertService', 'ConfirmDialogService', 'ElasticService',
+  '$sce', '$http', 'AlertService', 'ConfirmDialogService', 'OpenSearchService',
   function($scope, $location, $timeout, $sce, $http, AlertService,
-           ConfirmDialogService, ElasticService) {
+           ConfirmDialogService, OpenSearchService) {
 
     var defaultDescription = 'Cluster information delivered by kopf';
     $scope.shared_url = '';
@@ -37,7 +37,7 @@ kopf.controller('ClusterHealthController', ['$scope', '$location', '$timeout',
       $scope.results = null;
       var infoId = AlertService.info('Loading cluster health state. ' +
           'This could take a few moments.', {}, 30000);
-      ElasticService.getClusterDiagnosis($scope.retrieveHealth,
+      OpenSearchService.getClusterDiagnosis($scope.retrieveHealth,
           $scope.retrieveState, $scope.retrieveStats, $scope.retrieveHotThreads,
           function(responses) {
             $scope.state = '';

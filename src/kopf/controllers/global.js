@@ -1,6 +1,6 @@
 kopf.controller('GlobalController', ['$scope', '$location', '$sce', '$window',
-  'AlertService', 'ElasticService', 'ExternalSettingsService', 'PageService',
-  function($scope, $location, $sce, $window, AlertService, ElasticService,
+  'AlertService', 'OpenSearchService', 'ExternalSettingsService', 'PageService',
+  function($scope, $location, $sce, $window, AlertService, OpenSearchService,
            ExternalSettingsService, PageService) {
 
     $scope.version = '7.0.0';
@@ -9,10 +9,10 @@ kopf.controller('GlobalController', ['$scope', '$location', '$sce', '$window',
 
     $scope.$watch(
         function() {
-          return ElasticService.cluster;
+          return OpenSearchService.cluster;
         },
         function(newValue, oldValue) {
-          var version = ElasticService.getVersion();
+          var version = OpenSearchService.getVersion();
           if (version && version.isValid() && version.isElasticsearch()) {
             var major = version.getMajor();
             if (major < parseInt($scope.version.charAt(0))) {
@@ -52,7 +52,7 @@ kopf.controller('GlobalController', ['$scope', '$location', '$sce', '$window',
                 ':' + $location.port();
           }
         }
-        ElasticService.connect(host);
+        OpenSearchService.connect(host);
       } catch (error) {
         AlertService.error(error.message, error.body);
       }
@@ -60,10 +60,10 @@ kopf.controller('GlobalController', ['$scope', '$location', '$sce', '$window',
 
     $scope.connect();
 
-    ElasticService.refresh();
+    OpenSearchService.refresh();
 
     $scope.hasConnection = function() {
-      return isDefined(ElasticService.cluster);
+      return isDefined(OpenSearchService.cluster);
     };
 
     $scope.displayInfo = function(title, info) {

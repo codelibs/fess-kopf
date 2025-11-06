@@ -1,6 +1,6 @@
 kopf.controller('ClusterOverviewController', ['$scope', '$window',
-  'ConfirmDialogService', 'AlertService', 'ElasticService', 'AppState',
-  function($scope, $window, ConfirmDialogService, AlertService, ElasticService,
+  'ConfirmDialogService', 'AlertService', 'OpenSearchService', 'AppState',
+  function($scope, $window, ConfirmDialogService, AlertService, OpenSearchService,
            AppState) {
 
     $scope.cluster = undefined;
@@ -43,12 +43,12 @@ kopf.controller('ClusterOverviewController', ['$scope', '$window',
 
     $scope.$watch(
         function() {
-          return ElasticService.cluster;
+          return OpenSearchService.cluster;
         },
         function(newValue, oldValue) {
-          $scope.cluster = ElasticService.cluster;
-          $scope.setIndices(ElasticService.getIndices());
-          $scope.setNodes(ElasticService.getNodes());
+          $scope.cluster = OpenSearchService.cluster;
+          $scope.setIndices(OpenSearchService.getIndices());
+          $scope.setNodes(OpenSearchService.getNodes());
           if ($scope.cluster &&
               $scope.cluster.unassigned_shards === 0 &&
               $scope.cluster.relocating_shards === 0 &&
@@ -61,12 +61,12 @@ kopf.controller('ClusterOverviewController', ['$scope', '$window',
 
     $scope.$watch('node_filter',
         function(filter, previous) {
-          $scope.setNodes(ElasticService.getNodes());
+          $scope.setNodes(OpenSearchService.getNodes());
         },
         true);
 
     $scope.$watch('index_paginator', function(filter, previous) {
-      $scope.setIndices(ElasticService.getIndices());
+      $scope.setIndices(OpenSearchService.getIndices());
     }, true);
 
     $scope.selectShardRelocation = function(shard) {
@@ -85,7 +85,7 @@ kopf.controller('ClusterOverviewController', ['$scope', '$window',
     };
 
     $scope.optimizeIndex = function(index) {
-      ElasticService.optimizeIndex(index,
+      OpenSearchService.optimizeIndex(index,
           function(response) {
             AlertService.success('Index was successfully optimized', response);
           },
@@ -109,9 +109,9 @@ kopf.controller('ClusterOverviewController', ['$scope', '$window',
     };
 
     $scope.deleteIndex = function(index) {
-      ElasticService.deleteIndex(index,
+      OpenSearchService.deleteIndex(index,
           function(response) {
-            ElasticService.refresh();
+            OpenSearchService.refresh();
           },
           function(error) {
             AlertService.error('Error while deleting index', error);
@@ -132,10 +132,10 @@ kopf.controller('ClusterOverviewController', ['$scope', '$window',
     };
 
     $scope.clearCache = function(index) {
-      ElasticService.clearCache(index,
+      OpenSearchService.clearCache(index,
           function(response) {
             AlertService.success('Index cache was cleared', response);
-            ElasticService.refresh();
+            OpenSearchService.refresh();
           },
           function(error) {
             AlertService.error('Error while clearing index cache', error);
@@ -155,7 +155,7 @@ kopf.controller('ClusterOverviewController', ['$scope', '$window',
     };
 
     $scope.refreshIndex = function(index) {
-      ElasticService.refreshIndex(index,
+      OpenSearchService.refreshIndex(index,
           function(response) {
             AlertService.success('Index was successfully refreshed', response);
           },
@@ -178,10 +178,10 @@ kopf.controller('ClusterOverviewController', ['$scope', '$window',
     };
 
     $scope.enableAllocation = function() {
-      ElasticService.enableShardAllocation(
+      OpenSearchService.enableShardAllocation(
           function(response) {
             AlertService.success('Shard allocation was enabled', response);
-            ElasticService.refresh();
+            OpenSearchService.refresh();
           },
           function(error) {
             AlertService.error('Error while enabling shard allocation', error);
@@ -190,10 +190,10 @@ kopf.controller('ClusterOverviewController', ['$scope', '$window',
     };
 
     $scope.disableAllocation = function() {
-      ElasticService.disableShardAllocation(
+      OpenSearchService.disableShardAllocation(
           function(response) {
             AlertService.success('Shard allocation was disabled', response);
-            ElasticService.refresh();
+            OpenSearchService.refresh();
           },
           function(error) {
             AlertService.error('Error while disabling shard allocation', error);
@@ -209,7 +209,7 @@ kopf.controller('ClusterOverviewController', ['$scope', '$window',
           'accepted for the index. A closed index can be reopened.',
           'Close index',
           function() {
-            ElasticService.closeIndex(index);
+            OpenSearchService.closeIndex(index);
           }
       );
     };
@@ -221,7 +221,7 @@ kopf.controller('ClusterOverviewController', ['$scope', '$window',
           'This process could take sometime depending on the index size.',
           'Open index',
           function() {
-            ElasticService.openIndex(index);
+            OpenSearchService.openIndex(index);
           }
       );
     };
@@ -238,7 +238,7 @@ kopf.controller('ClusterOverviewController', ['$scope', '$window',
           'Selected indices:\n' + indices.join('\n'),
           'Close index',
           function() {
-            ElasticService.closeIndex(indices.join(','));
+            OpenSearchService.closeIndex(indices.join(','));
           }
       );
     };
@@ -254,7 +254,7 @@ kopf.controller('ClusterOverviewController', ['$scope', '$window',
           'Selected indices:\n' + indices.join('\n'),
           'Open index',
           function() {
-            ElasticService.openIndex(indices.join(','));
+            OpenSearchService.openIndex(indices.join(','));
           }
       );
     };
@@ -324,7 +324,7 @@ kopf.controller('ClusterOverviewController', ['$scope', '$window',
     };
 
     $scope.showIndexSettings = function(index) {
-      ElasticService.getIndexMetadata(index,
+      OpenSearchService.getIndexMetadata(index,
           function(metadata) {
             $scope.displayInfo('settings for ' + index, metadata.settings);
           },
@@ -335,7 +335,7 @@ kopf.controller('ClusterOverviewController', ['$scope', '$window',
     };
 
     $scope.showIndexMappings = function(index) {
-      ElasticService.getIndexMetadata(index,
+      OpenSearchService.getIndexMetadata(index,
           function(metadata) {
             $scope.displayInfo('mappings for ' + index, metadata.mappings);
           },
@@ -346,7 +346,7 @@ kopf.controller('ClusterOverviewController', ['$scope', '$window',
     };
 
     $scope.showNodeStats = function(nodeId) {
-      ElasticService.getNodeStats(nodeId,
+      OpenSearchService.getNodeStats(nodeId,
           function(nodeStats) {
             $scope.displayInfo('stats for ' + nodeStats.name, nodeStats.stats);
           },
@@ -357,7 +357,7 @@ kopf.controller('ClusterOverviewController', ['$scope', '$window',
     };
 
     $scope.showShardStats = function(shard, index, nodeId) {
-      ElasticService.getShardStats(shard, index, nodeId,
+      OpenSearchService.getShardStats(shard, index, nodeId,
           function(stats) {
             $scope.displayInfo('stats for shard ' + shard, stats.stats);
           },
@@ -368,9 +368,9 @@ kopf.controller('ClusterOverviewController', ['$scope', '$window',
     };
 
     $scope.relocateShard = function(shard, index, fromNode, toNode) {
-      ElasticService.relocateShard(shard, index, fromNode, toNode,
+      OpenSearchService.relocateShard(shard, index, fromNode, toNode,
           function(response) {
-            ElasticService.refresh();
+            OpenSearchService.refresh();
             $scope.relocatingShard = undefined;
             AlertService.success('Relocation successfully executed', response);
           },

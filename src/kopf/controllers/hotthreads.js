@@ -1,6 +1,6 @@
-kopf.controller('HotThreadsController', ['$scope', 'ElasticService',
+kopf.controller('HotThreadsController', ['$scope', 'OpenSearchService',
   'AlertService',
-  function($scope, ElasticService, AlertService) {
+  function($scope, OpenSearchService, AlertService) {
 
     $scope.node = undefined;
 
@@ -19,7 +19,7 @@ kopf.controller('HotThreadsController', ['$scope', 'ElasticService',
     $scope.nodesHotThreads = undefined;
 
     $scope.execute = function() {
-      ElasticService.getHotThreads($scope.node, $scope.type, $scope.threads,
+      OpenSearchService.getHotThreads($scope.node, $scope.type, $scope.threads,
           $scope.interval, $scope.ignoreIdleThreads,
           function(result) {
             $scope.nodesHotThreads = result;
@@ -33,16 +33,16 @@ kopf.controller('HotThreadsController', ['$scope', 'ElasticService',
 
     $scope.$watch(
         function() {
-          return ElasticService.cluster;
+          return OpenSearchService.cluster;
         },
         function(current, previous) {
-          $scope.nodes = ElasticService.getNodes();
+          $scope.nodes = OpenSearchService.getNodes();
         },
         true
     );
 
     $scope.initializeController = function() {
-      $scope.nodes = ElasticService.getNodes();
+      $scope.nodes = OpenSearchService.getNodes();
     };
 
   }
