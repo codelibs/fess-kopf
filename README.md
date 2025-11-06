@@ -1,6 +1,9 @@
 Fess KOPF
 =======================
 
+[![Test](https://github.com/codelibs/fess-kopf/actions/workflows/test.yml/badge.svg)](https://github.com/codelibs/fess-kopf/actions/workflows/test.yml)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 Fess KOPF is a simple web administration tool for [OpenSearch](https://opensearch.org/) written in JavaScript + AngularJS + jQuery + Bootstrap.
 
 This is a fork of [elasticsearch-kopf](https://github.com/lmenezes/elasticsearch-kopf) maintained for [Fess](https://fess.codelibs.org/), adapted to work with OpenSearch 2.x and 3.x.
@@ -20,6 +23,8 @@ It offers an easy way of performing common tasks on an OpenSearch cluster. Not e
 - Added OpenSearch 2.x and 3.x support
 - Removed deprecated features (Percolator, Warmers, Benchmark)
 - Optimized for use with Fess
+- Added comprehensive test suite with Jest
+- Added CI/CD with GitHub Actions
 
 ## Installation
 
