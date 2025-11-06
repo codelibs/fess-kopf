@@ -5,7 +5,7 @@ function Version(version, name) {
   var patch;
   var value = version;
   var valid = false;
-  var distribution = name;
+  var distribution = name || 'elasticsearch';
 
   if (checkVersion.test(value)) {
     valid = true;
@@ -35,8 +35,16 @@ function Version(version, name) {
     return value;
   };
 
+  this.getDistribution = function() {
+    return distribution;
+  };
+
   this.isElasticsearch = function() {
-    return distribution == "elasticsearch";
+    return distribution === 'elasticsearch';
+  };
+
+  this.isOpenSearch = function() {
+    return distribution === 'opensearch';
   };
 
   this.isGreater = function(other) {
@@ -48,6 +56,15 @@ function Version(version, name) {
         patch >= other.getPatch()
     );
     return (higherMajor || higherMinor || higherPatch);
+  };
+
+  // OpenSearch 2.x and 3.x specific version checks
+  this.isOpenSearch2OrLater = function() {
+    return this.isOpenSearch() && major >= 2;
+  };
+
+  this.isOpenSearch3OrLater = function() {
+    return this.isOpenSearch() && major >= 3;
   };
 
 }

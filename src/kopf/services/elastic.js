@@ -103,7 +103,8 @@ kopf.factory('ElasticService', ['$http', '$q', '$timeout', '$location',
               DebugService.debug('Attemping to connect with [' + host + '/]');
               instance.connect(host + '/');
             } else {
-              var distribution = isDefined(data.version.distribution) ? data.version.distribution : "elasticsearch";
+              var distribution = isDefined(data.version.distribution) ?
+                  data.version.distribution : 'elasticsearch';
               instance.setVersion(data.version.number, distribution);
               instance.connected = true;
               if (!instance.autoRefreshStarted) {
@@ -117,7 +118,8 @@ kopf.factory('ElasticService', ['$http', '$q', '$timeout', '$location',
           function(data) {
             if (data.status == 503) {
               DebugService.debug('No active master, switching to basic mode');
-              var distribution = isDefined(data.version.distribution) ? data.version.distribution : "elasticsearch";
+              var distribution = isDefined(data.version.distribution) ?
+                  data.version.distribution : 'elasticsearch';
               instance.setVersion(data.version.number, distribution);
               instance.connected = true;
               instance.setBrokenCluster(true);

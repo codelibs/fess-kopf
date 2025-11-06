@@ -50,14 +50,15 @@ kopf.config(function($routeProvider, $locationProvider) {
         templateUrl: 'partials/analysis.html',
         controller: 'AnalysisController'
       }).
-      when('/percolator', {
-        templateUrl: 'partials/percolator.html',
-        controller: 'PercolatorController'
-      }).
-      when('/warmers', {
-        templateUrl: 'partials/warmers.html',
-        controller: 'WarmersController'
-      }).
+      // Percolator and Warmers are deprecated in OpenSearch 2.x/3.x
+      // when('/percolator', {
+      //   templateUrl: 'partials/percolator.html',
+      //   controller: 'PercolatorController'
+      // }).
+      // when('/warmers', {
+      //   templateUrl: 'partials/warmers.html',
+      //   controller: 'WarmersController'
+      // }).
       when('/snapshot', {
         templateUrl: 'partials/snapshot.html',
         controller: 'SnapshotController'
@@ -2629,6 +2630,159 @@ function CatResult(result) {
   this.lines = values;
 }
 
+function ClusterChanges() {
+
+  this.nodeJoins = null;
+  this.nodeLeaves = null;
+  this.indicesCreated = null;
+  this.indicesDeleted = null;
+
+  this.docDelta = 0;
+  this.dataDelta = 0;
+
+  this.setDocDelta = function(delta) {
+    this.docDelta = delta;
+  };
+
+  this.getDocDelta = function() {
+    return this.docDelta;
+  };
+
+  this.absDocDelta = function() {
+    return Math.abs(this.docDelta);
+  };
+
+  this.absDataDelta = function() {
+    return readablizeBytes(Math.abs(this.dataDelta));
+  };
+
+  this.getDataDelta = function() {
+    return this.dataDelta;
+  };
+
+  this.setDataDelta = function(delta) {
+    this.dataDelta = delta;
+  };
+
+  this.hasChanges = function() {
+    return (
+      isDefined(this.nodeJoins) ||
+      isDefined(this.nodeLeaves) ||
+      isDefined(this.indicesCreated) ||
+      isDefined(this.indicesDeleted)
+      );
+  };
+
+  this.addJoiningNode = function(node) {
+    this.changes = true;
+    if (!isDefined(this.nodeJoins)) {
+      this.nodeJoins = [];
+    }
+    this.nodeJoins.push(node);
+  };
+
+  this.addLeavingNode = function(node) {
+    this.changes = true;
+    if (!isDefined(this.nodeLeaves)) {
+      this.nodeLeaves = [];
+    }
+    this.nodeLeaves.push(node);
+  };
+
+  this.hasJoins = function() {
+    return isDefined(this.nodeJoins);
+  };
+
+  this.hasLeaves = function() {
+    return isDefined(this.nodeLeaves);
+  };
+
+  this.hasCreatedIndices = function() {
+    return isDefined(this.indicesCreated);
+  };
+
+  this.hasDeletedIndices = function() {
+    return isDefined(this.indicesDeleted);
+  };
+
+  this.addCreatedIndex = function(index) {
+    if (!isDefined(this.indicesCreated)) {
+      this.indicesCreated = [];
+    }
+    this.indicesCreated.push(index);
+  };
+
+  this.addDeletedIndex = function(index) {
+    if (!isDefined(this.indicesDeleted)) {
+      this.indicesDeleted = [];
+    }
+    this.indicesDeleted.push(index);
+  };
+
+}
+
+function ClusterHealth(health) {
+  this.status = health.status;
+  this.cluster_name = health.cluster_name;
+  this.initializing_shards = health.initializing_shards;
+  this.active_primary_shards = health.active_primary_shards;
+  this.active_shards = health.active_shards;
+  this.relocating_shards = health.relocating_shards;
+  this.unassigned_shards = health.unassigned_shards;
+  this.number_of_nodes = health.number_of_nodes;
+  this.number_of_data_nodes = health.number_of_data_nodes;
+  this.timed_out = health.timed_out;
+  this.shards = this.active_shards + this.relocating_shards +
+      this.unassigned_shards + this.initializing_shards;
+  this.fetched_at = getTimeString(new Date());
+}
+
+function ClusterMapping(data) {
+
+  this.getIndices = function() {
+    return Object.keys(data);
+  };
+
+  this.getTypes = function(index) {
+    var indexMapping = getProperty(data, index + '.mappings', {});
+    return Object.keys(indexMapping);
+  };
+
+}
+
+function ClusterSettings(settings) {
+  // FIXME: 0.90/1.0 check
+  var valid = [
+    // cluster
+    'cluster.blocks.read_only',
+    'indices.ttl.interval',
+    'indices.cache.filter.size',
+    'discovery.zen.minimum_master_nodes',
+    // recovery
+    'indices.recovery.concurrent_streams',
+    'indices.recovery.compress',
+    'indices.recovery.file_chunk_size',
+    'indices.recovery.translog_ops',
+    'indices.recovery.translog_size',
+    'indices.recovery.max_bytes_per_sec',
+    // routing
+    'cluster.routing.allocation.node_initial_primaries_recoveries',
+    'cluster.routing.allocation.cluster_concurrent_rebalance',
+    'cluster.routing.allocation.awareness.attributes',
+    'cluster.routing.allocation.node_concurrent_recoveries',
+    'cluster.routing.allocation.disable_allocation',
+    'cluster.routing.allocation.disable_replica_allocation'
+  ];
+  var instance = this;
+  ['persistent', 'transient'].forEach(function(type) {
+    instance[type] = {};
+    var currentSettings = settings[type];
+    valid.forEach(function(setting) {
+      instance[type][setting] = getProperty(currentSettings, setting);
+    });
+  });
+}
+
 function Cluster(health, state, stats, nodesStats, settings, aliases, nodes,
                  main) {
   this.created_at = new Date().getTime();
@@ -2833,159 +2987,6 @@ function Cluster(health, state, stats, nodesStats, settings, aliases, nodes,
 
 }
 
-function ClusterChanges() {
-
-  this.nodeJoins = null;
-  this.nodeLeaves = null;
-  this.indicesCreated = null;
-  this.indicesDeleted = null;
-
-  this.docDelta = 0;
-  this.dataDelta = 0;
-
-  this.setDocDelta = function(delta) {
-    this.docDelta = delta;
-  };
-
-  this.getDocDelta = function() {
-    return this.docDelta;
-  };
-
-  this.absDocDelta = function() {
-    return Math.abs(this.docDelta);
-  };
-
-  this.absDataDelta = function() {
-    return readablizeBytes(Math.abs(this.dataDelta));
-  };
-
-  this.getDataDelta = function() {
-    return this.dataDelta;
-  };
-
-  this.setDataDelta = function(delta) {
-    this.dataDelta = delta;
-  };
-
-  this.hasChanges = function() {
-    return (
-      isDefined(this.nodeJoins) ||
-      isDefined(this.nodeLeaves) ||
-      isDefined(this.indicesCreated) ||
-      isDefined(this.indicesDeleted)
-      );
-  };
-
-  this.addJoiningNode = function(node) {
-    this.changes = true;
-    if (!isDefined(this.nodeJoins)) {
-      this.nodeJoins = [];
-    }
-    this.nodeJoins.push(node);
-  };
-
-  this.addLeavingNode = function(node) {
-    this.changes = true;
-    if (!isDefined(this.nodeLeaves)) {
-      this.nodeLeaves = [];
-    }
-    this.nodeLeaves.push(node);
-  };
-
-  this.hasJoins = function() {
-    return isDefined(this.nodeJoins);
-  };
-
-  this.hasLeaves = function() {
-    return isDefined(this.nodeLeaves);
-  };
-
-  this.hasCreatedIndices = function() {
-    return isDefined(this.indicesCreated);
-  };
-
-  this.hasDeletedIndices = function() {
-    return isDefined(this.indicesDeleted);
-  };
-
-  this.addCreatedIndex = function(index) {
-    if (!isDefined(this.indicesCreated)) {
-      this.indicesCreated = [];
-    }
-    this.indicesCreated.push(index);
-  };
-
-  this.addDeletedIndex = function(index) {
-    if (!isDefined(this.indicesDeleted)) {
-      this.indicesDeleted = [];
-    }
-    this.indicesDeleted.push(index);
-  };
-
-}
-
-function ClusterHealth(health) {
-  this.status = health.status;
-  this.cluster_name = health.cluster_name;
-  this.initializing_shards = health.initializing_shards;
-  this.active_primary_shards = health.active_primary_shards;
-  this.active_shards = health.active_shards;
-  this.relocating_shards = health.relocating_shards;
-  this.unassigned_shards = health.unassigned_shards;
-  this.number_of_nodes = health.number_of_nodes;
-  this.number_of_data_nodes = health.number_of_data_nodes;
-  this.timed_out = health.timed_out;
-  this.shards = this.active_shards + this.relocating_shards +
-      this.unassigned_shards + this.initializing_shards;
-  this.fetched_at = getTimeString(new Date());
-}
-
-function ClusterMapping(data) {
-
-  this.getIndices = function() {
-    return Object.keys(data);
-  };
-
-  this.getTypes = function(index) {
-    var indexMapping = getProperty(data, index + '.mappings', {});
-    return Object.keys(indexMapping);
-  };
-
-}
-
-function ClusterSettings(settings) {
-  // FIXME: 0.90/1.0 check
-  var valid = [
-    // cluster
-    'cluster.blocks.read_only',
-    'indices.ttl.interval',
-    'indices.cache.filter.size',
-    'discovery.zen.minimum_master_nodes',
-    // recovery
-    'indices.recovery.concurrent_streams',
-    'indices.recovery.compress',
-    'indices.recovery.file_chunk_size',
-    'indices.recovery.translog_ops',
-    'indices.recovery.translog_size',
-    'indices.recovery.max_bytes_per_sec',
-    // routing
-    'cluster.routing.allocation.node_initial_primaries_recoveries',
-    'cluster.routing.allocation.cluster_concurrent_rebalance',
-    'cluster.routing.allocation.awareness.attributes',
-    'cluster.routing.allocation.node_concurrent_recoveries',
-    'cluster.routing.allocation.disable_allocation',
-    'cluster.routing.allocation.disable_replica_allocation'
-  ];
-  var instance = this;
-  ['persistent', 'transient'].forEach(function(type) {
-    instance[type] = {};
-    var currentSettings = settings[type];
-    valid.forEach(function(setting) {
-      instance[type][setting] = getProperty(currentSettings, setting);
-    });
-  });
-}
-
 function EditableIndexSettings(settings) {
   // FIXME: 0.90/1.0 check
   this.valid_settings = [
@@ -3082,65 +3083,6 @@ function HotThreads(data) {
   });
 }
 
-function Index(indexName, clusterState, indexStats, aliases) {
-  this.name = indexName;
-  this.shards = null;
-  this.metadata = {};
-  this.state = 'close';
-  this.num_of_shards = 0;
-  this.num_of_replicas = 0;
-  this.aliases = [];
-  if (isDefined(aliases)) {
-    var indexAliases = aliases.aliases;
-    if (isDefined(indexAliases)) {
-      this.aliases = Object.keys(aliases.aliases);
-    }
-  }
-
-  if (isDefined(clusterState)) {
-    var routing = getProperty(clusterState, 'routing_table.indices');
-    this.state = 'open';
-    if (isDefined(routing)) {
-      var shards = Object.keys(routing[indexName].shards);
-      this.num_of_shards = shards.length;
-      var shardMap = routing[indexName].shards;
-      this.num_of_replicas = shardMap[0].length - 1;
-    }
-  }
-  this.num_docs = getProperty(indexStats, 'primaries.docs.count', 0);
-  this.deleted_docs = getProperty(indexStats, 'primaries.docs.deleted', 0);
-  this.size_in_bytes = getProperty(indexStats,
-      'primaries.store.size_in_bytes', 0);
-  this.total_size_in_bytes = getProperty(indexStats,
-      'total.store.size_in_bytes', 0);
-
-  this.unassigned = [];
-  this.unhealthy = false;
-
-  if (isDefined(clusterState) && isDefined(clusterState.routing_table)) {
-    var instance = this;
-    var shardsMap = clusterState.routing_table.indices[this.name].shards;
-    Object.keys(shardsMap).forEach(function(shardNum) {
-      shardsMap[shardNum].forEach(function(shard) {
-        if (shard.state != 'STARTED') {
-          instance.unhealthy = true;
-        }
-      });
-    });
-  }
-
-  this.special = this.name.indexOf('.') === 0 || this.name.indexOf('_') === 0;
-
-  this.equals = function(index) {
-    return index !== null && index.name == this.name;
-  };
-
-  this.closed = this.state === 'close';
-
-  this.open = this.state === 'open';
-
-}
-
 function IndexMetadata(index, metadata) {
   this.index = index;
   this.mappings = metadata.mappings;
@@ -3221,55 +3163,62 @@ function IndexTemplate(name, body) {
   this.body = body;
 }
 
-function Node(nodeId, nodeStats, nodeInfo) {
-  this.id = nodeId;
-  this.name = nodeInfo.name;
-  this.elasticVersion = nodeInfo.version;
-  this.jvmVersion = nodeInfo.jvm.version;
-  this.availableProcessors = nodeInfo.os.available_processors;
-  this.transportAddress = nodeInfo.transport_address;
-  this.host = nodeInfo.host;
+function Index(indexName, clusterState, indexStats, aliases) {
+  this.name = indexName;
+  this.shards = null;
+  this.metadata = {};
+  this.state = 'close';
+  this.num_of_shards = 0;
+  this.num_of_replicas = 0;
+  this.aliases = [];
+  if (isDefined(aliases)) {
+    var indexAliases = aliases.aliases;
+    if (isDefined(indexAliases)) {
+      this.aliases = Object.keys(aliases.aliases);
+    }
+  }
 
-  var roles = getProperty(nodeInfo, 'roles', []);
-  this.master = roles.indexOf('master') < 0 ? false : true;
-  this.data = (roles.indexOf('data') < 0 && roles.indexOf('data_content') < 0
-    && roles.indexOf('data_hot') < 0 && roles.indexOf('data_warm') < 0
-    && roles.indexOf('data_cold') < 0) ? false : true;
-  this.client = !this.master && !this.data;
-  this.current_master = false;
+  if (isDefined(clusterState)) {
+    var routing = getProperty(clusterState, 'routing_table.indices');
+    this.state = 'open';
+    if (isDefined(routing)) {
+      var shards = Object.keys(routing[indexName].shards);
+      this.num_of_shards = shards.length;
+      var shardMap = routing[indexName].shards;
+      this.num_of_replicas = shardMap[0].length - 1;
+    }
+  }
+  this.num_docs = getProperty(indexStats, 'primaries.docs.count', 0);
+  this.deleted_docs = getProperty(indexStats, 'primaries.docs.deleted', 0);
+  this.size_in_bytes = getProperty(indexStats,
+      'primaries.store.size_in_bytes', 0);
+  this.total_size_in_bytes = getProperty(indexStats,
+      'total.store.size_in_bytes', 0);
 
-  this.stats = nodeStats;
-  this.uptime = nodeStats.jvm.uptime_in_millis;
+  this.unassigned = [];
+  this.unhealthy = false;
 
-  this.heap_used = readablizeBytes(getProperty(this.stats,
-    'jvm.mem.heap_used_in_bytes'));
+  if (isDefined(clusterState) && isDefined(clusterState.routing_table)) {
+    var instance = this;
+    var shardsMap = clusterState.routing_table.indices[this.name].shards;
+    Object.keys(shardsMap).forEach(function(shardNum) {
+      shardsMap[shardNum].forEach(function(shard) {
+        if (shard.state != 'STARTED') {
+          instance.unhealthy = true;
+        }
+      });
+    });
+  }
 
-  this.heap_committed = readablizeBytes(getProperty(this.stats,
-    'jvm.mem.heap_committed_in_bytes'));
+  this.special = this.name.indexOf('.') === 0 || this.name.indexOf('_') === 0;
 
-  this.heap_used_percent = getProperty(this.stats, 'jvm.mem.heap_used_percent');
-
-  this.heap_max = readablizeBytes(getProperty(this.stats,
-    'jvm.mem.heap_max_in_bytes'));
-
-  this.disk_total_in_bytes = getProperty(this.stats, 'fs.total.total_in_bytes');
-  this.disk_free_in_bytes = getProperty(this.stats, 'fs.total.free_in_bytes');
-  var diskUsedInBytes = (this.disk_total_in_bytes - this.disk_free_in_bytes);
-  var usedRatio = (diskUsedInBytes / this.disk_total_in_bytes);
-  this.disk_used_percent = Math.round(100 * usedRatio);
-
-  this.cpu = getProperty(this.stats, 'process.cpu.percent');
-
-  var loadAverage = getProperty(this.stats, 'os.cpu.load_average');
-  this.load_average = loadAverage === undefined ? 0 : loadAverage['1m'];
-
-  this.setCurrentMaster = function() {
-    this.current_master = true;
+  this.equals = function(index) {
+    return index !== null && index.name == this.name;
   };
 
-  this.equals = function(node) {
-    return node.id === this.id;
-  };
+  this.closed = this.state === 'close';
+
+  this.open = this.state === 'open';
 
 }
 
@@ -3312,6 +3261,58 @@ function NodeStats(id, stats) {
   this.id = id;
   this.name = stats.name;
   this.stats = stats;
+}
+
+function Node(nodeId, nodeStats, nodeInfo) {
+  this.id = nodeId;
+  this.name = nodeInfo.name;
+  this.elasticVersion = nodeInfo.version;
+  this.jvmVersion = nodeInfo.jvm.version;
+  this.availableProcessors = nodeInfo.os.available_processors;
+  this.transportAddress = nodeInfo.transport_address;
+  this.host = nodeInfo.host;
+
+  var roles = getProperty(nodeInfo, 'roles', []);
+  this.master = roles.indexOf('master') < 0 ? false : true;
+  this.data = (roles.indexOf('data') < 0 && roles.indexOf('data_content') < 0 &&
+    roles.indexOf('data_hot') < 0 && roles.indexOf('data_warm') < 0 &&
+    roles.indexOf('data_cold') < 0) ? false : true;
+  this.client = !this.master && !this.data;
+  this.current_master = false;
+
+  this.stats = nodeStats;
+  this.uptime = nodeStats.jvm.uptime_in_millis;
+
+  this.heap_used = readablizeBytes(getProperty(this.stats,
+    'jvm.mem.heap_used_in_bytes'));
+
+  this.heap_committed = readablizeBytes(getProperty(this.stats,
+    'jvm.mem.heap_committed_in_bytes'));
+
+  this.heap_used_percent = getProperty(this.stats, 'jvm.mem.heap_used_percent');
+
+  this.heap_max = readablizeBytes(getProperty(this.stats,
+    'jvm.mem.heap_max_in_bytes'));
+
+  this.disk_total_in_bytes = getProperty(this.stats, 'fs.total.total_in_bytes');
+  this.disk_free_in_bytes = getProperty(this.stats, 'fs.total.free_in_bytes');
+  var diskUsedInBytes = (this.disk_total_in_bytes - this.disk_free_in_bytes);
+  var usedRatio = (diskUsedInBytes / this.disk_total_in_bytes);
+  this.disk_used_percent = Math.round(100 * usedRatio);
+
+  this.cpu = getProperty(this.stats, 'process.cpu.percent');
+
+  var loadAverage = getProperty(this.stats, 'os.cpu.load_average');
+  this.load_average = loadAverage === undefined ? 0 : loadAverage['1m'];
+
+  this.setCurrentMaster = function() {
+    this.current_master = true;
+  };
+
+  this.equals = function(node) {
+    return node.id === this.id;
+  };
+
 }
 
 function PercolateQuery(queryInfo) {
@@ -3458,6 +3459,12 @@ function Repository(name, info) {
   };
 }
 
+function ShardStats(shard, index, stats) {
+  this.shard = shard;
+  this.index = index;
+  this.stats = stats;
+}
+
 function Shard(routing) {
   this.primary = routing.primary;
   this.shard = routing.shard;
@@ -3465,12 +3472,6 @@ function Shard(routing) {
   this.node = routing.node;
   this.index = routing.index;
   this.id = this.node + '_' + this.shard + '_' + this.index;
-}
-
-function ShardStats(shard, index, stats) {
-  this.shard = shard;
-  this.index = index;
-  this.stats = stats;
 }
 
 function Snapshot(info) {
@@ -3501,7 +3502,7 @@ function Version(version, name) {
   var patch;
   var value = version;
   var valid = false;
-  var distribution = name;
+  var distribution = name || 'elasticsearch';
 
   if (checkVersion.test(value)) {
     valid = true;
@@ -3531,8 +3532,16 @@ function Version(version, name) {
     return value;
   };
 
+  this.getDistribution = function() {
+    return distribution;
+  };
+
   this.isElasticsearch = function() {
-    return distribution == "elasticsearch";
+    return distribution === 'elasticsearch';
+  };
+
+  this.isOpenSearch = function() {
+    return distribution === 'opensearch';
   };
 
   this.isGreater = function(other) {
@@ -3544,6 +3553,15 @@ function Version(version, name) {
         patch >= other.getPatch()
     );
     return (higherMajor || higherMinor || higherPatch);
+  };
+
+  // OpenSearch 2.x and 3.x specific version checks
+  this.isOpenSearch2OrLater = function() {
+    return this.isOpenSearch() && major >= 2;
+  };
+
+  this.isOpenSearch3OrLater = function() {
+    return this.isOpenSearch() && major >= 3;
   };
 
 }
@@ -3953,8 +3971,8 @@ function IndexFilter(name, closed, special, healthy, asc, timestamp) {
       catch (err) { // if not valid regexp, still try normal matching
         matches = index.name.indexOf(this.name.toLowerCase()) != -1;
         if (!matches) {
-          for (var idx = 0; idx < index.aliases.length; idx++) {
-            var alias = index.aliases[idx].toLowerCase();
+          for (var idx2 = 0; idx2 < index.aliases.length; idx2++) {
+            var alias = index.aliases[idx2].toLowerCase();
             matches = true;
             if ((matches = (alias.indexOf(this.name.toLowerCase()) != -1))) {
               break;
@@ -4647,7 +4665,8 @@ kopf.factory('ElasticService', ['$http', '$q', '$timeout', '$location',
               DebugService.debug('Attemping to connect with [' + host + '/]');
               instance.connect(host + '/');
             } else {
-              var distribution = isDefined(data.version.distribution) ? data.version.distribution : "elasticsearch";
+              var distribution = isDefined(data.version.distribution) ?
+                  data.version.distribution : 'elasticsearch';
               instance.setVersion(data.version.number, distribution);
               instance.connected = true;
               if (!instance.autoRefreshStarted) {
@@ -4661,7 +4680,8 @@ kopf.factory('ElasticService', ['$http', '$q', '$timeout', '$location',
           function(data) {
             if (data.status == 503) {
               DebugService.debug('No active master, switching to basic mode');
-              var distribution = isDefined(data.version.distribution) ? data.version.distribution : "elasticsearch";
+              var distribution = isDefined(data.version.distribution) ?
+                  data.version.distribution : 'elasticsearch';
               instance.setVersion(data.version.number, distribution);
               instance.connected = true;
               instance.setBrokenCluster(true);
