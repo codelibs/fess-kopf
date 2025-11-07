@@ -1,11 +1,11 @@
-function Version(version, name) {
+function Version(version, distribution) {
   var checkVersion = new RegExp('(\\d+)\\.(\\d+)\\.(\\d+)\\.*');
   var major;
   var minor;
   var patch;
   var value = version;
+  var dist = distribution || 'opensearch';
   var valid = false;
-  var distribution = name;
 
   if (checkVersion.test(value)) {
     valid = true;
@@ -35,10 +35,6 @@ function Version(version, name) {
     return value;
   };
 
-  this.isElasticsearch = function() {
-    return distribution == "elasticsearch";
-  };
-
   this.isGreater = function(other) {
     var higherMajor = major > other.getMajor();
     var higherMinor = major == other.getMajor() && minor > other.getMinor();
@@ -48,6 +44,15 @@ function Version(version, name) {
         patch >= other.getPatch()
     );
     return (higherMajor || higherMinor || higherPatch);
+  };
+
+  // OpenSearch 2.x and 3.x version checks
+  this.isOpenSearch2OrLater = function() {
+    return major >= 2;
+  };
+
+  this.isOpenSearch3OrLater = function() {
+    return major >= 3;
   };
 
 }

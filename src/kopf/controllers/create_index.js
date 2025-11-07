@@ -1,6 +1,6 @@
 kopf.controller('CreateIndexController', ['$scope', 'AlertService',
-  'ElasticService', 'AceEditorService',
-  function($scope, AlertService, ElasticService, AceEditorService) {
+  'OpenSearchService', 'AceEditorService',
+  function($scope, AlertService, OpenSearchService, AceEditorService) {
 
     $scope.source_index = null;
     $scope.shards = '';
@@ -14,7 +14,7 @@ kopf.controller('CreateIndexController', ['$scope', 'AlertService',
     };
 
     $scope.updateEditor = function() {
-      ElasticService.getIndexMetadata($scope.source_index,
+      OpenSearchService.getIndexMetadata($scope.source_index,
           function(meta) {
             var body = {settings: meta.settings, mappings: meta.mappings};
             $scope.editor.setValue(JSON.stringify(body, null, 2));
@@ -44,9 +44,9 @@ kopf.controller('CreateIndexController', ['$scope', 'AlertService',
             }
             bodyString = JSON.stringify(body);
           }
-          ElasticService.createIndex($scope.name, bodyString,
+          OpenSearchService.createIndex($scope.name, bodyString,
               function(response) {
-                ElasticService.refresh();
+                OpenSearchService.refresh();
               },
               function(error) {
                 AlertService.error('Error while creating index', error);
@@ -60,7 +60,7 @@ kopf.controller('CreateIndexController', ['$scope', 'AlertService',
       if (!isDefined($scope.editor)) {
         $scope.editor = AceEditorService.init('index-settings-editor');
       }
-      $scope.indices = ElasticService.getIndices();
+      $scope.indices = OpenSearchService.getIndices();
       $scope.source_index = null;
       $scope.editor.setValue('{}');
       $scope.shards = '';

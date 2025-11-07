@@ -3,7 +3,7 @@
 // http://localhost:9200
 // http://user:password@localhost:9200
 // https://localhost:9200
-function ESConnection(url, withCredentials) {
+function OpenSearchConnection(url, withCredentials) {
   if (url.indexOf('http://') !== 0 && url.indexOf('https://') !== 0) {
     url = 'http://' + url;
   }

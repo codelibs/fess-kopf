@@ -1,9 +1,9 @@
-kopf.directive('ngNavbarSection', ['$location', 'ElasticService',
-  function($location, ElasticService) {
+kopf.directive('ngNavbarSection', ['$location', 'OpenSearchService',
+  function($location, OpenSearchService) {
 
     return {
       template: function(elem, attrs) {
-        if (!attrs.version || ElasticService.versionCheck(attrs.version)) {
+        if (!attrs.version || OpenSearchService.versionCheck(attrs.version)) {
           var target = attrs.target;
           var text = attrs.text;
           var icon = attrs.icon;

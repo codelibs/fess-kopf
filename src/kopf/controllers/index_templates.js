@@ -1,7 +1,7 @@
 kopf.controller('IndexTemplatesController', ['$scope', 'ConfirmDialogService',
-  'AlertService', 'AceEditorService', 'ElasticService',
+  'AlertService', 'AceEditorService', 'OpenSearchService',
   function($scope, ConfirmDialogService, AlertService, AceEditorService,
-           ElasticService) {
+           OpenSearchService) {
 
     var TemplateBase = JSON.stringify(
         {
@@ -33,7 +33,7 @@ kopf.controller('IndexTemplatesController', ['$scope', 'ConfirmDialogService',
     };
 
     $scope.loadTemplates = function() {
-      ElasticService.getIndexTemplates(
+      OpenSearchService.getIndexTemplates(
           function(templates) {
             $scope.paginator.setCollection(templates);
             $scope.page = $scope.paginator.getPage();
@@ -50,7 +50,7 @@ kopf.controller('IndexTemplatesController', ['$scope', 'ConfirmDialogService',
           $scope.editor.format();
           if (!isDefined($scope.editor.error)) {
             $scope.template.body = $scope.editor.getValue();
-            ElasticService.createIndexTemplate($scope.template,
+            OpenSearchService.createIndexTemplate($scope.template,
                 function(response) {
                   $scope.loadTemplates();
                   AlertService.success(
@@ -77,7 +77,7 @@ kopf.controller('IndexTemplatesController', ['$scope', 'ConfirmDialogService',
           template.body,
           'Delete',
           function() {
-            ElasticService.deleteIndexTemplate(template.name,
+            OpenSearchService.deleteIndexTemplate(template.name,
                 function(response) {
                   AlertService.success('Template successfully deleted',
                       response);

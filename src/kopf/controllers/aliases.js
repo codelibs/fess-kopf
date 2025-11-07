@@ -1,6 +1,6 @@
 kopf.controller('AliasesController', ['$scope', 'AlertService',
-  'AceEditorService', 'ElasticService',
-  function($scope, AlertService, AceEditorService, ElasticService) {
+  'AceEditorService', 'OpenSearchService',
+  function($scope, AlertService, AceEditorService, OpenSearchService) {
 
     $scope.paginator = new Paginator(1, 10, [], new AliasFilter('', ''));
     $scope.page = $scope.paginator.getPage();
@@ -12,10 +12,10 @@ kopf.controller('AliasesController', ['$scope', 'AlertService',
 
     $scope.$watch(
         function() {
-          return ElasticService.cluster;
+          return OpenSearchService.cluster;
         },
         function(filter, previous) {
-          $scope.indices = ElasticService.getIndices();
+          $scope.indices = OpenSearchService.getIndices();
         },
         true
     );
@@ -119,7 +119,7 @@ kopf.controller('AliasesController', ['$scope', 'AlertService',
       if (adds.length === 0 && deletes.length === 0) {
         AlertService.warn('No changes were made: nothing to save');
       } else {
-        ElasticService.updateAliases(adds, deletes,
+        OpenSearchService.updateAliases(adds, deletes,
             function(response) {
               AlertService.success('Aliases were successfully updated',
                   response);
@@ -133,7 +133,7 @@ kopf.controller('AliasesController', ['$scope', 'AlertService',
     };
 
     $scope.loadAliases = function() {
-      ElasticService.fetchAliases(
+      OpenSearchService.fetchAliases(
           function(indexAliases) {
             $scope.original = indexAliases.map(function(ia) {
               return ia.clone();
@@ -148,7 +148,7 @@ kopf.controller('AliasesController', ['$scope', 'AlertService',
     };
 
     $scope.initializeController = function() {
-      $scope.indices = ElasticService.getIndices();
+      $scope.indices = OpenSearchService.getIndices();
       $scope.loadAliases();
       $scope.initEditor();
     };

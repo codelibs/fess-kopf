@@ -1,6 +1,6 @@
 kopf.controller('IndexSettingsController', ['$scope', '$location',
-  'AlertService', 'ElasticService',
-  function($scope, $location, AlertService, ElasticService) {
+  'AlertService', 'OpenSearchService',
+  function($scope, $location, AlertService, OpenSearchService) {
 
     $scope.index = null;
     $scope.settings = null;
@@ -17,12 +17,12 @@ kopf.controller('IndexSettingsController', ['$scope', '$location',
           newSettings[setting] = editableSettings[setting];
         }
       });
-      ElasticService.updateIndexSettings(index,
+      OpenSearchService.updateIndexSettings(index,
           JSON.stringify(newSettings, undefined, ''),
           function(response) {
             AlertService.success('Index settings were successfully updated',
                 response);
-            ElasticService.refresh();
+            OpenSearchService.refresh();
           },
           function(error) {
             AlertService.error('Error while updating index settings', error);
@@ -32,7 +32,7 @@ kopf.controller('IndexSettingsController', ['$scope', '$location',
 
     $scope.initializeController = function() {
       var index = $location.search().index;
-      ElasticService.getIndexMetadata(index,
+      OpenSearchService.getIndexMetadata(index,
           function(metadata) {
             $scope.index = index;
             $scope.settings = metadata.settings;

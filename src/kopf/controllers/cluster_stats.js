@@ -1,14 +1,14 @@
-kopf.controller('ClusterStatsController', ['$scope', 'ElasticService',
-  function($scope, ElasticService) {
+kopf.controller('ClusterStatsController', ['$scope', 'OpenSearchService',
+  function($scope, OpenSearchService) {
 
     $scope.cluster = undefined;
 
     $scope.$watch(
         function() {
-          return ElasticService.cluster;
+          return OpenSearchService.cluster;
         },
         function(newValue, oldValue) {
-          $scope.cluster = ElasticService.cluster;
+          $scope.cluster = OpenSearchService.cluster;
         }
     );
 

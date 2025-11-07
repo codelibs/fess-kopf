@@ -1,6 +1,6 @@
 kopf.controller('NodesController', ['$scope', 'ConfirmDialogService',
-  'AlertService', 'ElasticService', 'AppState',
-  function($scope, ConfirmDialogService, AlertService, ElasticService,
+  'AlertService', 'OpenSearchService', 'AppState',
+  function($scope, ConfirmDialogService, AlertService, OpenSearchService,
            AppState) {
 
     $scope.sortBy = 'name';
@@ -29,7 +29,7 @@ kopf.controller('NodesController', ['$scope', 'ConfirmDialogService',
 
     $scope.$watch(
         function() {
-          return ElasticService.cluster;
+          return OpenSearchService.cluster;
         },
         function(newValue, oldValue) {
           $scope.refresh();
@@ -37,14 +37,14 @@ kopf.controller('NodesController', ['$scope', 'ConfirmDialogService',
     );
 
     $scope.refresh = function() {
-      var nodes = ElasticService.getNodes();
+      var nodes = OpenSearchService.getNodes();
       $scope.nodes = nodes.filter(function(node) {
         return $scope.filter.matches(node);
       });
     };
 
     $scope.showNodeStats = function(nodeId) {
-      ElasticService.getNodeStats(nodeId,
+      OpenSearchService.getNodeStats(nodeId,
           function(nodeStats) {
             $scope.displayInfo('stats for ' + nodeStats.name, nodeStats.stats);
           },

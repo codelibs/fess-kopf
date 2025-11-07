@@ -90,7 +90,12 @@ module.exports = function(grunt) {
       appjs: {
         src: [
           'src/kopf/kopf.js',
-          'src/kopf/*/*.js',
+          'src/kopf/opensearch/*.js',
+          'src/kopf/models/*.js',
+          'src/kopf/services/*.js',
+          'src/kopf/filters/*.js',
+          'src/kopf/directives/*.js',
+          'src/kopf/controllers/*.js',
           'src/kopf/util.js',
         ],
         dest: '_site/dist/kopf.js'
