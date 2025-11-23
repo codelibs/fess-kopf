@@ -125,4 +125,176 @@ describe('Version', () => {
       expect(version.getMinor()).toBe(17);
     });
   });
+
+  describe('OpenSearch 3 specific features', () => {
+    test('should correctly identify OpenSearch 3.0.0', () => {
+      const version = new Version('3.0.0');
+      expect(version.isOpenSearch3OrLater()).toBe(true);
+      expect(version.isOpenSearch2OrLater()).toBe(true);
+    });
+
+    test('should correctly identify OpenSearch 3.1.0', () => {
+      const version = new Version('3.1.0');
+      expect(version.isOpenSearch3OrLater()).toBe(true);
+      expect(version.getMajor()).toBe(3);
+      expect(version.getMinor()).toBe(1);
+    });
+
+    test('should handle OpenSearch 3.x.x range', () => {
+      const versions = [
+        '3.0.0',
+        '3.1.0',
+        '3.5.2',
+        '3.10.15',
+        '3.99.99'
+      ];
+
+      versions.forEach(versionStr => {
+        const version = new Version(versionStr);
+        expect(version.isOpenSearch3OrLater()).toBe(true);
+        expect(version.getMajor()).toBe(3);
+      });
+    });
+
+    test('should distinguish between OpenSearch 2 and 3', () => {
+      const v2 = new Version('2.99.99');
+      const v3 = new Version('3.0.0');
+
+      expect(v2.isOpenSearch2OrLater()).toBe(true);
+      expect(v2.isOpenSearch3OrLater()).toBe(false);
+
+      expect(v3.isOpenSearch2OrLater()).toBe(true);
+      expect(v3.isOpenSearch3OrLater()).toBe(true);
+    });
+
+    test('should compare OpenSearch 3 versions correctly', () => {
+      const v30 = new Version('3.0.0');
+      const v31 = new Version('3.1.0');
+      const v35 = new Version('3.5.2');
+
+      expect(v31.isGreater(v30)).toBe(true);
+      expect(v35.isGreater(v31)).toBe(true);
+      expect(v30.isGreater(v35)).toBe(false);
+    });
+  });
+
+  describe('Distribution parameter', () => {
+    test('should accept distribution parameter', () => {
+      const version = new Version('3.0.0', 'opensearch');
+      expect(version.isValid()).toBe(true);
+      expect(version.getMajor()).toBe(3);
+    });
+
+    test('should default to opensearch distribution', () => {
+      const version1 = new Version('3.0.0');
+      const version2 = new Version('3.0.0', 'opensearch');
+
+      expect(version1.isValid()).toBe(version2.isValid());
+      expect(version1.getMajor()).toBe(version2.getMajor());
+    });
+  });
+
+  describe('Edge cases and error handling', () => {
+    test('should handle versions with extra segments', () => {
+      const version = new Version('3.0.0.1');
+      expect(version.isValid()).toBe(true);
+      expect(version.getMajor()).toBe(3);
+      expect(version.getMinor()).toBe(0);
+      expect(version.getPatch()).toBe(0);
+    });
+
+    test('should handle versions with pre-release identifiers', () => {
+      const versions = [
+        '3.0.0-alpha',
+        '3.0.0-beta.1',
+        '3.0.0-rc.1',
+        '3.1.0-SNAPSHOT'
+      ];
+
+      versions.forEach(versionStr => {
+        const version = new Version(versionStr);
+        expect(version.isValid()).toBe(true);
+        expect(version.isOpenSearch3OrLater()).toBe(true);
+      });
+    });
+
+    test('should handle empty version string', () => {
+      const version = new Version('');
+      expect(version.isValid()).toBe(false);
+    });
+
+    test('should handle null version', () => {
+      const version = new Version(null);
+      expect(version.isValid()).toBe(false);
+    });
+
+    test('should handle undefined version', () => {
+      const version = new Version(undefined);
+      expect(version.isValid()).toBe(false);
+    });
+
+    test('should handle version with only major number', () => {
+      const version = new Version('3');
+      expect(version.isValid()).toBe(false);
+    });
+
+    test('should handle version with only major.minor', () => {
+      const version = new Version('3.0');
+      expect(version.isValid()).toBe(false);
+    });
+  });
+
+  describe('Version comparison edge cases', () => {
+    test('should handle comparison with invalid version', () => {
+      const validVersion = new Version('3.0.0');
+      const invalidVersion = new Version('invalid');
+
+      // isGreater should handle this gracefully
+      expect(() => {
+        validVersion.isGreater(invalidVersion);
+      }).not.toThrow();
+    });
+
+    test('should compare versions with different patch levels', () => {
+      const v301 = new Version('3.0.1');
+      const v300 = new Version('3.0.0');
+
+      expect(v301.isGreater(v300)).toBe(true);
+      expect(v300.isGreater(v301)).toBe(false);
+    });
+
+    test('should handle cross-major version comparisons', () => {
+      const v2 = new Version('2.99.99');
+      const v3 = new Version('3.0.0');
+
+      expect(v3.isGreater(v2)).toBe(true);
+      expect(v2.isGreater(v3)).toBe(false);
+    });
+  });
+
+  describe('Future OpenSearch versions', () => {
+    test('should support OpenSearch 4.x and beyond', () => {
+      const v4 = new Version('4.0.0');
+      const v5 = new Version('5.0.0');
+      const v10 = new Version('10.0.0');
+
+      expect(v4.isOpenSearch2OrLater()).toBe(true);
+      expect(v4.isOpenSearch3OrLater()).toBe(true);
+
+      expect(v5.isOpenSearch2OrLater()).toBe(true);
+      expect(v5.isOpenSearch3OrLater()).toBe(true);
+
+      expect(v10.isOpenSearch2OrLater()).toBe(true);
+      expect(v10.isOpenSearch3OrLater()).toBe(true);
+    });
+
+    test('should compare future versions correctly', () => {
+      const v3 = new Version('3.0.0');
+      const v4 = new Version('4.0.0');
+      const v5 = new Version('5.0.0');
+
+      expect(v4.isGreater(v3)).toBe(true);
+      expect(v5.isGreater(v4)).toBe(true);
+    });
+  });
 });
