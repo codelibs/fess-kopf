@@ -5,7 +5,8 @@ kopf.factory('ExternalSettingsService', ['DebugService',
 
     var ES_HOST = 'location';
 
-    var ES_ROOT_PATH = 'elasticsearch_root_path';
+    var OPENSEARCH_ROOT_PATH = 'opensearch_root_path';
+    var ES_ROOT_PATH = 'elasticsearch_root_path'; // Deprecated: for backward compatibility
 
     var WITH_CREDENTIALS = 'with_credentials';
 
@@ -56,12 +57,39 @@ kopf.factory('ExternalSettingsService', ['DebugService',
       return settings;
     };
 
-    this.getElasticsearchHost = function() {
+    /**
+     * Gets the OpenSearch host URL from settings
+     *
+     * @returns {string} OpenSearch host URL
+     */
+    this.getOpenSearchHost = function() {
       return this.getSettings()[ES_HOST];
     };
 
+    // Deprecated: Use getOpenSearchHost() instead
+    this.getElasticsearchHost = function() {
+      return this.getOpenSearchHost();
+    };
+
+    /**
+     * Gets the OpenSearch root path from settings.
+     * Prefers opensearch_root_path but falls back to elasticsearch_root_path
+     * for backward compatibility.
+     *
+     * @returns {string} OpenSearch root path
+     */
+    this.getOpenSearchRootPath = function() {
+      var settings = this.getSettings();
+      // Prefer opensearch_root_path, fall back to elasticsearch_root_path
+      if (isDefined(settings[OPENSEARCH_ROOT_PATH])) {
+        return settings[OPENSEARCH_ROOT_PATH];
+      }
+      return settings[ES_ROOT_PATH];
+    };
+
+    // Deprecated: Use getOpenSearchRootPath() instead
     this.getElasticsearchRootPath = function() {
-      return this.getSettings()[ES_ROOT_PATH];
+      return this.getOpenSearchRootPath();
     };
 
     this.withCredentials = function() {

@@ -86,4 +86,29 @@ describe("ExternalSettingsService", function() {
         expect(service.settings).toEqual({refresh_rate: '1', theme: 'whatever'});
       });
 
+  it("should prefer opensearch_root_path over elasticsearch_root_path",
+      function() {
+        service.settings = {
+          opensearch_root_path: '/opensearch',
+          elasticsearch_root_path: '/es'
+        };
+        expect(service.getOpenSearchRootPath()).toEqual('/opensearch');
+      });
+
+  it("should fall back to elasticsearch_root_path when opensearch_root_path is not defined",
+      function() {
+        service.settings = {
+          elasticsearch_root_path: '/es'
+        };
+        expect(service.getOpenSearchRootPath()).toEqual('/es');
+      });
+
+  it("should support getElasticsearchRootPath as deprecated alias",
+      function() {
+        service.settings = {
+          opensearch_root_path: '/opensearch'
+        };
+        expect(service.getElasticsearchRootPath()).toEqual('/opensearch');
+      });
+
 });

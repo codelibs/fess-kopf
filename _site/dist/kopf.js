@@ -1108,12 +1108,13 @@ function Token(token, startOffset, endOffset, position) {
   this.position = position;
 }
 
-function Version(version) {
+function Version(version, distribution) {
   var checkVersion = new RegExp('(\\d+)\\.(\\d+)\\.(\\d+)\\.*');
   var major;
   var minor;
   var patch;
   var value = version;
+  var dist = distribution || 'opensearch';
   var valid = false;
 
   if (checkVersion.test(value)) {
@@ -2144,7 +2145,8 @@ kopf.factory('ExternalSettingsService', ['DebugService',
 
     var ES_HOST = 'location';
 
-    var ES_ROOT_PATH = 'elasticsearch_root_path';
+    var OPENSEARCH_ROOT_PATH = 'opensearch_root_path';
+    var ES_ROOT_PATH = 'elasticsearch_root_path'; // Deprecated: for backward compatibility
 
     var WITH_CREDENTIALS = 'with_credentials';
 
@@ -2195,12 +2197,39 @@ kopf.factory('ExternalSettingsService', ['DebugService',
       return settings;
     };
 
-    this.getElasticsearchHost = function() {
+    /**
+     * Gets the OpenSearch host URL from settings
+     *
+     * @returns {string} OpenSearch host URL
+     */
+    this.getOpenSearchHost = function() {
       return this.getSettings()[ES_HOST];
     };
 
+    // Deprecated: Use getOpenSearchHost() instead
+    this.getElasticsearchHost = function() {
+      return this.getOpenSearchHost();
+    };
+
+    /**
+     * Gets the OpenSearch root path from settings.
+     * Prefers opensearch_root_path but falls back to elasticsearch_root_path
+     * for backward compatibility.
+     *
+     * @returns {string} OpenSearch root path
+     */
+    this.getOpenSearchRootPath = function() {
+      var settings = this.getSettings();
+      // Prefer opensearch_root_path, fall back to elasticsearch_root_path
+      if (isDefined(settings[OPENSEARCH_ROOT_PATH])) {
+        return settings[OPENSEARCH_ROOT_PATH];
+      }
+      return settings[ES_ROOT_PATH];
+    };
+
+    // Deprecated: Use getOpenSearchRootPath() instead
     this.getElasticsearchRootPath = function() {
-      return this.getSettings()[ES_ROOT_PATH];
+      return this.getOpenSearchRootPath();
     };
 
     this.withCredentials = function() {
@@ -2399,7 +2428,7 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
       var root = ExternalSettingsService.getOpenSearchRootPath();
       var withCredentials = ExternalSettingsService.withCredentials();
       this.connection = new OpenSearchConnection(host + root, withCredentials);
-      DebugService.debug('Elasticseach connection:', this.connection);
+      DebugService.debug('OpenSearch connection:', this.connection);
       this.clusterRequest('GET', '/', {}, {},
           function(data) {
             if (data.OK) { // detected https://github.com/Asquera/elasticsearch-http-basic
@@ -4703,11 +4732,11 @@ kopf.controller('GlobalController', ['$scope', '$location', '$sce', '$window',
         },
         function(newValue, oldValue) {
           var version = OpenSearchService.getVersion();
-          if (version && version.isValid() && version.isElasticsearch()) {
+          if (version && version.isValid()) {
             var major = version.getMajor();
             if (major < parseInt($scope.version.charAt(0))) {
               AlertService.warn(
-                  'This version is not compatible with your elasticsearch version',
+                  'This version is not compatible with your OpenSearch version',
                   'Upgrading to newest supported version is recommended'
               );
             }
