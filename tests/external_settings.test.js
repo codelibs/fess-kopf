@@ -1,6 +1,6 @@
 /**
  * Tests for ExternalSettingsService
- * Tests OpenSearch configuration and backward compatibility
+ * Tests OpenSearch configuration
  */
 
 const fs = require('fs');
@@ -42,13 +42,14 @@ describe('ExternalSettingsService', () => {
 
   describe('Configuration Variables', () => {
     test('should define OPENSEARCH_ROOT_PATH constant', () => {
-      // Check that the code contains the new constant
+      // Check that the code contains the constant
       expect(serviceCode).toContain('opensearch_root_path');
     });
 
-    test('should maintain backward compatibility with ES_ROOT_PATH', () => {
-      // Check that the code still contains the old constant
-      expect(serviceCode).toContain('elasticsearch_root_path');
+    test('should not contain Elasticsearch legacy naming', () => {
+      // Verify ES legacy support has been removed
+      expect(serviceCode).not.toContain('getElasticsearchHost');
+      expect(serviceCode).not.toContain('getElasticsearchRootPath');
     });
   });
 
@@ -77,37 +78,15 @@ describe('ExternalSettingsService', () => {
     });
   });
 
-  describe('getElasticsearchHost() [deprecated]', () => {
-    test('should delegate to getOpenSearchHost()', () => {
-      service.settings = {location: 'http://localhost:9200'};
-      expect(service.getElasticsearchHost()).toBe('http://localhost:9200');
-    });
-
-    test('should return same value as getOpenSearchHost()', () => {
-      service.settings = {location: 'https://test.com:9200'};
-      const opensearchHost = service.getOpenSearchHost();
-      const elasticsearchHost = service.getElasticsearchHost();
-      expect(elasticsearchHost).toBe(opensearchHost);
-    });
-  });
-
   describe('getOpenSearchRootPath()', () => {
-    test('should prefer opensearch_root_path when both are set', () => {
+    test('should return opensearch_root_path from settings', () => {
       service.settings = {
-        opensearch_root_path: '/opensearch',
-        elasticsearch_root_path: '/elasticsearch'
+        opensearch_root_path: '/opensearch'
       };
       expect(service.getOpenSearchRootPath()).toBe('/opensearch');
     });
 
-    test('should fall back to elasticsearch_root_path when opensearch_root_path is not set', () => {
-      service.settings = {
-        elasticsearch_root_path: '/elasticsearch'
-      };
-      expect(service.getOpenSearchRootPath()).toBe('/elasticsearch');
-    });
-
-    test('should return undefined when neither is set', () => {
+    test('should return undefined when opensearch_root_path is not set', () => {
       service.settings = {};
       expect(service.getOpenSearchRootPath()).toBeUndefined();
     });
@@ -119,17 +98,9 @@ describe('ExternalSettingsService', () => {
       expect(service.getOpenSearchRootPath()).toBe('');
     });
 
-    test('should handle null elasticsearch_root_path with undefined opensearch_root_path', () => {
-      service.settings = {
-        elasticsearch_root_path: null
-      };
-      expect(service.getOpenSearchRootPath()).toBeNull();
-    });
-
     test('should handle various path formats', () => {
       const paths = [
         '/opensearch',
-        '/es',
         '/cluster/opensearch',
         '',
         '/'
@@ -139,33 +110,6 @@ describe('ExternalSettingsService', () => {
         service.settings = {opensearch_root_path: testPath};
         expect(service.getOpenSearchRootPath()).toBe(testPath);
       });
-    });
-  });
-
-  describe('getElasticsearchRootPath() [deprecated]', () => {
-    test('should delegate to getOpenSearchRootPath()', () => {
-      service.settings = {
-        opensearch_root_path: '/opensearch'
-      };
-      expect(service.getElasticsearchRootPath()).toBe('/opensearch');
-    });
-
-    test('should return same value as getOpenSearchRootPath()', () => {
-      service.settings = {
-        opensearch_root_path: '/test',
-        elasticsearch_root_path: '/old'
-      };
-      const opensearchPath = service.getOpenSearchRootPath();
-      const elasticsearchPath = service.getElasticsearchRootPath();
-      expect(elasticsearchPath).toBe(opensearchPath);
-    });
-
-    test('should maintain backward compatibility', () => {
-      service.settings = {
-        elasticsearch_root_path: '/legacy'
-      };
-      // Should still work with old setting name
-      expect(service.getElasticsearchRootPath()).toBe('/legacy');
     });
   });
 
@@ -223,58 +167,42 @@ describe('ExternalSettingsService', () => {
     });
   });
 
-  describe('Backward Compatibility', () => {
-    test('should work with old elasticsearch_root_path configuration', () => {
+  describe('Real-world Usage Scenarios', () => {
+    test('Scenario: Fresh installation with OpenSearch 3', () => {
       service.settings = {
-        elasticsearch_root_path: '/es',
+        opensearch_root_path: '',
         with_credentials: false,
-        theme: 'dark',
+        theme: 'fess',
         refresh_rate: 5000
       };
 
-      expect(service.getOpenSearchRootPath()).toBe('/es');
-      expect(service.getElasticsearchRootPath()).toBe('/es');
+      expect(service.getOpenSearchRootPath()).toBe('');
+      expect(service.withCredentials()).toBe(false);
+      expect(service.getTheme()).toBe('fess');
+      expect(service.getRefreshRate()).toBe(5000);
     });
 
-    test('should prefer new opensearch_root_path over old setting', () => {
+    test('Scenario: Docker deployment with custom root path', () => {
       service.settings = {
-        opensearch_root_path: '/new',
-        elasticsearch_root_path: '/old'
+        opensearch_root_path: '/custom/path',
+        with_credentials: true,
+        theme: 'dark',
+        refresh_rate: 3000
       };
 
-      expect(service.getOpenSearchRootPath()).toBe('/new');
+      expect(service.getOpenSearchRootPath()).toBe('/custom/path');
     });
 
-    test('deprecated methods should work identically to new methods', () => {
+    test('Scenario: Default configuration', () => {
       service.settings = {
-        location: 'http://localhost:9200',
-        opensearch_root_path: '/opensearch'
+        opensearch_root_path: '',
+        with_credentials: false,
+        theme: 'fess',
+        refresh_rate: 5000
       };
 
-      expect(service.getElasticsearchHost()).toBe(service.getOpenSearchHost());
-      expect(service.getElasticsearchRootPath()).toBe(service.getOpenSearchRootPath());
-    });
-  });
-
-  describe('Migration Scenarios', () => {
-    test('should handle migration from elasticsearch to opensearch naming', () => {
-      // Start with old config
-      service.settings = {
-        elasticsearch_root_path: '/es'
-      };
-      expect(service.getOpenSearchRootPath()).toBe('/es');
-
-      // Update to new config
-      service.settings.opensearch_root_path = '/opensearch';
-      expect(service.getOpenSearchRootPath()).toBe('/opensearch');
-    });
-
-    test('should handle incomplete migration', () => {
-      // Only new setting is set
-      service.settings = {
-        opensearch_root_path: '/opensearch'
-      };
-      expect(service.getOpenSearchRootPath()).toBe('/opensearch');
+      expect(service.getOpenSearchRootPath()).toBe('');
+      expect(service.getOpenSearchHost()).toBeUndefined();
     });
   });
 
