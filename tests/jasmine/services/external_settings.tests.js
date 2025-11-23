@@ -78,12 +78,20 @@ describe("ExternalSettingsService", function() {
         var settings = {
           refresh_rate: '1',
           theme: 'whatever',
-          elasticsearch_root_path: 'blah blah',
+          opensearch_root_path: 'blah blah',
           with_credentials: 'nono'
         };
         service.settings = {};
         service.updateSettings(settings);
         expect(service.settings).toEqual({refresh_rate: '1', theme: 'whatever'});
+      });
+
+  it("should return opensearch_root_path from settings",
+      function() {
+        service.settings = {
+          opensearch_root_path: '/opensearch'
+        };
+        expect(service.getOpenSearchRootPath()).toEqual('/opensearch');
       });
 
 });

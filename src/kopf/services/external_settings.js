@@ -5,7 +5,7 @@ kopf.factory('ExternalSettingsService', ['DebugService',
 
     var ES_HOST = 'location';
 
-    var ES_ROOT_PATH = 'elasticsearch_root_path';
+    var OPENSEARCH_ROOT_PATH = 'opensearch_root_path';
 
     var WITH_CREDENTIALS = 'with_credentials';
 
@@ -56,12 +56,22 @@ kopf.factory('ExternalSettingsService', ['DebugService',
       return settings;
     };
 
-    this.getElasticsearchHost = function() {
+    /**
+     * Gets the OpenSearch host URL from settings
+     *
+     * @returns {string} OpenSearch host URL
+     */
+    this.getOpenSearchHost = function() {
       return this.getSettings()[ES_HOST];
     };
 
-    this.getElasticsearchRootPath = function() {
-      return this.getSettings()[ES_ROOT_PATH];
+    /**
+     * Gets the OpenSearch root path from settings
+     *
+     * @returns {string} OpenSearch root path
+     */
+    this.getOpenSearchRootPath = function() {
+      return this.getSettings()[OPENSEARCH_ROOT_PATH];
     };
 
     this.withCredentials = function() {
