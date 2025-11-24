@@ -1,34 +1,38 @@
-<div class="row">
-  <div class="col-lg-6">
-    <div class="row">
-      <div class="col-lg-6 col-sm-6 cluster-overview-filter">
-        <input type="text" ng-model="index_paginator.filter.name"
-               class="form-control input-sm"
-               placeholder="filter indices by name">
-      </div>
-      <div
-          class="col-lg-3 col-sm-3 col-xs-6 cluster-overview-filter cluster-map-node-types">
-        <input type="checkbox"
-               ng-model="index_paginator.filter.closed"> <i
-          class="fa fa-fw fa-folder-o node-type-icon"> </i> closed
-        ({{cluster.closedIndices}})
-      </div>
-      <div
-          class="col-lg-3 col-sm-3 col-xs-6 cluster-overview-filter cluster-map-node-types">
-        <input type="checkbox"
-               ng-model="index_paginator.filter.special"> <i
-          class="fa fa-fw fa-asterisk node-type-icon"> </i> special
-        ({{cluster.special_indices}})
-      </div>
+<div class="row overview-filters">
+  <div class="col-lg-5 col-md-6 col-sm-12">
+    <div class="input-group">
+      <span class="input-group-addon">
+        <i class="fa fa-search"></i>
+      </span>
+      <input type="text"
+             ng-model="index_paginator.filter.name"
+             class="form-control"
+             placeholder="Filter indices by name...">
     </div>
   </div>
-  <div class="col-lg-6">
-    <div class="row">
-      <div class="col-lg-6 col-sm-6  cluster-overview-filter">
-        <input type="text" ng-model="node_filter.name"
-               class="form-control input-sm"
-               placeholder="filter nodes by name">
-      </div>
+  <div class="col-lg-3 col-md-3 col-sm-6 col-xs-6">
+    <label class="filter-checkbox">
+      <input type="checkbox" ng-model="index_paginator.filter.closed">
+      <i class="fa fa-folder-o"></i> Closed
+      <span class="badge">{{cluster.closedIndices}}</span>
+    </label>
+  </div>
+  <div class="col-lg-2 col-md-3 col-sm-6 col-xs-6">
+    <label class="filter-checkbox">
+      <input type="checkbox" ng-model="index_paginator.filter.special">
+      <i class="fa fa-asterisk"></i> Special
+      <span class="badge">{{cluster.special_indices}}</span>
+    </label>
+  </div>
+  <div class="col-lg-2 col-md-12 col-sm-12">
+    <div class="input-group">
+      <span class="input-group-addon">
+        <i class="fa fa-filter"></i>
+      </span>
+      <input type="text"
+             ng-model="node_filter.name"
+             class="form-control"
+             placeholder="Filter nodes...">
     </div>
   </div>
 </div>

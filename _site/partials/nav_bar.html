@@ -6,13 +6,6 @@
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-<!--
-      <span class="navbar-brand navbar-cluster-status-{{clusterStatus}}">
-        <i class="fa fa-fw fa-circle navbar-logo-action">
-          <span style="display:block; margin-top: -24px; font-size: 26px; font-weight: 500" class="navbar-cluster-status-{{clusterStatus}}-nav">K</span>
-        </i>
-      </span>
--->
     </div>
     <div class="collapse navbar-collapse">
       <ul class="nav navbar-nav navbar-cluster-status-{{clusterStatus}}">
@@ -25,21 +18,14 @@
           </a>
           <ul class="dropdown-menu">
             <li ng-navbar-section target="createIndex" text="create index" icon="fa-file-o"></li>
-<!--
-            <li ng-navbar-section target="clusterSettings" text="cluster settings" icon="fa-cog"></li>
--->
             <li ng-navbar-section target="aliases" text="aliases" icon="fa-tags"></li>
             <li ng-navbar-section target="analysis" text="analysis" icon="fa-puzzle-piece"></li>
-<!--
-            <li ng-navbar-section target="percolator" text="percolator" icon="fa-bell-o"></li>
--->
             <li ng-navbar-section target="snapshot" text="snapshot" icon="fa-camera"></li>
             <li ng-navbar-section target="indexTemplates" text="index templates" icon="fa-book"></li>
             <li ng-navbar-section target="cat" text="cat apis" icon="fa-list"></li>
             <li ng-navbar-section target="hotthreads" text="hot threads" icon="fa-tasks"></li>
           </ul>
         </li>
-        <!-- li ng-navbar-section name="benchmark" icon="fa-bar-chart-o" version="1.4.0"></li -->
       </ul>
       <ul class="nav navbar-nav navbar-cluster-status-{{clusterStatus}} navbar-right visible-lg">
         <li>
@@ -47,16 +33,6 @@
             <i class="fa fa-fw fa-cog"></i><i class="fa fa-fw fa-caret-down"></i>
           </a>
           <ul class="dropdown-menu form-horizontal navbar-app-settings">
-<!--
-            <li>
-              <div class="row">
-                <div class="col-lg-12">
-                  <span class="pull-right navbar-app-setting">v{{version}}</span>
-                </div>
-              </div>
-            </li>
-            <li class="divider"></li>
--->
             <li class="navbar-menu-section">
               <div class="row">
                 <div class="col-xs-5">
@@ -87,36 +63,6 @@
                 </div>
               </div>
             </li>
-            <li class="divider"></li>
-<!--
-            <li>
-              <div class="row">
-                <div class="col-lg-12">
-                  <span class="navbar-app-setting">connect to a different host</span>
-                </div>
-              </div>
-            </li>
-            <li class="navbar-menu-section">
-              <div class="row">
-                <div class="col-lg-12">
-                  <input type="text" class="form-control" ng-model="new_host" ng-keypress="handleConnectToHost($event)" placeholder="http://localhost:9200">
-                </div>
-              </div>
-            </li>
-            <li ng-show="host_history.length > 0"><h5>previous hosts</h5></li>
-            <li ng-show="host_history.length > 0" class="divider"></li>
-            <li ng-show="host_history.length > 0" ng-repeat="host in host_history" ng-click="connectToHost(host.host)">
-              <a target="_self" href class="host-history">{{host.host}}</a>
-            </li>
-            <li class="divider"></li>
-            <li>
-              <div class="row">
-                <div class="col-lg-12">
-                  <span class="navbar-app-setting">found a bug? <a href="https://github.com/lmenezes/elasticsearch-kopf/issues/new" target="_blank">be cool and <b>report it!</b></a></span>
-                </div>
-              </div>
-            </li>
--->
           </ul>
         </li>
       </ul>
