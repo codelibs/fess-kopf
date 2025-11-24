@@ -1,49 +1,65 @@
-.cluster-stat-detail {
-	font-size: 9px;
-}
+/* AdminLTE-style Cluster Overview */
+
+/* Overview Table */
 table.overview {
-    table-layout:fixed;
+    table-layout: fixed;
 }
+
 @-moz-document url-prefix() {
     table.overview {
         table-layout: auto;
     }
     table.overview tr td { width: 16.67%; }
 }
+
+/* Dropdown */
 .index-menu-icon {
 	padding-right: 18px;
 }
+
 .dropdown-menu .divider {
 	margin: 5px 0px;
 }
+
+.index-dropdown {
+    right: 0;
+    left: inherit;
+}
+
+.cluster-dropdown {
+    text-align: left;
+}
+
+/* Cluster Actions */
 .cluster-map-header-cluster-actions {
-	font-size: 30px;
+	font-size: 24px;
 	vertical-align: middle !important;
 	text-align: center;
 	border-bottom: 0px !important;
-    padding-bottom: 0px !important;
-    padding-top: 0px !important;
+    padding: 8px !important;
 }
+
 .cluster-map-header-cluster-action {
-	font-size: 28px;
+	font-size: 22px;
 	text-align: center;
 	vertical-align: middle;
 	cursor: pointer;
 }
+
 a.cluster-map-header-cluster-action {
 	color: inherit;
 	font-weight: 200;
 	text-decoration: none;
 }
+
+/* Index Header */
 .cluster-map-header-index-name {
 	overflow: hidden;
 	white-space: nowrap;
 	font-weight: 500;
 	text-overflow: ellipsis;
 	display: block;
-	font-size: 13px;
-	font-weight: 500;
-	line-height: 15px;
+	line-height: 1.42857143;
 }
 
 a.cluster-map-header-index-name:hover {
@@ -53,181 +69,172 @@ a.cluster-map-header-index-name:hover {
 
 .cluster-map-header-index-alias {
 	word-wrap: break-word;
-	font-size: 10px;
 	font-weight: 300;
+	font-size: 85%;
 }
 
 .cluster-map-header-index-actions {
-	padding: 6px;
+	padding: 8px;
 }
 
 .cluster-map-header-index-action {
-	font-size: 12px;
 	font-weight: 200;
 	cursor: pointer;
 }
+
 a.cluster-map-header-index-action:hover {
-	font-size: 12px;
 	font-weight: 200;
 	text-decoration: none;
 }
+
+/* Node Info */
 .cluster-map-node-name {
 	word-wrap:break-word;
 	font-weight: 500;
-	font-size: 13px;
 	text-overflow: ellipsis;
 	overflow: hidden;
 	display: block;
 }
+
 .cluster-map-node-types {
 	padding-top: 4px;
+	margin-bottom: 8px;
 }
+
 .cluster-map-node-type {
 	font-weight: 300;
 	padding-right: 5px;
-	font-size: 12px;
+	font-size: 90%;
 }
-.cluster-overview-filter {
-	margin-bottom: 5px;
-	margin-top: 5px;
-}
+
 .node-type-icon {
 	padding-left: 2px;
 	padding-right: 2px;
 }
+
 .cluster-map-node-badges {
 	display: inline-block;
 	vertical-align: top;
 }
-.cluster-map-node-detail {
+
+.cluster-map-node-detail,
+.cluster-map-node-stat {
 	word-wrap: break-word;
-	font-size: 9px;
 	font-weight: normal !important;
 	padding-right: 0px;
 	text-align: left;
+	font-size: 85%;
 }
 
 .cluster-map-node-stat {
-	font-size: 9px;
 	font-weight: 500 !important;
-	padding-right: 0px;
-	text-align: left;
 }
+
 .shards-cell {
 	padding-top: 8px !important;
 }
+
 .cluster-map-pagination {
 	padding-top: 5px;
 	font-weight: 300;
-	font-size: 12px;
 }
+
 .cluster-map-node-action {
 	text-align: center;
 	vertical-align: middle;
 	cursor: pointer;
 }
+
 a.cluster-map-node-action {
 	font-weight: 200;
 	text-decoration: none;
 }
+
 .cluster-map-header-empty {
 	border-bottom: 0px !important;
 	border-top: 0px !important;
 }
+
+/* Stats Section */
 .overview-stats {
-	margin-bottom: 20px;
+	margin-bottom: 0;
 }
-.cluster-map-stat-block {
-	display: inline-block;
-}
-.stat-block {
-	width: 100%;
-	text-align: center;
-	display: inline-block;
-	margin-top: 6px;
-}
-.cluster-map-stat-number {
-	font-size: 16px;
-	text-align: left;
-	font-weight: 400;
-	line-height: 30px;
-}
-.cluster-map-stat-description {
-	font-size: 12px;
-	text-align: left;
-	font-weight: 300;
-}
+
+/* Shards */
 .shards {
 	max-height: 40px !important;
 	vertical-align: top !important;
 	word-wrap:break-word;
 }
+
+/* Progress Bars */
 .node-progress {
-	height: 3px;
-	margin-bottom: 0px;
-	margin-top: 0px;
-	border-radius: 0px;
-}
-.node-progress-container {
-	padding-left: 0px;
-	padding-right: 0px;	
-}
-.node-progress-bar {
-	padding-left: 3px;
-	padding-right: 3px;
-}
-.progress-title-top {
-	font-size: 8px;
-	font-weight: 300;
-	text-align: center;
-	padding-top: 3px;
-	padding-bottom: 0px;
-	line-height: 5px;
-	margin-top: 0px;
-}
-.progress-title-left {
-	font-size: 8px;
-	font-weight: 300;
-	text-align: right;
-	padding-bottom: 0px;
-	line-height: 8px;
-	margin-top: 0px;
-}
-.index-dropdown {
-    right: 0;
-    left: inherit;
-}
-.cluster-dropdown {
-    text-align: left;
+	height: 6px;
+	margin-bottom: 2px;
+	margin-top: 2px;
+	border-radius: 3px;
+	overflow: hidden;
 }
 
-.unassigned-row {
-	vertical-align: middle !important;
+.node-progress-container {
+	padding-left: 0px;
+	padding-right: 0px;
 }
-.overview-filters {
-	margin-top: 10px;
-	margin-bottom: 6px;
+
+.node-progress-bar {
+	padding-left: 4px;
+	padding-right: 4px;
 }
-.page-btn {
-	width: 29px;
-	font-size: 12px;
-	height: 20px;
-	line-height: 18px;
+
+.progress-title-top,
+.progress-title-left {
+	font-weight: 400;
 	text-align: center;
+	padding: 4px 2px;
+	line-height: 1.2;
+	margin: 0;
+	font-size: 85%;
 }
-.idx-alias {
+
+.progress-title-left {
+	text-align: right;
+}
+
+/* Filters */
+.overview-filters {
+	margin-top: 8px;
+	margin-bottom: 4px;
+}
+
+.content-panel > .row {
+	margin-bottom: 8px;
+}
+
+.content-panel > .row:last-child {
+	margin-bottom: 0;
+}
+
+/* Pagination */
+.page-btn {
+	padding: 6px 12px;
+	text-align: center;
+	border-radius: 3px;
+	min-width: 40px;
+}
+
+/* Index Info */
+.idx-alias,
+.idx-stats {
 	overflow: hidden;
 	white-space: nowrap;
 	text-overflow: ellipsis;
 	display: block;
-	font-size: 10px;
 	font-weight: 300;
-	line-height: 14px;
-    height: 14px;
+	line-height: 1.42857143;
+	font-size: 85%;
 }
-.idx-stats {
-    font-size: 10px;
-    font-weight: 300;
-    line-height: 14px;
-    height: 14px;
+
+/* Unassigned Row */
+.unassigned-row {
+	vertical-align: middle !important;
 }

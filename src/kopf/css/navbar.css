@@ -1,80 +1,78 @@
+/* AdminLTE-style Navbar */
 .dropdown-menu {
 	margin-top: 0px;
 	margin-left: 25px;
 }
 
+.navbar {
+	border: none;
+	margin-bottom: 0;
+}
+
+.navbar-fixed-top {
+	border: none;
+}
+
 .navbar-nav {
-	margin-top: 0px;
-	font-size: 13px;
+	margin: 0;
+}
+
+.navbar-nav > li > a {
+	padding: 15px;
 }
 
 .navbar-collapse {
-	border-top: 0px;
+	border-top: 0;
 }
 
 .navbar-toggle {
-	padding: 6px 9px;
-	margin-right: 25px;
-    height: 22px;
-    width: 30px;
-    margin-top: 4px;
-    margin-bottom: 4px;
+	margin-top: 8px;
+	margin-bottom: 8px;
+	padding: 8px 10px;
 }
+
 .navbar-toggle .icon-bar {
-	width: 10px;
-	height: 1px;
+	width: 22px;
+	height: 2px;
 }
-.navbar-fixed-top {
-	margin-right: 0px !important;
+
+.navbar-brand {
+	padding: 15px 15px;
+	font-size: 20px;
+	line-height: 20px;
+	margin-left: 25px !important;
 }
-.navbar {
-	height: 30px !important;
-	min-height: 30px !important;
-}
+
 .navbar-logo {
-	font-size: 38px;
+	font-size: 20px;
 	font-variant: small-caps;
-	line-height: 32px !important;
-	padding-top: 0px !important;
-	padding-bottom: 0px !important;
-	font-weight: 100;
-	vertical-align: middle;
+	line-height: 20px;
+	font-weight: 400;
 }
+
 .navbar-logo-action {
-	font-size: 24px;
-	font-weight: 100;
-	vertical-align: middle;
+	font-size: 18px;
+	font-weight: 300;
 	font-variant: normal;
 }
+
 .navbar-menu-section {
-	vertical-align: middle;
-	padding-top: 4px;
-	padding-bottom: 4px;
-	width: 220px !important;
+	padding: 8px;
 }
-.navbar-nav > li {
-	height: 30px !important;
-}
-.navbar-nav > li > a {
-	height: 30px !important;
-	line-height: 30px;
-	padding-top: 0px;
-	padding-bottom:0px;
-	padding-left: 13px;
-	padding-right: 13px;
-}
+
 .nav-pills > li > a {
 	font-weight: 400;
-	font-size: 13px;
+	border-radius: 3px;
+	padding: 8px 15px;
 }
+
 .navbar-app-settings {
-	width: auto;
-	padding-top: 6px;
-	padding-left: 10px;
-	padding-right: 10px;
+	width: 320px;
+	padding: 8px 12px;
+	min-width: 320px;
 }
+
 .navbar-app-setting {
-	line-height: 30px;
 	font-weight: 300;
-	font-size: 12px;
+	padding: 8px 0;
 }

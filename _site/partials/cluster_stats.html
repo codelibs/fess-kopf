@@ -1,52 +1,73 @@
-<div class="row" class="overview-stats" ng-controller="ClusterStatsController">
+<div class="row overview-stats" ng-controller="ClusterStatsController">
+  <!-- Nodes Info Box -->
   <div class="col-lg-5ths col-md-3 col-sm-6 col-xs-12">
-    <div class="stat-block bordered">
-      <span class="tooltiped" data-placement="bottom" title="number of nodes in the cluster">
-        <span class="cluster-map-stat-number">{{cluster.number_of_nodes | number:0}}</span>
-        <span class="cluster-map-stat-description">nodes</span>
+    <div class="info-box">
+      <span class="info-box-icon bg-aqua">
+        <i class="fa fa-server"></i>
       </span>
+      <div class="info-box-content">
+        <span class="info-box-text">Nodes</span>
+        <span class="info-box-number">{{cluster.number_of_nodes | number:0}}</span>
+      </div>
     </div>
   </div>
+
+  <!-- Indices Info Box -->
   <div class="col-lg-5ths col-md-3 col-sm-6 col-xs-12">
-    <div class="stat-block bordered">
-      <span class="tooltiped" data-placement="bottom" title="total number of indices">
-        <span class="cluster-map-stat-number">{{cluster.total_indices | number:0}}</span>
-        <span class="cluster-map-stat-description">indices</span>
+    <div class="info-box">
+      <span class="info-box-icon bg-green">
+        <i class="fa fa-database"></i>
       </span>
+      <div class="info-box-content">
+        <span class="info-box-text">Indices</span>
+        <span class="info-box-number">{{cluster.total_indices | number:0}}</span>
+      </div>
     </div>
   </div>
+
+  <!-- Shards Info Box -->
   <div class="col-lg-5ths col-md-3 col-sm-6 col-xs-12">
-    <div class="stat-block bordered">
-      <span class="tooltiped" data-placement="bottom" title="number of shards in the cluster (closed indices are not taken into account)">
-        <span class="cluster-map-stat-number">{{cluster.shards | number:0}}</span>
-        <span class="cluster-map-stat-description">shards</span>
+    <div class="info-box">
+      <span class="info-box-icon bg-yellow">
+        <i class="fa fa-th"></i>
       </span>
+      <div class="info-box-content">
+        <span class="info-box-text">Shards</span>
+        <span class="info-box-number">{{cluster.shards | number:0}}</span>
+      </div>
     </div>
   </div>
+
+  <!-- Documents Info Box -->
   <div class="col-lg-5ths col-md-3 col-sm-6 col-xs-12">
-    <div class="stat-block bordered">
-      <div class="cluster-stat-detail">
-        <span class="tooltiped" data-placement="bottom" title="number of documents (replicas are not taken into account)">
-          <span class="cluster-map-stat-number">{{cluster.num_docs | number:0}}</span>
-          <span class="cluster-map-stat-description">docs</span>
-        </span>
-        <span ng-show="cluster.changes.getDocDelta() != 0">
-          <i ng-show="cluster.changes.getDocDelta() > 0" class="fa fa-arrow-up"></i>
-          <i ng-show="cluster.changes.getDocDelta() < 0" class="fa fa-arrow-down"></i>
+    <div class="info-box">
+      <span class="info-box-icon bg-purple">
+        <i class="fa fa-file-text-o"></i>
+      </span>
+      <div class="info-box-content">
+        <span class="info-box-text">Documents</span>
+        <span class="info-box-number">{{cluster.num_docs | number:0}}</span>
+        <span class="info-box-delta" ng-show="cluster.changes.getDocDelta() != 0">
+          <i ng-show="cluster.changes.getDocDelta() > 0" class="fa fa-arrow-up text-success"></i>
+          <i ng-show="cluster.changes.getDocDelta() < 0" class="fa fa-arrow-down text-danger"></i>
           {{cluster.changes.absDocDelta() | number:0}}
         </span>
       </div>
     </div>
   </div>
+
+  <!-- Total Size Info Box -->
   <div class="col-lg-5ths col-md-3 col-sm-6 col-xs-12">
-    <div class="stat-block bordered">
-      <div class="cluster-stat-detail">
-        <span class="tooltiped" data-placement="bottom" title="total data in the cluster(replicas are taken into account)">
-          <span class="cluster-map-stat-number">{{cluster.total_size_in_bytes | bytes}}</span>
-        </span>
-        <span ng-show="cluster.changes.getDataDelta() != 0">
-          <i ng-show="cluster.changes.getDataDelta() > 0" class="fa fa-arrow-up"></i>
-          <i ng-show="cluster.changes.getDataDelta() < 0" class="fa fa-arrow-down"></i>
+    <div class="info-box">
+      <span class="info-box-icon bg-red">
+        <i class="fa fa-hdd-o"></i>
+      </span>
+      <div class="info-box-content">
+        <span class="info-box-text">Total Size</span>
+        <span class="info-box-number">{{cluster.total_size_in_bytes | bytes}}</span>
+        <span class="info-box-delta" ng-show="cluster.changes.getDataDelta() != 0">
+          <i ng-show="cluster.changes.getDataDelta() > 0" class="fa fa-arrow-up text-success"></i>
+          <i ng-show="cluster.changes.getDataDelta() < 0" class="fa fa-arrow-down text-danger"></i>
           {{cluster.changes.absDataDelta()}}
         </span>
       </div>
