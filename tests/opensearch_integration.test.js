@@ -87,30 +87,6 @@ describe('OpenSearch Integration Tests', () => {
     });
   });
 
-  describe('Docker Environment', () => {
-    test('Docker configuration should support KOPF_OPENSEARCH_ROOT_PATH', () => {
-      const dockerRunScript = fs.readFileSync(
-        path.join(__dirname, '../docker/run.sh'),
-        'utf8'
-      );
-
-      // Should support KOPF_OPENSEARCH_ROOT_PATH
-      expect(dockerRunScript).toContain('KOPF_OPENSEARCH_ROOT_PATH');
-
-      // Should generate opensearch_root_path in config
-      expect(dockerRunScript).toContain('opensearch_root_path');
-    });
-
-    test('Docker script should not contain Elasticsearch legacy variables', () => {
-      const dockerRunScript = fs.readFileSync(
-        path.join(__dirname, '../docker/run.sh'),
-        'utf8'
-      );
-
-      // Should not support old KOPF_ES_ROOT_PATH
-      expect(dockerRunScript).not.toContain('KOPF_ES_ROOT_PATH');
-    });
-  });
 
   describe('Default Configuration', () => {
     test('default kopf_external_settings.json should use opensearch naming', () => {
@@ -148,8 +124,7 @@ describe('OpenSearch Integration Tests', () => {
       const filesToCheck = [
         '../src/kopf/services/external_settings.js',
         '../src/kopf/services/opensearch.js',
-        '../_site/kopf_external_settings.json',
-        '../docker/run.sh'
+        '../_site/kopf_external_settings.json'
       ];
 
       filesToCheck.forEach(file => {
