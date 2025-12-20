@@ -1,6 +1,6 @@
 {
   "name": "fess-kopf",
-  "version": "15.4.0-SNAPSHOT",
+  "version": "15.4.0",
   "description": "Fess KOPF - simple web administration tool for OpenSearch (Fess version)",
   "main": "index.html",
   "scripts": {
