@@ -1,13 +1,16 @@
 {
   "name": "fess-kopf",
-  "version": "5.0.0",
+  "version": "15.4.0-SNAPSHOT",
   "description": "Fess KOPF - simple web administration tool for OpenSearch (Fess version)",
   "main": "index.html",
   "scripts": {
     "test": "jest",
     "test:coverage": "jest --coverage",
     "build": "grunt build",
-    "lint": "grunt jshint"
+    "lint": "grunt jshint",
+    "version:set": "node scripts/set-version.js",
+    "version:release": "node scripts/set-version.js release",
+    "version:snapshot": "node scripts/set-version.js snapshot"
   },
   "repository": {
     "type": "git",
