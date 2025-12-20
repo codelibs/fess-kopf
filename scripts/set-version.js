@@ -17,7 +17,6 @@ const command = args[0];
 const newVersion = args[1];
 
 const packageJsonPath = path.join(__dirname, '..', 'package.json');
-const pluginPropsPath = path.join(__dirname, '..', 'plugin-descriptor.properties');
 
 // Read current version from package.json
 const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
@@ -74,12 +73,5 @@ if (!versionPattern.test(version)) {
 packageJson.version = version;
 fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2) + '\n');
 
-// Update plugin-descriptor.properties (always without SNAPSHOT, add .0)
-const baseVersion = version.replace('-SNAPSHOT', '');
-let propsContent = fs.readFileSync(pluginPropsPath, 'utf8');
-propsContent = propsContent.replace(/version=.*/, 'version=' + baseVersion + '.0');
-fs.writeFileSync(pluginPropsPath, propsContent);
-
 console.log('Version updated successfully:');
 console.log('  package.json: ' + version);
-console.log('  plugin-descriptor.properties: ' + baseVersion + '.0');
