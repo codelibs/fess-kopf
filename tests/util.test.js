@@ -136,5 +136,162 @@ describe('Utility Functions', () => {
       expect(readablizeBytes(10000000000000000)).toBe('8.88PB');
       expect(readablizeBytes(100000000000000000)).toBe('88.82PB');
     });
+
+    test('should return 0 for 0 bytes', () => {
+      expect(readablizeBytes(0)).toBe(0);
+    });
+
+    test('should return 0 for negative bytes', () => {
+      expect(readablizeBytes(-100)).toBe(0);
+    });
+
+    test('should handle exact power of 1024', () => {
+      expect(readablizeBytes(1024)).toBe('1.00KB');
+      expect(readablizeBytes(1048576)).toBe('1.00MB');
+      expect(readablizeBytes(1073741824)).toBe('1.00GB');
+    });
+  });
+
+  describe('isNumber', () => {
+    test('should return true for integer string', () => {
+      expect(isNumber('123')).toBe(true);
+    });
+
+    test('should return true for number', () => {
+      expect(isNumber(123)).toBe(true);
+    });
+
+    test('should return true for string containing digits', () => {
+      expect(isNumber('abc123def')).toBe(true);
+    });
+
+    test('should return false for string without digits', () => {
+      expect(isNumber('abc')).toBe(false);
+    });
+
+    test('should return false for empty string', () => {
+      expect(isNumber('')).toBe(false);
+    });
+
+    test('should return true for zero', () => {
+      expect(isNumber('0')).toBe(true);
+      expect(isNumber(0)).toBe(true);
+    });
+
+    test('should return true for negative number string', () => {
+      expect(isNumber('-123')).toBe(true);
+    });
+
+    test('should return true for decimal string', () => {
+      expect(isNumber('12.34')).toBe(true);
+    });
+  });
+
+  describe('getTimeString', () => {
+    test('should format time with leading zeros', () => {
+      const date = new Date(2024, 0, 1, 9, 5, 3);
+      expect(getTimeString(date)).toBe('09:05:03');
+    });
+
+    test('should format time without leading zeros needed', () => {
+      const date = new Date(2024, 0, 1, 15, 30, 45);
+      expect(getTimeString(date)).toBe('15:30:45');
+    });
+
+    test('should format midnight', () => {
+      const date = new Date(2024, 0, 1, 0, 0, 0);
+      expect(getTimeString(date)).toBe('00:00:00');
+    });
+
+    test('should format noon', () => {
+      const date = new Date(2024, 0, 1, 12, 0, 0);
+      expect(getTimeString(date)).toBe('12:00:00');
+    });
+
+    test('should format end of day', () => {
+      const date = new Date(2024, 0, 1, 23, 59, 59);
+      expect(getTimeString(date)).toBe('23:59:59');
+    });
+  });
+
+  describe('getProperty edge cases', () => {
+    test('should handle null object', () => {
+      expect(getProperty(null, 'foo', 'default')).toBe('default');
+    });
+
+    test('should handle undefined object', () => {
+      expect(getProperty(undefined, 'foo', 'default')).toBe('default');
+    });
+
+    test('should handle deeply nested property', () => {
+      const obj = { a: { b: { c: { d: { e: 'deep' } } } } };
+      expect(getProperty(obj, 'a.b.c.d.e')).toBe('deep');
+    });
+
+    test('should handle array access', () => {
+      const obj = { arr: [1, 2, 3] };
+      expect(getProperty(obj, 'arr.1')).toBe(2);
+    });
+
+    test('should handle mixed access (property then index)', () => {
+      const obj = { items: [{ name: 'first' }, { name: 'second' }] };
+      expect(getProperty(obj, 'items.0.name')).toBe('first');
+    });
+
+    test('should return default when middle property is undefined', () => {
+      const obj = { a: { b: undefined } };
+      expect(getProperty(obj, 'a.b.c', 'default')).toBe('default');
+    });
+
+    test('should return falsy values correctly', () => {
+      const obj = { zero: 0, empty: '', falsy: false };
+      expect(getProperty(obj, 'zero')).toBe(0);
+      expect(getProperty(obj, 'empty')).toBe('');
+      expect(getProperty(obj, 'falsy')).toBe(false);
+    });
+  });
+
+  describe('isDefined edge cases', () => {
+    test('should return true for empty string', () => {
+      expect(isDefined('')).toBe(true);
+    });
+
+    test('should return true for empty array', () => {
+      expect(isDefined([])).toBe(true);
+    });
+
+    test('should return true for NaN', () => {
+      expect(isDefined(NaN)).toBe(true);
+    });
+
+    test('should return true for Infinity', () => {
+      expect(isDefined(Infinity)).toBe(true);
+    });
+  });
+
+  describe('notEmpty edge cases', () => {
+    test('should return false for whitespace only string', () => {
+      expect(notEmpty('   ')).toBe(false);
+    });
+
+    test('should return false for tab and newline', () => {
+      expect(notEmpty('\t\n')).toBe(false);
+    });
+
+    test('should return true for array', () => {
+      expect(notEmpty([1, 2, 3])).toBe(true);
+    });
+
+    test('should return true for object', () => {
+      expect(notEmpty({ a: 1 })).toBe(true);
+    });
+
+    test('should return true for boolean true', () => {
+      expect(notEmpty(true)).toBe(true);
+    });
+
+    test('should return true for boolean false (toString gives "false")', () => {
+      expect(notEmpty(false)).toBe(true);
+    });
   });
 });
