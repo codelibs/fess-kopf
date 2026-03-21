@@ -33,6 +33,12 @@ module.exports = function(grunt) {
           {
             expand: true,
             flatten: true,
+            src: ['src/lib/ace/ext-language_tools.js'],
+            dest: './_site/dist/'
+          },
+          {
+            expand: true,
+            flatten: true,
             src: ['src/lib/angularjs/*.map'],
             dest: './_site/dist/'
           },

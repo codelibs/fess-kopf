@@ -43,4 +43,16 @@ function AceEditor(target) {
   this.hasContent = function() {
     return this.editor.getValue().trim().length > 0;
   };
+
+  this.enableAutocomplete = function(completers) {
+    var editor = this.editor;
+    ace.config.loadModule('ace/ext/language_tools', function() {
+      editor.setOptions({
+        enableBasicAutocompletion: true,
+        enableLiveAutocompletion: true,
+        enableSnippets: false
+      });
+      editor.completers = completers;
+    });
+  };
 }

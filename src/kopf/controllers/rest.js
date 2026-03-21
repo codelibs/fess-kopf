@@ -163,6 +163,13 @@ kopf.controller('RestController', ['$scope', '$location', '$timeout',
       if (!isDefined($scope.editor)) {
         $scope.editor = AceEditorService.init('rest-client-editor');
         $scope.editor.setValue($scope.request.body);
+        var completer = createQueryDslCompleter(function() {
+          return {
+            mapping: $scope.mapping,
+            requestPath: $scope.request.path
+          };
+        });
+        $scope.editor.enableAutocomplete([completer]);
       }
     };
 
