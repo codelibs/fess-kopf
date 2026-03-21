@@ -12,6 +12,7 @@ kopf.controller('WarmersController', [
     $scope.warmer = new Warmer('', '', {types: [], source: {}});
 
     $scope.warmers = [];
+    $scope.loadingWarmers = false;
 
     $scope.$watch(
         function() {
@@ -74,14 +75,17 @@ kopf.controller('WarmersController', [
 
     $scope.loadIndexWarmers = function() {
       if (isDefined($scope.index)) {
+        $scope.loadingWarmers = true;
         OpenSearchService.getIndexWarmers($scope.index, '',
             function(warmers) {
               $scope.paginator.setCollection(warmers);
               $scope.page = $scope.paginator.getPage();
+              $scope.loadingWarmers = false;
             },
             function(error) {
               $scope.paginator.setCollection([]);
               $scope.page = $scope.paginator.getPage();
+              $scope.loadingWarmers = false;
               AlertService.error('Error while fetching warmers', error);
             }
         );

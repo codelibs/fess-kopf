@@ -122,6 +122,14 @@
                       </td>
                     </tr>
                   </table>
+                  <div ng-show="loadingAliases" class="text-center text-muted" style="padding: 20px 0;">
+                    <i class="fa fa-spinner fa-spin fa-2x"></i>
+                    <p>Loading aliases...</p>
+                  </div>
+                  <div ng-show="!loadingAliases && page.total == 0" class="empty-state text-center text-muted" style="padding: 20px 0;">
+                    <i class="fa fa-link fa-2x"></i>
+                    <p>No aliases found</p>
+                  </div>
                 </div>
               </div>
               <div class="action-buttons">

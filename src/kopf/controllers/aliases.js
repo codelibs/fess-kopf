@@ -9,6 +9,7 @@ kopf.controller('AliasesController', ['$scope', 'AlertService',
     $scope.new_alias = new Alias('', '', '', '', '');
 
     $scope.aliases = [];
+    $scope.loadingAliases = false;
 
     $scope.$watch(
         function() {
@@ -133,6 +134,7 @@ kopf.controller('AliasesController', ['$scope', 'AlertService',
     };
 
     $scope.loadAliases = function() {
+      $scope.loadingAliases = true;
       OpenSearchService.fetchAliases(
           function(indexAliases) {
             $scope.original = indexAliases.map(function(ia) {
@@ -140,8 +142,10 @@ kopf.controller('AliasesController', ['$scope', 'AlertService',
             });
             $scope.paginator.setCollection(indexAliases);
             $scope.page = $scope.paginator.getPage();
+            $scope.loadingAliases = false;
           },
           function(error) {
+            $scope.loadingAliases = false;
             AlertService.error('Error while fetching aliases', error);
           }
       );

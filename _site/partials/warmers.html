@@ -105,6 +105,14 @@
                       </td>
                     </tr>
                   </table>
+                  <div ng-show="loadingWarmers" class="text-center text-muted" style="padding: 20px 0;">
+                    <i class="fa fa-spinner fa-spin fa-2x"></i>
+                    <p>Loading warmers...</p>
+                  </div>
+                  <div ng-show="!loadingWarmers && page.total == 0" class="empty-state text-center text-muted" style="padding: 20px 0;">
+                    <i class="fa fa-fire fa-2x"></i>
+                    <p>No warmers found</p>
+                  </div>
                 </div>
               </div>
             </div>
