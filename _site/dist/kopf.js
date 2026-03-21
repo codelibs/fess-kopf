@@ -1231,7 +1231,9 @@ function AliasFilter(index, alias) {
   };
 
   this.getSorting = function() {
-    return undefined;
+    return function(a, b) {
+      return a.index.localeCompare(b.index);
+    };
   };
 
   this.equals = function(other) {
@@ -1577,7 +1579,9 @@ function NodeFilter(name, data, master, client, timestamp) {
   };
 
   this.getSorting = function() {
-    return undefined;
+    return function(a, b) {
+      return a.name.localeCompare(b.name);
+    };
   };
 
   this.equals = function(other) {
@@ -1747,26 +1751,40 @@ function Request(path, method, body) {
   };
 }
 
-function SnapshotFilter() {
+function SnapshotFilter(name) {
+
+  this.name = name;
 
   this.clone = function() {
-    return new SnapshotFilter();
+    return new SnapshotFilter(this.name);
   };
 
   this.getSorting = function() {
-    return undefined;
+    return function(a, b) {
+      return a.name.localeCompare(b.name);
+    };
   };
 
   this.equals = function(other) {
-    return other !== null;
+    return (other !== null &&
+      this.name == other.name);
   };
 
   this.isBlank = function() {
-    return true;
+    return !notEmpty(this.name);
   };
 
   this.matches = function(snapshot) {
-    return true;
+    if (this.isBlank()) {
+      return true;
+    } else {
+      var matches = true;
+      if (notEmpty(this.name)) {
+        matches = snapshot.name.toLowerCase().indexOf(
+            this.name.toLowerCase()) != -1;
+      }
+      return matches;
+    }
   };
 
 }
@@ -1913,7 +1931,9 @@ function WarmerFilter(id) {
   };
 
   this.getSorting = function() {
-    return undefined;
+    return function(a, b) {
+      return a.id.localeCompare(b.id);
+    };
   };
 
   this.equals = function(other) {
@@ -3607,6 +3627,7 @@ kopf.controller('AliasesController', ['$scope', 'AlertService',
     $scope.new_alias = new Alias('', '', '', '', '');
 
     $scope.aliases = [];
+    $scope.loadingAliases = false;
 
     $scope.$watch(
         function() {
@@ -3731,6 +3752,7 @@ kopf.controller('AliasesController', ['$scope', 'AlertService',
     };
 
     $scope.loadAliases = function() {
+      $scope.loadingAliases = true;
       OpenSearchService.fetchAliases(
           function(indexAliases) {
             $scope.original = indexAliases.map(function(ia) {
@@ -3738,8 +3760,10 @@ kopf.controller('AliasesController', ['$scope', 'AlertService',
             });
             $scope.paginator.setCollection(indexAliases);
             $scope.page = $scope.paginator.getPage();
+            $scope.loadingAliases = false;
           },
           function(error) {
+            $scope.loadingAliases = false;
             AlertService.error('Error while fetching aliases', error);
           }
       );
@@ -5484,12 +5508,13 @@ kopf.controller('SnapshotController', ['$scope', 'ConfirmDialogService',
     $scope.repositories = [];
     $scope.indices = [];
 
-    $scope.paginator = new Paginator(1, 10, [], new SnapshotFilter());
+    $scope.paginator = new Paginator(1, 10, [], new SnapshotFilter(''));
     $scope.page = $scope.paginator.getPage();
     $scope.snapshots = [];
 
     $scope.snapshot = null;
     $scope.snapshot_repository = '';
+    $scope.loadingSnapshots = false;
 
     $scope.restorable_indices = [];
     $scope.repository_form = new Repository('', {settings: {}, type: ''});
@@ -5683,14 +5708,17 @@ kopf.controller('SnapshotController', ['$scope', 'ConfirmDialogService',
     };
 
     $scope.fetchSnapshots = function(repository) {
+      $scope.loadingSnapshots = true;
       OpenSearchService.getSnapshots(repository,
           function(response) {
             $scope.paginator.setCollection(response);
             $scope.page = $scope.paginator.getPage();
+            $scope.loadingSnapshots = false;
           },
           function(error) {
             $scope.paginator.setCollection([]);
             $scope.page = $scope.paginator.getPage();
+            $scope.loadingSnapshots = false;
             AlertService.error('Error while fetching snapshots', error);
           }
       );
@@ -5731,6 +5759,7 @@ kopf.controller('WarmersController', [
     $scope.warmer = new Warmer('', '', {types: [], source: {}});
 
     $scope.warmers = [];
+    $scope.loadingWarmers = false;
 
     $scope.$watch(
         function() {
@@ -5793,14 +5822,17 @@ kopf.controller('WarmersController', [
 
     $scope.loadIndexWarmers = function() {
       if (isDefined($scope.index)) {
+        $scope.loadingWarmers = true;
         OpenSearchService.getIndexWarmers($scope.index, '',
             function(warmers) {
               $scope.paginator.setCollection(warmers);
               $scope.page = $scope.paginator.getPage();
+              $scope.loadingWarmers = false;
             },
             function(error) {
               $scope.paginator.setCollection([]);
               $scope.page = $scope.paginator.getPage();
+              $scope.loadingWarmers = false;
               AlertService.error('Error while fetching warmers', error);
             }
         );

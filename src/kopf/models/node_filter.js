@@ -10,7 +10,9 @@ function NodeFilter(name, data, master, client, timestamp) {
   };
 
   this.getSorting = function() {
-    return undefined;
+    return function(a, b) {
+      return a.name.localeCompare(b.name);
+    };
   };
 
   this.equals = function(other) {

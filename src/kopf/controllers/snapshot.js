@@ -6,12 +6,13 @@ kopf.controller('SnapshotController', ['$scope', 'ConfirmDialogService',
     $scope.repositories = [];
     $scope.indices = [];
 
-    $scope.paginator = new Paginator(1, 10, [], new SnapshotFilter());
+    $scope.paginator = new Paginator(1, 10, [], new SnapshotFilter(''));
     $scope.page = $scope.paginator.getPage();
     $scope.snapshots = [];
 
     $scope.snapshot = null;
     $scope.snapshot_repository = '';
+    $scope.loadingSnapshots = false;
 
     $scope.restorable_indices = [];
     $scope.repository_form = new Repository('', {settings: {}, type: ''});
@@ -205,14 +206,17 @@ kopf.controller('SnapshotController', ['$scope', 'ConfirmDialogService',
     };
 
     $scope.fetchSnapshots = function(repository) {
+      $scope.loadingSnapshots = true;
       OpenSearchService.getSnapshots(repository,
           function(response) {
             $scope.paginator.setCollection(response);
             $scope.page = $scope.paginator.getPage();
+            $scope.loadingSnapshots = false;
           },
           function(error) {
             $scope.paginator.setCollection([]);
             $scope.page = $scope.paginator.getPage();
+            $scope.loadingSnapshots = false;
             AlertService.error('Error while fetching snapshots', error);
           }
       );

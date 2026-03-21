@@ -8,7 +8,9 @@ function AliasFilter(index, alias) {
   };
 
   this.getSorting = function() {
-    return undefined;
+    return function(a, b) {
+      return a.index.localeCompare(b.index);
+    };
   };
 
   this.equals = function(other) {

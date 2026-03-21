@@ -7,7 +7,9 @@ function WarmerFilter(id) {
   };
 
   this.getSorting = function() {
-    return undefined;
+    return function(a, b) {
+      return a.id.localeCompare(b.id);
+    };
   };
 
   this.equals = function(other) {
