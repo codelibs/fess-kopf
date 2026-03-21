@@ -1173,6 +1173,17 @@ a.cluster-map-node-action {
 .history-icon > a:hover {
 	text-decoration: none;
 }
+
+.ace_editor.ace_autocomplete {
+	width: 400px;
+	z-index: 200000;
+	font-size: 12px;
+}
+
+.ace_editor.ace_autocomplete .ace_completion-meta {
+	color: #999;
+	font-style: italic;
+}
 select.input-sm-twoxheight {
 	height: 100px;
 	line-height: 30px;
