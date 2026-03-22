@@ -1276,6 +1276,11 @@ function AceEditor(target) {
         enableSnippets: false
       });
       editor.completers = completers;
+      editor.commands.on('afterExec', function(e) {
+        if (e.command.name === 'insertstring' && e.args === '"') {
+          editor.execCommand('startAutocomplete');
+        }
+      });
     });
   };
 }
@@ -1888,7 +1893,29 @@ var QUERY_DSL_DEFINITIONS = {
   ],
   'aggs.*.top_hits': ['size', 'sort', '_source', 'from'],
   'aggs.*.composite': ['size', 'sources', 'after'],
-  'sort.*': ['order', 'mode', 'missing', 'nested', 'unmapped_type']
+  'sort.*': ['order', 'mode', 'missing', 'nested', 'unmapped_type'],
+  'query.match_phrase_prefix.*': [
+    'query', 'analyzer', 'slop', 'boost', 'zero_terms_query', 'max_expansions'
+  ],
+  'query.match_bool_prefix.*': [
+    'query', 'operator', 'analyzer', 'fuzziness', 'prefix_length',
+    'max_expansions', 'boost'
+  ],
+  'query.span_term.*': ['value', 'boost'],
+  'query.span_near': ['clauses', 'slop', 'in_order', 'collect_payloads'],
+  'query.span_or': ['clauses'],
+  'query.span_first': ['match', 'end'],
+  'query.span_not': ['include', 'exclude', 'pre', 'post', 'dist'],
+  'collapse': ['field', 'inner_hits', 'max_concurrent_group_searches'],
+  'suggest.*': ['text', 'term', 'phrase', 'completion'],
+  'suggest.*.term': [
+    'field', 'size', 'suggest_mode', 'sort', 'string_distance', 'analyzer'
+  ],
+  'suggest.*.phrase': [
+    'field', 'size', 'gram_size', 'real_word_error_likelihood', 'confidence',
+    'max_errors', 'analyzer'
+  ],
+  'suggest.*.completion': ['field', 'size', 'skip_duplicates', 'fuzzy']
 };
 
 var FIELD_NAME_CONTEXTS = [
@@ -1902,6 +1929,45 @@ var QUERY_CONTEXTS = [
   'query.bool.must', 'query.bool.must_not', 'query.bool.should',
   'query.bool.filter'
 ];
+
+var VALUE_FIELD_CONTEXTS = [
+  'aggs.*.terms.field',
+  'aggs.*.date_histogram.field',
+  'aggs.*.histogram.field',
+  'aggs.*.range.field',
+  'aggs.*.date_range.field',
+  'query.exists.field',
+  'query.nested.path',
+  'query.query_string.default_field',
+  'collapse.field'
+];
+
+var VALUE_ENUM_DEFINITIONS = {
+  'query.match.*.operator': ['and', 'or'],
+  'query.match.*.zero_terms_query': ['none', 'all'],
+  'query.match_phrase.*.zero_terms_query': ['none', 'all'],
+  'query.multi_match.type': [
+    'best_fields', 'most_fields', 'cross_fields',
+    'phrase', 'phrase_prefix', 'bool_prefix'
+  ],
+  'query.multi_match.operator': ['and', 'or'],
+  'query.multi_match.zero_terms_query': ['none', 'all'],
+  'query.nested.score_mode': ['avg', 'max', 'min', 'sum', 'none'],
+  'query.function_score.score_mode': [
+    'multiply', 'sum', 'avg', 'first', 'max', 'min'
+  ],
+  'query.function_score.boost_mode': [
+    'multiply', 'replace', 'sum', 'avg', 'max', 'min'
+  ],
+  'query.range.*.relation': ['INTERSECTS', 'CONTAINS', 'WITHIN'],
+  'sort.*.order': ['asc', 'desc'],
+  'sort.*.mode': ['min', 'max', 'sum', 'avg', 'median'],
+  'sort.*.missing': ['_last', '_first'],
+  'highlight.type': ['unified', 'plain', 'fvh'],
+  'highlight.order': ['score'],
+  'highlight.encoder': ['default', 'html'],
+  'highlight.boundary_scanner': ['sentence', 'word', 'chars']
+};
 
 // --- Known DSL keywords (used to distinguish user-defined names from
 //     DSL structure when resolving wildcard patterns) ---
@@ -1925,6 +1991,20 @@ var DSL_KEYWORDS = (function() {
   }
   return keywords;
 })();
+
+var PATH_ALIASES = {
+  'post_filter': 'query'
+};
+
+function resolvePathAlias(pathStr) {
+  var firstDot = pathStr.indexOf('.');
+  var firstSegment = firstDot === -1 ? pathStr : pathStr.substring(0, firstDot);
+  if (PATH_ALIASES.hasOwnProperty(firstSegment)) {
+    var rest = firstDot === -1 ? '' : pathStr.substring(firstDot);
+    return PATH_ALIASES[firstSegment] + rest;
+  }
+  return null;
+}
 
 // --- Priority scores for common items ---
 
@@ -2105,6 +2185,7 @@ function QueryDslContextParser(text, cursorRow, cursorCol) {
   this.isKey = isKey;
   this.isInArray = stack.length > 0 && stack[stack.length - 1].isArray;
   this.partial = inString ? currentKey : (lastKey || currentKey);
+  this.lastKey = isKey ? '' : lastKey;
 }
 
 // --- Helper functions ---
@@ -2122,7 +2203,75 @@ function isFieldNameContext(pathStr) {
       return true;
     }
   }
+  var aliased = resolvePathAlias(pathStr);
+  if (aliased !== null) {
+    return isFieldNameContext(aliased);
+  }
   return false;
+}
+
+function isValueFieldContext(pathStr, lastKey) {
+  if (!lastKey) {
+    return false;
+  }
+  var fullPath = pathStr ? pathStr + '.' + lastKey : lastKey;
+  fullPath = normalizeAggsAlias(fullPath);
+  if (VALUE_FIELD_CONTEXTS.indexOf(fullPath) !== -1) {
+    return true;
+  }
+  var parts = fullPath.split('.');
+  var wildParts = parts.slice();
+  for (var i = 0; i < wildParts.length; i++) {
+    if (!DSL_KEYWORDS.hasOwnProperty(wildParts[i])) {
+      wildParts[i] = '*';
+    }
+  }
+  var wildPath = wildParts.join('.');
+  if (wildPath !== fullPath &&
+      VALUE_FIELD_CONTEXTS.indexOf(wildPath) !== -1) {
+    return true;
+  }
+  var collapsed = collapseNestedAggs(wildParts);
+  if (collapsed && VALUE_FIELD_CONTEXTS.indexOf(collapsed) !== -1) {
+    return true;
+  }
+  var aliased = resolvePathAlias(fullPath);
+  if (aliased !== null) {
+    return isValueFieldContext(
+        aliased.substring(0, aliased.lastIndexOf('.')),
+        aliased.substring(aliased.lastIndexOf('.') + 1));
+  }
+  return false;
+}
+
+function lookupValueEnums(pathStr, lastKey) {
+  if (!lastKey) {
+    return [];
+  }
+  var fullPath = pathStr ? pathStr + '.' + lastKey : lastKey;
+  fullPath = normalizeAggsAlias(fullPath);
+  if (VALUE_ENUM_DEFINITIONS.hasOwnProperty(fullPath)) {
+    return VALUE_ENUM_DEFINITIONS[fullPath];
+  }
+  var parts = fullPath.split('.');
+  var wildParts = parts.slice();
+  for (var i = 0; i < wildParts.length; i++) {
+    if (!DSL_KEYWORDS.hasOwnProperty(wildParts[i])) {
+      wildParts[i] = '*';
+    }
+  }
+  var wildPath = wildParts.join('.');
+  if (wildPath !== fullPath &&
+      VALUE_ENUM_DEFINITIONS.hasOwnProperty(wildPath)) {
+    return VALUE_ENUM_DEFINITIONS[wildPath];
+  }
+  var aliased = resolvePathAlias(fullPath);
+  if (aliased !== null) {
+    return lookupValueEnums(
+        aliased.substring(0, aliased.lastIndexOf('.')),
+        aliased.substring(aliased.lastIndexOf('.') + 1));
+  }
+  return [];
 }
 
 /**
@@ -2140,6 +2289,14 @@ function isQueryArrayContext(context) {
   for (var i = 0; i < QUERY_CONTEXTS.length; i++) {
     if (pathStr === QUERY_CONTEXTS[i]) {
       return true;
+    }
+  }
+  var aliased = resolvePathAlias(pathStr);
+  if (aliased !== null) {
+    for (var j = 0; j < QUERY_CONTEXTS.length; j++) {
+      if (aliased === QUERY_CONTEXTS[j]) {
+        return true;
+      }
     }
   }
   return false;
@@ -2200,6 +2357,12 @@ function lookupSuggestions(pathStr) {
   var collapsed = collapseNestedAggs(parts);
   if (collapsed) {
     return lookupSuggestions(collapsed);
+  }
+
+  // 4. Try path alias resolution.
+  var aliased = resolvePathAlias(pathStr);
+  if (aliased !== null) {
+    return lookupSuggestions(aliased);
   }
 
   return [];
@@ -2531,8 +2694,51 @@ function createQueryDslCompleter(mappingProvider) {
       // Strip a leading quote that Ace may include in the prefix.
       var cleanPrefix = prefix.replace(/^"/, '');
 
-      // Only suggest keys, not values (for now).
+      // --- Value position completions ---
       if (!context.isKey) {
+        var valuePath = normalizeAggsAlias(context.path.join('.'));
+        var valueKey = context.lastKey;
+
+        // Field-name value contexts (e.g. "field": "" in aggs.terms)
+        if (isValueFieldContext(valuePath, valueKey)) {
+          var vFields = resolveFields(mappingProvider);
+          if (vFields.length > 0) {
+            var vFieldCompletions = [];
+            for (var vf = 0; vf < vFields.length; vf++) {
+              if (cleanPrefix.length === 0 ||
+                  vFields[vf].indexOf(cleanPrefix) === 0) {
+                vFieldCompletions.push({
+                  caption: vFields[vf],
+                  value: vFields[vf],
+                  score: 1000 - vf,
+                  meta: 'field'
+                });
+              }
+            }
+            callback(null, vFieldCompletions);
+            return;
+          }
+        }
+
+        // Enum value contexts (e.g. "operator": "" in match)
+        var enums = lookupValueEnums(valuePath, valueKey);
+        if (enums.length > 0) {
+          var enumCompletions = [];
+          for (var ve = 0; ve < enums.length; ve++) {
+            if (cleanPrefix.length === 0 ||
+                enums[ve].indexOf(cleanPrefix) === 0) {
+              enumCompletions.push({
+                caption: enums[ve],
+                value: enums[ve],
+                score: 900 - ve,
+                meta: 'value'
+              });
+            }
+          }
+          callback(null, enumCompletions);
+          return;
+        }
+
         callback(null, []);
         return;
       }
@@ -2540,6 +2746,39 @@ function createQueryDslCompleter(mappingProvider) {
       var pathStr = normalizeAggsAlias(context.path.join('.'));
       var suggestions = [];
       var meta = 'property';
+
+      // Sort array: keys are field names.
+      if (context.isInArray && pathStr === 'sort') {
+        var sortFields = resolveFields(mappingProvider);
+        if (sortFields.length > 0) {
+          var sortCompletions = [];
+          var specialSortFields = ['_score', '_doc'];
+          for (var ssf = 0; ssf < specialSortFields.length; ssf++) {
+            if (cleanPrefix.length === 0 ||
+                specialSortFields[ssf].indexOf(cleanPrefix) === 0) {
+              sortCompletions.push({
+                caption: specialSortFields[ssf],
+                value: specialSortFields[ssf],
+                score: 1100 - ssf,
+                meta: 'field'
+              });
+            }
+          }
+          for (var sf = 0; sf < sortFields.length; sf++) {
+            if (cleanPrefix.length === 0 ||
+                sortFields[sf].indexOf(cleanPrefix) === 0) {
+              sortCompletions.push({
+                caption: sortFields[sf],
+                value: sortFields[sf],
+                score: 1000 - sf,
+                meta: 'field'
+              });
+            }
+          }
+          callback(null, sortCompletions);
+          return;
+        }
+      }
 
       // 1. Bool array contexts (must, should, filter, must_not) expect
       //    query type objects.

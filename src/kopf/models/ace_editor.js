@@ -53,6 +53,11 @@ function AceEditor(target) {
         enableSnippets: false
       });
       editor.completers = completers;
+      editor.commands.on('afterExec', function(e) {
+        if (e.command.name === 'insertstring' && e.args === '"') {
+          editor.execCommand('startAutocomplete');
+        }
+      });
     });
   };
 }
