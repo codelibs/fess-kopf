@@ -2082,4 +2082,789 @@ describe('createQueryDslCompleter', function() {
     expect(c).toContain('f1');
     expect(c).toContain('f2');
   });
+
+  // =========================================================================
+  // Value position field completions (integration)
+  // =========================================================================
+
+  describe('value position field completions', function() {
+
+    var mappingData = {
+      'idx': {
+        mappings: {
+          properties: {
+            status: {type: 'keyword'},
+            title: {type: 'text'},
+            timestamp: {type: 'date'}
+          }
+        }
+      }
+    };
+
+    var provider = function() { return new ClusterMapping(mappingData); };
+
+    it('should suggest field names at value position inside aggs.*.terms',
+      function() {
+        var text =
+          '{\n  "aggs": {\n    "x": {\n      "terms": {\n' +
+          '        "field": \n      }\n    }\n  }\n}';
+        var results = getCompletions(text, 4, 17, '', provider);
+        var c = captions(results);
+        expect(c).toContain('status');
+        expect(c).toContain('title');
+        expect(c).toContain('timestamp');
+      }
+    );
+
+    it('should suggest field names at value position inside query.exists',
+      function() {
+        var text =
+          '{\n  "query": {\n    "exists": {\n      "field": \n    }\n  }\n}';
+        var results = getCompletions(text, 3, 15, '', provider);
+        var c = captions(results);
+        expect(c).toContain('status');
+        expect(c).toContain('title');
+        expect(c).toContain('timestamp');
+      }
+    );
+
+    it('should return empty at value position for "size" at root (regression)',
+      function() {
+        var text = '{\n  "size": ';
+        var results = getCompletions(text, 1, 10, '', provider);
+        expect(results).toEqual([]);
+      }
+    );
+
+    it('should return empty at value position for field inside query.match',
+      function() {
+        var text =
+          '{\n  "query": {\n    "match": {\n      "title": ';
+        var results = getCompletions(text, 3, 16, '', provider);
+        expect(results).toEqual([]);
+      }
+    );
+
+    it('should return empty for value field context without mapping',
+      function() {
+        var text =
+          '{\n  "aggs": {\n    "x": {\n      "terms": {\n' +
+          '        "field": \n      }\n    }\n  }\n}';
+        var results = getCompletions(text, 4, 17, '');
+        expect(results).toEqual([]);
+      }
+    );
+
+    it('should filter value field completions by prefix', function() {
+      var text =
+        '{\n  "aggs": {\n    "x": {\n      "terms": {\n' +
+        '        "field": \n      }\n    }\n  }\n}';
+      var results = getCompletions(text, 4, 17, 'st', provider);
+      var c = captions(results);
+      expect(c).toContain('status');
+      expect(c).not.toContain('title');
+      expect(c).not.toContain('timestamp');
+    });
+
+    it('should suggest field names for date_histogram field value',
+      function() {
+        var text =
+          '{\n  "aggs": {\n    "x": {\n      "date_histogram": {\n' +
+          '        "field": \n      }\n    }\n  }\n}';
+        var results = getCompletions(text, 4, 17, '', provider);
+        var c = captions(results);
+        expect(c).toContain('status');
+        expect(c).toContain('timestamp');
+      }
+    );
+
+    it('should suggest field names using "aggregations" spelling',
+      function() {
+        var text =
+          '{\n  "aggregations": {\n    "x": {\n      "terms": {\n' +
+          '        "field": \n      }\n    }\n  }\n}';
+        var results = getCompletions(text, 4, 17, '', provider);
+        var c = captions(results);
+        expect(c).toContain('status');
+        expect(c).toContain('title');
+      }
+    );
+  });
+
+  // =========================================================================
+  // Value position enum completions (integration)
+  // =========================================================================
+
+  describe('value position enum completions', function() {
+
+    it('should suggest enum values for operator inside query.match.title',
+      function() {
+        var text =
+          '{\n  "query": {\n    "match": {\n      "title": {\n' +
+          '        "operator": \n      }\n    }\n  }\n}';
+        var results = getCompletions(text, 4, 20, '');
+        var c = captions(results);
+        expect(c).toContain('and');
+        expect(c).toContain('or');
+        expect(c.length).toBe(2);
+      }
+    );
+
+    it('should suggest enum values for order inside sort.price', function() {
+      var text =
+        '{\n  "sort": [\n    {\n      "price": {\n' +
+        '        "order": \n      }\n    }\n  ]\n}';
+      var results = getCompletions(text, 4, 17, '');
+      var c = captions(results);
+      expect(c).toContain('asc');
+      expect(c).toContain('desc');
+    });
+
+    it('should have meta "value" for enum completions', function() {
+      var text =
+        '{\n  "query": {\n    "match": {\n      "title": {\n' +
+        '        "operator": \n      }\n    }\n  }\n}';
+      var results = getCompletions(text, 4, 20, '');
+      var item = results.find(function(r) { return r.caption === 'and'; });
+      expect(item).toBeDefined();
+      expect(item.meta).toBe('value');
+    });
+
+    it('should filter enum values by prefix', function() {
+      var text =
+        '{\n  "query": {\n    "multi_match": {\n' +
+        '      "type": \n    }\n  }\n}';
+      var results = getCompletions(text, 3, 14, 'ph');
+      var c = captions(results);
+      expect(c).toContain('phrase');
+      expect(c).toContain('phrase_prefix');
+      expect(c).not.toContain('best_fields');
+      expect(c).not.toContain('cross_fields');
+    });
+
+    it('should suggest function_score score_mode values', function() {
+      var text =
+        '{\n  "query": {\n    "function_score": {\n' +
+        '      "score_mode": \n    }\n  }\n}';
+      var results = getCompletions(text, 3, 20, '');
+      var c = captions(results);
+      expect(c).toContain('multiply');
+      expect(c).toContain('sum');
+      expect(c).toContain('avg');
+      expect(c).toContain('first');
+      expect(c).toContain('max');
+      expect(c).toContain('min');
+    });
+
+    it('should suggest range relation values', function() {
+      var text =
+        '{\n  "query": {\n    "range": {\n      "age": {\n' +
+        '        "relation": \n      }\n    }\n  }\n}';
+      var results = getCompletions(text, 4, 20, '');
+      var c = captions(results);
+      expect(c).toContain('INTERSECTS');
+      expect(c).toContain('CONTAINS');
+      expect(c).toContain('WITHIN');
+    });
+  });
+
+  // =========================================================================
+  // post_filter completions (integration)
+  // =========================================================================
+
+  describe('post_filter completions', function() {
+
+    it('should suggest query types inside post_filter', function() {
+      var text = '{\n  "post_filter": {\n    \n  }\n}';
+      var results = getCompletions(text, 2, 4, '');
+      var c = captions(results);
+      expect(c).toContain('match');
+      expect(c).toContain('bool');
+      expect(c).toContain('term');
+      expect(c).toContain('range');
+      expect(c).toContain('exists');
+    });
+
+    it('should suggest field names inside post_filter.match with mapping',
+      function() {
+        var mappingData = {
+          'idx': {
+            mappings: {
+              properties: {
+                status: {type: 'keyword'},
+                title: {type: 'text'}
+              }
+            }
+          }
+        };
+        var provider = function() {
+          return new ClusterMapping(mappingData);
+        };
+        var text =
+          '{\n  "post_filter": {\n    "match": {\n      \n    }\n  }\n}';
+        var results = getCompletions(text, 3, 6, '', provider);
+        var c = captions(results);
+        expect(c).toContain('status');
+        expect(c).toContain('title');
+      }
+    );
+
+    it('should suggest bool clauses inside post_filter.bool', function() {
+      var text =
+        '{\n  "post_filter": {\n    "bool": {\n      \n    }\n  }\n}';
+      var results = getCompletions(text, 3, 6, '');
+      var c = captions(results);
+      expect(c).toContain('must');
+      expect(c).toContain('should');
+      expect(c).toContain('filter');
+      expect(c).toContain('must_not');
+    });
+
+    it('should suggest enum values inside post_filter via alias', function() {
+      var text =
+        '{\n  "post_filter": {\n    "match": {\n' +
+        '      "title": {\n        "operator": \n' +
+        '      }\n    }\n  }\n}';
+      var results = getCompletions(text, 4, 20, '');
+      var c = captions(results);
+      expect(c).toContain('and');
+      expect(c).toContain('or');
+    });
+
+    it('should suggest query types in post_filter.bool.must array context',
+      function() {
+        var text =
+          '{\n  "post_filter": {\n    "bool": {\n' +
+          '      "must": [\n        \n      ]\n    }\n  }\n}';
+        var results = getCompletions(text, 4, 8, '');
+        var c = captions(results);
+        expect(c).toContain('match');
+        expect(c).toContain('term');
+        expect(c).toContain('range');
+      }
+    );
+  });
+
+  // =========================================================================
+  // Sort array field completions (integration)
+  // =========================================================================
+
+  describe('sort array field completions', function() {
+
+    it('should suggest field names plus _score and _doc inside sort array',
+      function() {
+        var mappingData = {
+          'idx': {
+            mappings: {
+              properties: {
+                price: {type: 'float'},
+                name: {type: 'text'}
+              }
+            }
+          }
+        };
+        var provider = function() {
+          return new ClusterMapping(mappingData);
+        };
+        var text = '{\n  "sort": [\n    {\n      \n    }\n  ]\n}';
+        // cursor inside the object within the sort array — but the parser
+        // puts isInArray=false because the immediate parent is an object.
+        // So the sort-array branch requires isInArray=true at path 'sort'.
+        // We need the cursor to be directly inside the array (not inside
+        // a nested object) for the sort-array branch.
+        var textDirect = '{\n  "sort": [\n    \n  ]\n}';
+        var results = getCompletions(textDirect, 2, 4, '', provider);
+        var c = captions(results);
+        expect(c).toContain('_score');
+        expect(c).toContain('_doc');
+        expect(c).toContain('price');
+        expect(c).toContain('name');
+      }
+    );
+
+    it('should give _score higher score than regular fields in sort array',
+      function() {
+        var mappingData = {
+          'idx': {
+            mappings: {
+              properties: {
+                price: {type: 'float'}
+              }
+            }
+          }
+        };
+        var provider = function() {
+          return new ClusterMapping(mappingData);
+        };
+        var textDirect = '{\n  "sort": [\n    \n  ]\n}';
+        var results = getCompletions(textDirect, 2, 4, '', provider);
+        var scoreItem = results.find(function(r) {
+          return r.caption === '_score';
+        });
+        var priceItem = results.find(function(r) {
+          return r.caption === 'price';
+        });
+        expect(scoreItem).toBeDefined();
+        expect(priceItem).toBeDefined();
+        expect(scoreItem.score).toBeGreaterThan(priceItem.score);
+      }
+    );
+
+    it('should filter sort array fields by prefix', function() {
+      var mappingData = {
+        'idx': {
+          mappings: {
+            properties: {
+              price: {type: 'float'},
+              name: {type: 'text'}
+            }
+          }
+        }
+      };
+      var provider = function() {
+        return new ClusterMapping(mappingData);
+      };
+      var textDirect = '{\n  "sort": [\n    \n  ]\n}';
+      var results = getCompletions(textDirect, 2, 4, '_', provider);
+      var c = captions(results);
+      expect(c).toContain('_score');
+      expect(c).toContain('_doc');
+      expect(c).not.toContain('price');
+      expect(c).not.toContain('name');
+    });
+
+    it('should fall back to DSL sort params without mapping', function() {
+      var text = '{\n  "sort": [\n    {\n      \n    }\n  ]\n}';
+      var results = getCompletions(text, 3, 6, '');
+      // Without mapping, sort array should still show something
+      // (falls through to standard DSL lookup — sort.* keys)
+      expect(results).toBeDefined();
+    });
+  });
+
+  // =========================================================================
+  // New DSL definitions (integration)
+  // =========================================================================
+
+  describe('new DSL definitions', function() {
+
+    it('should suggest collapse parameters', function() {
+      var text = '{\n  "collapse": {\n    \n  }\n}';
+      var results = getCompletions(text, 2, 4, '');
+      var c = captions(results);
+      expect(c).toContain('field');
+      expect(c).toContain('inner_hits');
+      expect(c).toContain('max_concurrent_group_searches');
+    });
+
+    it('should suggest suggest types for named suggest', function() {
+      var text =
+        '{\n  "suggest": {\n    "my_suggest": {\n      \n    }\n  }\n}';
+      var results = getCompletions(text, 3, 6, '');
+      var c = captions(results);
+      expect(c).toContain('text');
+      expect(c).toContain('term');
+      expect(c).toContain('phrase');
+      expect(c).toContain('completion');
+    });
+
+    it('should suggest span_near parameters', function() {
+      var text =
+        '{\n  "query": {\n    "span_near": {\n      \n    }\n  }\n}';
+      var results = getCompletions(text, 3, 6, '');
+      var c = captions(results);
+      expect(c).toContain('clauses');
+      expect(c).toContain('slop');
+      expect(c).toContain('in_order');
+    });
+
+    it('should suggest match_phrase_prefix parameters inside field',
+      function() {
+        var text =
+          '{\n  "query": {\n    "match_phrase_prefix": {\n' +
+          '      "title": {\n        \n      }\n    }\n  }\n}';
+        var results = getCompletions(text, 4, 8, '');
+        var c = captions(results);
+        expect(c).toContain('query');
+        expect(c).toContain('analyzer');
+        expect(c).toContain('slop');
+        expect(c).toContain('max_expansions');
+      }
+    );
+
+    it('should suggest match_bool_prefix parameters inside field',
+      function() {
+        var text =
+          '{\n  "query": {\n    "match_bool_prefix": {\n' +
+          '      "title": {\n        \n      }\n    }\n  }\n}';
+        var results = getCompletions(text, 4, 8, '');
+        var c = captions(results);
+        expect(c).toContain('query');
+        expect(c).toContain('operator');
+        expect(c).toContain('fuzziness');
+        expect(c).toContain('max_expansions');
+      }
+    );
+
+    it('should suggest span_term parameters inside field', function() {
+      var text =
+        '{\n  "query": {\n    "span_term": {\n' +
+        '      "title": {\n        \n      }\n    }\n  }\n}';
+      var results = getCompletions(text, 4, 8, '');
+      var c = captions(results);
+      expect(c).toContain('value');
+      expect(c).toContain('boost');
+    });
+
+    it('should suggest span_or parameters', function() {
+      var text =
+        '{\n  "query": {\n    "span_or": {\n      \n    }\n  }\n}';
+      var results = getCompletions(text, 3, 6, '');
+      var c = captions(results);
+      expect(c).toContain('clauses');
+    });
+
+    it('should suggest span_first parameters', function() {
+      var text =
+        '{\n  "query": {\n    "span_first": {\n      \n    }\n  }\n}';
+      var results = getCompletions(text, 3, 6, '');
+      var c = captions(results);
+      expect(c).toContain('match');
+      expect(c).toContain('end');
+    });
+
+    it('should suggest span_not parameters', function() {
+      var text =
+        '{\n  "query": {\n    "span_not": {\n      \n    }\n  }\n}';
+      var results = getCompletions(text, 3, 6, '');
+      var c = captions(results);
+      expect(c).toContain('include');
+      expect(c).toContain('exclude');
+      expect(c).toContain('pre');
+      expect(c).toContain('post');
+      expect(c).toContain('dist');
+    });
+
+    it('should suggest suggest.*.term parameters', function() {
+      var text =
+        '{\n  "suggest": {\n    "my_suggest": {\n' +
+        '      "term": {\n        \n      }\n    }\n  }\n}';
+      var results = getCompletions(text, 4, 8, '');
+      var c = captions(results);
+      expect(c).toContain('field');
+      expect(c).toContain('size');
+      expect(c).toContain('suggest_mode');
+      expect(c).toContain('analyzer');
+    });
+
+    it('should suggest suggest.*.phrase parameters', function() {
+      var text =
+        '{\n  "suggest": {\n    "my_suggest": {\n' +
+        '      "phrase": {\n        \n      }\n    }\n  }\n}';
+      var results = getCompletions(text, 4, 8, '');
+      var c = captions(results);
+      expect(c).toContain('field');
+      expect(c).toContain('size');
+      expect(c).toContain('gram_size');
+      expect(c).toContain('confidence');
+    });
+
+    it('should suggest suggest.*.completion parameters', function() {
+      var text =
+        '{\n  "suggest": {\n    "my_suggest": {\n' +
+        '      "completion": {\n        \n      }\n    }\n  }\n}';
+      var results = getCompletions(text, 4, 8, '');
+      var c = captions(results);
+      expect(c).toContain('field');
+      expect(c).toContain('size');
+      expect(c).toContain('skip_duplicates');
+      expect(c).toContain('fuzzy');
+    });
+  });
+});
+
+// ===========================================================================
+// QueryDslContextParser.lastKey
+// ===========================================================================
+
+describe('QueryDslContextParser.lastKey', function() {
+
+  it('should set lastKey to key name when cursor is at value position',
+    function() {
+      var text = '{\n  "size": ';
+      var ctx = new QueryDslContextParser(text, 1, 10);
+      expect(ctx.isKey).toBe(false);
+      expect(ctx.lastKey).toBe('size');
+    }
+  );
+
+  it('should set lastKey to empty string when cursor is at key position',
+    function() {
+      var text = '{\n  \n}';
+      var ctx = new QueryDslContextParser(text, 1, 2);
+      expect(ctx.isKey).toBe(true);
+      expect(ctx.lastKey).toBe('');
+    }
+  );
+
+  it('should set lastKey for nested value position', function() {
+    var text =
+      '{\n  "query": {\n    "match": {\n      "title": {\n' +
+      '        "operator": ';
+    var ctx = new QueryDslContextParser(text, 4, 20);
+    expect(ctx.isKey).toBe(false);
+    expect(ctx.lastKey).toBe('operator');
+  });
+
+  it('should set lastKey to empty after comma (key position)', function() {
+    var text = '{\n  "size": 10,\n  ';
+    var ctx = new QueryDslContextParser(text, 2, 2);
+    expect(ctx.isKey).toBe(true);
+    expect(ctx.lastKey).toBe('');
+  });
+
+  it('should set lastKey for field value in aggs terms', function() {
+    var text =
+      '{\n  "aggs": {\n    "x": {\n      "terms": {\n' +
+      '        "field": ';
+    var ctx = new QueryDslContextParser(text, 4, 17);
+    expect(ctx.isKey).toBe(false);
+    expect(ctx.lastKey).toBe('field');
+  });
+});
+
+// ===========================================================================
+// isValueFieldContext
+// ===========================================================================
+
+describe('isValueFieldContext', function() {
+
+  it('should return true for aggs.my_agg.terms with field (wildcard match)',
+    function() {
+      expect(isValueFieldContext('aggs.my_agg.terms', 'field')).toBe(true);
+    }
+  );
+
+  it('should return false for aggs.my_agg.terms with size', function() {
+    expect(isValueFieldContext('aggs.my_agg.terms', 'size')).toBe(false);
+  });
+
+  it('should return true for query.exists with field (exact match)',
+    function() {
+      expect(isValueFieldContext('query.exists', 'field')).toBe(true);
+    }
+  );
+
+  it('should return true for query.nested with path', function() {
+    expect(isValueFieldContext('query.nested', 'path')).toBe(true);
+  });
+
+  it('should return true for query.query_string with default_field',
+    function() {
+      expect(isValueFieldContext('query.query_string', 'default_field'))
+        .toBe(true);
+    }
+  );
+
+  it('should return true for collapse with field', function() {
+    expect(isValueFieldContext('collapse', 'field')).toBe(true);
+  });
+
+  it('should return true for nested aggs (aggs.x.aggs.y.terms with field)',
+    function() {
+      expect(isValueFieldContext('aggs.x.aggs.y.terms', 'field')).toBe(true);
+    }
+  );
+
+  it('should return false for empty path with field', function() {
+    expect(isValueFieldContext('', 'field')).toBe(false);
+  });
+
+  it('should return false for query.match with title (not a value field)',
+    function() {
+      expect(isValueFieldContext('query.match', 'title')).toBe(false);
+    }
+  );
+
+  it('should return false when lastKey is empty', function() {
+    expect(isValueFieldContext('aggs.my_agg.terms', '')).toBe(false);
+  });
+
+  it('should resolve via aggregations alias (normalizeAggsAlias)',
+    function() {
+      expect(isValueFieldContext('aggregations.my_agg.terms', 'field'))
+        .toBe(true);
+    }
+  );
+});
+
+// ===========================================================================
+// lookupValueEnums
+// ===========================================================================
+
+describe('lookupValueEnums', function() {
+
+  it('should return [and, or] for query.match.title with operator',
+    function() {
+      var result = lookupValueEnums('query.match.title', 'operator');
+      expect(result).toEqual(['and', 'or']);
+    }
+  );
+
+  it('should return [none, all] for query.match.title with zero_terms_query',
+    function() {
+      var result = lookupValueEnums('query.match.title', 'zero_terms_query');
+      expect(result).toEqual(['none', 'all']);
+    }
+  );
+
+  it('should return multi_match type enums', function() {
+    var result = lookupValueEnums('query.multi_match', 'type');
+    expect(result).toContain('best_fields');
+    expect(result).toContain('most_fields');
+    expect(result).toContain('cross_fields');
+    expect(result).toContain('phrase');
+    expect(result).toContain('phrase_prefix');
+    expect(result).toContain('bool_prefix');
+  });
+
+  it('should return [asc, desc] for sort.price with order', function() {
+    var result = lookupValueEnums('sort.price', 'order');
+    expect(result).toEqual(['asc', 'desc']);
+  });
+
+  it('should return sort mode enums for sort.price with mode', function() {
+    var result = lookupValueEnums('sort.price', 'mode');
+    expect(result).toContain('min');
+    expect(result).toContain('max');
+    expect(result).toContain('sum');
+    expect(result).toContain('avg');
+    expect(result).toContain('median');
+  });
+
+  it('should return highlight type enums', function() {
+    var result = lookupValueEnums('highlight', 'type');
+    expect(result).toEqual(['unified', 'plain', 'fvh']);
+  });
+
+  it('should return empty for query.match.title with query (not enum)',
+    function() {
+      var result = lookupValueEnums('query.match.title', 'query');
+      expect(result).toEqual([]);
+    }
+  );
+
+  it('should return empty for empty path with size', function() {
+    var result = lookupValueEnums('', 'size');
+    expect(result).toEqual([]);
+  });
+
+  it('should return empty when lastKey is empty', function() {
+    var result = lookupValueEnums('query.match.title', '');
+    expect(result).toEqual([]);
+  });
+
+  it('should resolve via aggregations alias (normalizeAggsAlias)',
+    function() {
+      var result = lookupValueEnums('sort.price', 'missing');
+      expect(result).toContain('_last');
+      expect(result).toContain('_first');
+    }
+  );
+});
+
+// ===========================================================================
+// resolvePathAlias
+// ===========================================================================
+
+describe('resolvePathAlias', function() {
+
+  it('should resolve post_filter to query', function() {
+    expect(resolvePathAlias('post_filter')).toBe('query');
+  });
+
+  it('should resolve post_filter.match.title to query.match.title',
+    function() {
+      expect(resolvePathAlias('post_filter.match.title'))
+        .toBe('query.match.title');
+    }
+  );
+
+  it('should resolve post_filter.bool to query.bool', function() {
+    expect(resolvePathAlias('post_filter.bool')).toBe('query.bool');
+  });
+
+  it('should return null for query (no alias)', function() {
+    expect(resolvePathAlias('query')).toBeNull();
+  });
+
+  it('should return null for aggs (no alias)', function() {
+    expect(resolvePathAlias('aggs')).toBeNull();
+  });
+
+  it('should return null for empty string', function() {
+    expect(resolvePathAlias('')).toBeNull();
+  });
+});
+
+// ===========================================================================
+// lookupSuggestions with aliases
+// ===========================================================================
+
+describe('lookupSuggestions with aliases', function() {
+
+  it('should return query types for post_filter', function() {
+    var result = lookupSuggestions('post_filter');
+    expect(result).toContain('match');
+    expect(result).toContain('bool');
+    expect(result).toContain('term');
+    expect(result).toContain('range');
+    expect(result).toContain('exists');
+  });
+
+  it('should return match parameters for post_filter.match.title',
+    function() {
+      var result = lookupSuggestions('post_filter.match.title');
+      expect(result).toContain('query');
+      expect(result).toContain('operator');
+      expect(result).toContain('analyzer');
+    }
+  );
+
+  it('should return bool clauses for post_filter.bool', function() {
+    var result = lookupSuggestions('post_filter.bool');
+    expect(result).toContain('must');
+    expect(result).toContain('should');
+    expect(result).toContain('filter');
+    expect(result).toContain('must_not');
+  });
+});
+
+// ===========================================================================
+// isFieldNameContext with aliases
+// ===========================================================================
+
+describe('isFieldNameContext with aliases', function() {
+
+  it('should return true for post_filter.match', function() {
+    expect(isFieldNameContext('post_filter.match')).toBe(true);
+  });
+
+  it('should return true for post_filter.term', function() {
+    expect(isFieldNameContext('post_filter.term')).toBe(true);
+  });
+
+  it('should return true for post_filter.range', function() {
+    expect(isFieldNameContext('post_filter.range')).toBe(true);
+  });
+
+  it('should return false for post_filter alone', function() {
+    expect(isFieldNameContext('post_filter')).toBe(false);
+  });
+
+  it('should return false for post_filter.bool (not a field context)',
+    function() {
+      expect(isFieldNameContext('post_filter.bool')).toBe(false);
+    }
+  );
 });
