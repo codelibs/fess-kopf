@@ -1053,7 +1053,7 @@ function Repository(name, info) {
       json.settings = this.getSettings(urlSettings);
     }
     if (this.type === 's3') {
-      var s3Settings = ['region', 'bucket', 'base_path', 'access_key',
+      var s3Settings = ['client', 'region', 'bucket', 'base_path', 'access_key',
         'secret_key', 'chunk_size', 'max_retries', 'compress',
         'server_side_encryption'
       ];
@@ -1065,8 +1065,8 @@ function Repository(name, info) {
       json.settings = this.getSettings(hdfsSettings);
     }
     if (this.type === 'azure') {
-      var azureSettings = ['container', 'base_path', 'concurrent_streams',
-        'chunk_size', 'compress'];
+      var azureSettings = ['client', 'container', 'base_path',
+        'concurrent_streams', 'chunk_size', 'compress'];
       json.settings = this.getSettings(azureSettings);
     }
     return JSON.stringify(json);
