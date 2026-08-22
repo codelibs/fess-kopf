@@ -6045,7 +6045,7 @@ kopf.controller('IndexTemplatesController', ['$scope', 'ConfirmDialogService',
 
     var TemplateBase = JSON.stringify(
         {
-          template: 'template pattern(e.g.: index*)',
+          index_patterns: ['index*'],
           settings: {},
           mappings: {},
           aliases: {}
