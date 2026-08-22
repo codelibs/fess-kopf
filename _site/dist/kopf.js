@@ -4328,7 +4328,7 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
         requests.push($http.get(host + '/_cluster/state', params));
       }
       if (stats) {
-        requests.push($http.get(host + '/_nodes/stats?all=true', params));
+        requests.push($http.get(host + '/_nodes/stats', params));
       }
       if (hotthreads) {
         requests.push($http.get(host + '/_nodes/hot_threads', params));
