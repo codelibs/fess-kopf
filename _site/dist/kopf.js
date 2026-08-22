@@ -900,14 +900,15 @@ function NodeStats(id, stats) {
 function Node(nodeId, nodeStats, nodeInfo) {
   this.id = nodeId;
   this.name = nodeInfo.name;
-  this.elasticVersion = nodeInfo.version;
+  this.version = nodeInfo.version;
   this.jvmVersion = nodeInfo.jvm.version;
   this.availableProcessors = nodeInfo.os.available_processors;
   this.transportAddress = nodeInfo.transport_address;
   this.host = nodeInfo.host;
 
   var roles = getProperty(nodeInfo, 'roles', []);
-  this.master = roles.indexOf('master') < 0 ? false : true;
+  this.master = roles.indexOf('master') >= 0 ||
+      roles.indexOf('cluster_manager') >= 0;
   this.data = (roles.indexOf('data') < 0 && roles.indexOf('data_content') < 0 &&
     roles.indexOf('data_hot') < 0 && roles.indexOf('data_warm') < 0 &&
     roles.indexOf('data_cold') < 0) ? false : true;
