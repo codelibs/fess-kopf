@@ -37,6 +37,7 @@ The following features have been removed as they are not supported in OpenSearch
 - Percolator queries (deprecated in Elasticsearch 5.x)
 - Index warmers (deprecated in Elasticsearch 5.x)
 - Benchmark API (removed in Elasticsearch 5.x)
+- Public GitHub Gist sharing of cluster state (removed for security)
 
 ## Installation
 

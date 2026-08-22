@@ -12,7 +12,7 @@
 				<div id="diagnosisOptions" class="panel-collapse in">
 					<div class="panel-body">
 						<div class="row">
-							<div class="col-xs-12 col-sm-6">
+							<div class="col-xs-12 col-sm-12">
 								<div class="row cluster-health-filters form-group">
 									<div class="col-xs-6 col-sm-3">
 									  <label class="cluster-map-node-type">
@@ -42,32 +42,7 @@
 										</button>
 									</div>
 								</div>
-								
-							</div>
-							<div class="col-xs-12 col-sm-6">
-								<div class="row">
-									<div class="col-xs-12 form-group">
-										<input type="text" ng-model="gist_title" class="form-control input-sm" placeholder="gist title" ng-disabled="results == null">
-									</div>
-								</div>
-								<div class="row">
-									<div class="col-xs-12 form-group" style="text-align: right;">
-										<button type="button" title="easily share cluster information with others" class="btn btn-success input-sm" ng-click='checkPublishClusterHealth()' ng-disabled="results == null" data-toggle="modal" href="#confirm_dialog" data-backdrop="static" tabindex="-1">
-											<i class="fa fa-github"></i> Gist
-										</button>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div class="row">
-							<div class="col-xs-12">
-								<table class="table table-striped table-condensed" style="width: 100%; margin-bottom: 0px">
-									<tr ng-repeat="h in gist_history" style="font-size: 13px">
-										<td class="gist-timestamp-col">{{h.timestamp}}</td>
-										<td class="gist-link-col"><a href="{{h.url}}" target="_blank">{{h.url}}</a></td>
-										<td class="gist-title-col">{{h.title}}</td>
-									</tr>
-								</table>
+
 							</div>
 						</div>
 					</div>
