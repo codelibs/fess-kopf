@@ -113,7 +113,7 @@ kopf.controller('RestController', ['$scope', '$location', '$timeout',
                   $scope.request.method, $scope.request.body);
             },
             function(error, status) {
-              if (status !== 0) {
+              if (status > 0) {
                 AlertService.error('Request was not successful');
                 _handleResponse(error);
               } else {

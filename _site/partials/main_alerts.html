@@ -8,7 +8,7 @@
 			{{a.message}}
 		</a>
 		<span ng-show="!a.hasResponse()">{{a.message}}</span>
-		<div ng-show="a.hasResponse()" id="alert_details_{{a.id}}" class="panel-collapse collapse">
+		<div ng-show="a.hasResponse()" id="alert_details_{{a.id}}" class="panel-collapse collapse" ng-class="{in: a.expanded}">
 			<pre ng-class="a.class" class="alert response-pre">{{a.getResponse()}}</pre>
 		</div>
 	</div>

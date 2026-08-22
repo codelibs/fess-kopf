@@ -7,6 +7,7 @@ var Alert = function(message, response, level, _class, icon) {
   this.icon = icon;
   this.timestamp = getTimeString(currentDate);
   this.id = 'alert_box_' + currentDate.getTime();
+  this.expanded = level === 'error' && isDefined(response);
 
   this.hasResponse = function() {
     return isDefined(this.response);
@@ -41,7 +42,7 @@ kopf.factory('AlertService', function() {
 
   // creates an error alert
   this.error = function(msg, resp, timeout) {
-    timeout = isDefined(timeout) ? timeout : 7500;
+    timeout = isDefined(timeout) ? timeout : 30000;
     var alert = new Alert(msg, resp, 'error', 'alert-danger', 'fa fa-warning');
     return this.addAlert(alert, timeout);
   };
