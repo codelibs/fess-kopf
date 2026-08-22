@@ -3,7 +3,7 @@ kopf.factory('ExternalSettingsService', ['DebugService',
 
     var KEY = 'kopfSettings';
 
-    var ES_HOST = 'location';
+    var LOCATION = 'location';
 
     var OPENSEARCH_ROOT_PATH = 'opensearch_root_path';
 
@@ -57,12 +57,14 @@ kopf.factory('ExternalSettingsService', ['DebugService',
     };
 
     /**
-     * Gets the OpenSearch host URL from settings
+     * Gets the OpenSearch host URL from settings.
+     * Only set this when kopf is not served from the search server, for
+     * example during local development with `grunt server`.
      *
      * @returns {string} OpenSearch host URL
      */
     this.getOpenSearchHost = function() {
-      return this.getSettings()[ES_HOST];
+      return this.getSettings()[LOCATION];
     };
 
     /**

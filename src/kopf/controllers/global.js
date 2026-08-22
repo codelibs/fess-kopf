@@ -1,6 +1,7 @@
-kopf.controller('GlobalController', ['$scope', '$location', '$sce', '$window',
-  'AlertService', 'OpenSearchService', 'ExternalSettingsService', 'PageService',
-  function($scope, $location, $sce, $window, AlertService, OpenSearchService,
+kopf.controller('GlobalController', ['$scope', '$location', '$sce',
+  'AlertService', 'OpenSearchService', 'ExternalSettingsService',
+  'PageService',
+  function($scope, $location, $sce, AlertService, OpenSearchService,
            ExternalSettingsService, PageService) {
 
     $scope.version = '2.0.0';
@@ -29,22 +30,14 @@ kopf.controller('GlobalController', ['$scope', '$location', '$sce', '$window',
       return ExternalSettingsService.getTheme();
     };
 
-    $scope.readParameter = function(name) {
-      var regExp = new RegExp('[\\?&]' + name + '=([^&#]*)');
-      var results = regExp.exec($window.location.href);
-      return isDefined(results) ? results[1] : null;
-    };
-
     $scope.connect = function() {
       try {
         var host = 'http://localhost:9200'; // default
         if ($location.host() !== '') { // not opening from fs
-          var location = $scope.readParameter('location');
           var url = $location.absUrl();
-          if (isDefined(location) ||
-              isDefined(location = ExternalSettingsService
-                .getOpenSearchHost())) {
-            host = location;
+          var configured = ExternalSettingsService.getOpenSearchHost();
+          if (notEmpty(configured)) {
+            host = configured;
           } else if (url.indexOf('/_plugin/kopf') > -1) {
             host = url.substring(0, url.indexOf('/_plugin/kopf'));
           } else {

@@ -225,4 +225,21 @@ describe('ExternalSettingsService', () => {
       expect(service.getOpenSearchRootPath()).toBe(123);
     });
   });
+
+  describe('shipped kopf_external_settings.json', () => {
+    const shipped = JSON.parse(fs.readFileSync(
+      path.join(__dirname, '../_site/kopf_external_settings.json'),
+      'utf8'
+    ));
+
+    test('should declare the location key', () => {
+      expect(Object.keys(shipped)).toContain('location');
+    });
+
+    test('should ship with an empty location', () => {
+      // A non-empty value here would make every Fess installation talk to
+      // whatever host was left behind during development.
+      expect(shipped.location).toBe('');
+    });
+  });
 });
