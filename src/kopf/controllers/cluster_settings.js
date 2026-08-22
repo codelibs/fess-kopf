@@ -7,7 +7,9 @@ kopf.controller('ClusterSettingsController', ['$scope', '$location', '$timeout',
       $('#cluster_settings_tabs a:first').tab('show');
       $('.setting-info').popover();
       $scope.active_settings = 'transient'; // remember last active?
-      $scope.settings = new ClusterSettings(OpenSearchService.cluster.settings);
+      var cluster = OpenSearchService.cluster;
+      $scope.settingsAvailable = cluster.settingsAvailable;
+      $scope.settings = new ClusterSettings(cluster.settings);
     };
 
     $scope.save = function() {

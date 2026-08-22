@@ -11,6 +11,9 @@
 			</div>
 		</div>
 		<div class="content-panel">
+			<div class="alert alert-warning" ng-show="!settingsAvailable">
+				Cluster settings could not be read. Values shown may be incomplete.
+			</div>
 			<div class="row">
 				<div class="col-sm-2 col-xs-12">
 					<ul class="nav nav-pills nav-stacked" id="cluster_settings_tabs">
