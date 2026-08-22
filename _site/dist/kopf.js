@@ -3398,46 +3398,6 @@ kopf.factory('ExternalSettingsService', ['DebugService',
 
   }]);
 
-kopf.factory('HostHistoryService', function() {
-
-  this.getHostHistory = function() {
-    var history = localStorage.getItem('kopfHostHistory');
-    history = isDefined(history) ? history : '[]';
-    return JSON.parse(history);
-  };
-
-  this.addToHistory = function(connection) {
-    var host = connection.host.toLowerCase();
-    var username = connection.username;
-    var password = connection.password;
-    if (username && password) {
-      host = host.replace(/^(https|http):\/\//gi, function addAuth(prefix) {
-        return prefix + username + ':' + password + '@';
-      });
-    }
-    var entry = {host: host};
-    var history = this.getHostHistory();
-    for (var i = 0; i < history.length; i++) {
-      if (history[i].host === host) {
-        history.splice(i, 1);
-        break;
-      }
-    }
-    history.splice(0, 0, entry);
-    if (history.length > 10) {
-      history.length = 10;
-    }
-    localStorage.setItem('kopfHostHistory', JSON.stringify(history));
-  };
-
-  this.clearHistory = function() {
-    localStorage.removeItem('kopfHostHistory');
-  };
-
-  return this;
-
-});
-
 kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
   'ExternalSettingsService', 'DebugService', 'AlertService',
   function($http, $q, $timeout, $location, ExternalSettingsService,
@@ -6073,28 +6033,15 @@ kopf.controller('IndexTemplatesController', ['$scope', 'ConfirmDialogService',
 
 kopf.controller('NavbarController', ['$scope', '$location',
   'ExternalSettingsService', 'OpenSearchService', 'AlertService',
-  'HostHistoryService',
   function($scope, $location, ExternalSettingsService, OpenSearchService,
-           AlertService, HostHistoryService) {
+           AlertService) {
 
     $scope.new_refresh = '' + ExternalSettingsService.getRefreshRate();
     $scope.theme = ExternalSettingsService.getTheme();
-    $scope.new_host = '';
-    $scope.current_host = OpenSearchService.getHost();
-    $scope.host_history = HostHistoryService.getHostHistory();
 
     $scope.clusterStatus = undefined;
     $scope.clusterName = undefined;
     $scope.fetchedAt = undefined;
-
-    $scope.$watch(
-        function() {
-          return OpenSearchService.getHost();
-        },
-        function(newValue, oldValue) {
-          $scope.current_host = OpenSearchService.getHost();
-        }
-    );
 
     $scope.$watch(
         function() {
@@ -6114,25 +6061,6 @@ kopf.controller('NavbarController', ['$scope', '$location',
           }
         }
     );
-
-    $scope.handleConnectToHost = function(event) {
-      if (event.keyCode == 13 && notEmpty($scope.new_host)) {
-        $scope.connectToHost($scope.new_host);
-      }
-    };
-
-    $scope.connectToHost = function(host) {
-      try {
-        OpenSearchService.connect(host);
-        HostHistoryService.addToHistory(OpenSearchService.connection);
-        $scope.host_history = HostHistoryService.getHostHistory();
-      } catch (error) {
-        AlertService.error('Error while connecting to new target host', error);
-      } finally {
-        $scope.current_host = OpenSearchService.connection.host;
-        OpenSearchService.refresh();
-      }
-    };
 
     $scope.changeRefresh = function() {
       ExternalSettingsService.setRefreshRate($scope.new_refresh);
