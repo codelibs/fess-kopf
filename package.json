@@ -4,13 +4,17 @@
   "description": "Fess KOPF - simple web administration tool for OpenSearch (Fess version)",
   "main": "index.html",
   "scripts": {
-    "test": "jest",
+    "test": "jest && vitest run --config vitest.config.mts",
     "test:coverage": "jest --coverage",
-    "build": "grunt build",
-    "lint": "eslint src/kopf tests",
+    "build": "grunt build && vite build --config app/vite.config.mts",
+    "lint": "eslint src/kopf tests app",
     "version:set": "node scripts/set-version.js",
     "version:release": "node scripts/set-version.js release",
-    "version:snapshot": "node scripts/set-version.js snapshot"
+    "version:snapshot": "node scripts/set-version.js snapshot",
+    "build:app": "vite build --config app/vite.config.mts",
+    "dev:app": "vite --config app/vite.config.mts",
+    "test:app": "vitest run --config vitest.config.mts",
+    "typecheck": "vue-tsc --noEmit -p app/tsconfig.json"
   },
   "repository": {
     "type": "git",
@@ -22,8 +26,14 @@
     "url": "https://github.com/codelibs/fess-kopf/issues"
   },
   "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.8",
+    "@vitest/coverage-v8": "^4.1.11",
+    "@vue/eslint-config-typescript": "^14.9.0",
+    "@vue/test-utils": "^2.4.11",
     "angular": "1.4.7",
+    "bootstrap": "^5.3.8",
     "eslint": "^9.39.5",
+    "eslint-plugin-vue": "^10.10.0",
     "globals": "^17.11.0",
     "grunt": "^1.6.1",
     "grunt-contrib-clean": "^2.0.1",
@@ -32,12 +42,20 @@
     "grunt-contrib-copy": "^1.0.0",
     "grunt-contrib-watch": "^1.1.0",
     "jest": "^29.7.0",
-    "jest-environment-jsdom": "^29.7.0"
+    "jest-environment-jsdom": "^29.7.0",
+    "jsdom": "^29.1.1",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.67.0",
+    "vite": "^8.2.2",
+    "vitest": "^4.1.11",
+    "vue": "^3.5.41",
+    "vue-router": "^4.6.4",
+    "vue-tsc": "^3.3.11"
   },
   "directories": {
     "test": "tests"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": "^20.19.0 || >=22.12.0"
   }
 }
