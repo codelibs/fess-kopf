@@ -44,4 +44,11 @@ describe('Alert', () => {
         'alert-warning', 'fa fa-info');
     expect(warn.expanded).toBe(false);
   });
+
+  test('should give alerts created in the same tick distinct ids', () => {
+    const a = new Alert('one', undefined, 'info', 'alert-info', 'i');
+    const b = new Alert('two', undefined, 'info', 'alert-info', 'i');
+    const c = new Alert('three', undefined, 'info', 'alert-info', 'i');
+    expect(new Set([a.id, b.id, c.id]).size).toBe(3);
+  });
 });
