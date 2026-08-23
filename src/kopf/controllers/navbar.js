@@ -1,27 +1,14 @@
 kopf.controller('NavbarController', ['$scope', '$location',
   'ExternalSettingsService', 'OpenSearchService', 'AlertService',
-  'HostHistoryService',
   function($scope, $location, ExternalSettingsService, OpenSearchService,
-           AlertService, HostHistoryService) {
+           AlertService) {
 
     $scope.new_refresh = '' + ExternalSettingsService.getRefreshRate();
     $scope.theme = ExternalSettingsService.getTheme();
-    $scope.new_host = '';
-    $scope.current_host = OpenSearchService.getHost();
-    $scope.host_history = HostHistoryService.getHostHistory();
 
     $scope.clusterStatus = undefined;
     $scope.clusterName = undefined;
     $scope.fetchedAt = undefined;
-
-    $scope.$watch(
-        function() {
-          return OpenSearchService.getHost();
-        },
-        function(newValue, oldValue) {
-          $scope.current_host = OpenSearchService.getHost();
-        }
-    );
 
     $scope.$watch(
         function() {
@@ -41,25 +28,6 @@ kopf.controller('NavbarController', ['$scope', '$location',
           }
         }
     );
-
-    $scope.handleConnectToHost = function(event) {
-      if (event.keyCode == 13 && notEmpty($scope.new_host)) {
-        $scope.connectToHost($scope.new_host);
-      }
-    };
-
-    $scope.connectToHost = function(host) {
-      try {
-        OpenSearchService.connect(host);
-        HostHistoryService.addToHistory(OpenSearchService.connection);
-        $scope.host_history = HostHistoryService.getHostHistory();
-      } catch (error) {
-        AlertService.error('Error while connecting to new target host', error);
-      } finally {
-        $scope.current_host = OpenSearchService.connection.host;
-        OpenSearchService.refresh();
-      }
-    };
 
     $scope.changeRefresh = function() {
       ExternalSettingsService.setRefreshRate($scope.new_refresh);
