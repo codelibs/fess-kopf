@@ -1,3 +1,5 @@
+var alertSequence = 0;
+
 var Alert = function(message, response, level, _class, icon) {
   var currentDate = new Date();
   this.message = message;
@@ -6,7 +8,7 @@ var Alert = function(message, response, level, _class, icon) {
   this.class = _class;
   this.icon = icon;
   this.timestamp = getTimeString(currentDate);
-  this.id = 'alert_box_' + currentDate.getTime();
+  this.id = 'alert_box_' + currentDate.getTime() + '_' + (alertSequence++);
   this.expanded = level === 'error' && isDefined(response);
 
   this.hasResponse = function() {

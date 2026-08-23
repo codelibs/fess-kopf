@@ -89,6 +89,9 @@ function Cluster(health, state, stats, nodesStats, settings, aliases, nodes,
           // cluster state, which leaves it closed by default.
           var closed = new Index(indexName, undefined, undefined,
               aliases[indexName]);
+          if (closed.special) {
+            specialIndices++;
+          }
           indices.push(closed);
           indicesByName[indexName] = closed;
         }

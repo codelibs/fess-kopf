@@ -198,6 +198,8 @@ function BrokenCluster(health, state, nodesStats, settings, nodes) {
   this.master_node = state.master_node;
 
   this.settings = settings;
+  this.settingsAvailable = isDefined(settings) &&
+      (isDefined(settings.persistent) || isDefined(settings.transient));
 
   var totalSize = 0;
 
@@ -525,6 +527,9 @@ function Cluster(health, state, stats, nodesStats, settings, aliases, nodes,
           // cluster state, which leaves it closed by default.
           var closed = new Index(indexName, undefined, undefined,
               aliases[indexName]);
+          if (closed.special) {
+            specialIndices++;
+          }
           indices.push(closed);
           indicesByName[indexName] = closed;
         }
@@ -2867,6 +2872,8 @@ kopf.factory('AceEditorService', function() {
   return this;
 });
 
+var alertSequence = 0;
+
 var Alert = function(message, response, level, _class, icon) {
   var currentDate = new Date();
   this.message = message;
@@ -2875,7 +2882,7 @@ var Alert = function(message, response, level, _class, icon) {
   this.class = _class;
   this.icon = icon;
   this.timestamp = getTimeString(currentDate);
-  this.id = 'alert_box_' + currentDate.getTime();
+  this.id = 'alert_box_' + currentDate.getTime() + '_' + (alertSequence++);
   this.expanded = level === 'error' && isDefined(response);
 
   this.hasResponse = function() {

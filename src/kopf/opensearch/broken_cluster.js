@@ -18,6 +18,8 @@ function BrokenCluster(health, state, nodesStats, settings, nodes) {
   this.master_node = state.master_node;
 
   this.settings = settings;
+  this.settingsAvailable = isDefined(settings) &&
+      (isDefined(settings.persistent) || isDefined(settings.transient));
 
   var totalSize = 0;
 

@@ -98,4 +98,19 @@ describe('Cluster with a closed index', () => {
     });
     expect(openNames).not.toContain('closed-one');
   });
+
+  // An index that exists only in blocks - never in the routing table -
+  // and whose name marks it special. Cluster counted special indices in
+  // the routing-table pass only, so this one was missed.
+  test('should count a special index that exists only in blocks', () => {
+    const blocksOnly = {
+      cluster_name: 'fess-search', master_node: 'n1',
+      routing_table: {indices: {}},
+      blocks: {indices: {'.closed-special': {'4': {description: 'closed'}}}},
+      metadata: {indices: {}}
+    };
+    const cluster = new Cluster(health, blocksOnly, stats, nodesStats, {},
+        {}, nodes, main);
+    expect(cluster.special_indices).toBe(1);
+  });
 });
