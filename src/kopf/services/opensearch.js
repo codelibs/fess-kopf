@@ -95,7 +95,10 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
       var root = ExternalSettingsService.getOpenSearchRootPath();
       var withCredentials = ExternalSettingsService.withCredentials();
       this.connection = new OpenSearchConnection(host + root, withCredentials);
-      DebugService.debug('OpenSearch connection:', this.connection);
+      DebugService.debug('OpenSearch connection:', {
+        host: this.connection.host,
+        withCredentials: this.connection.withCredentials
+      });
       this.clusterRequest('GET', '/', {}, {},
           function(data) {
             if (data.OK) { // detected https://github.com/Asquera/elasticsearch-http-basic
@@ -654,13 +657,15 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
               }
             } catch (exception) {
               DebugService.debug('Error parsing output:', exception);
-              DebugService.debug('REST APIs output:', responses);
+              DebugService.debug('REST APIs output:',
+                  responses.map(function(r) { return r.data; }));
               error(exception);
             }
           },
           function(response) {
-            DebugService.debug('Error requesting shard stats data:', response);
-            error(response);
+            DebugService.debug('Error requesting shard stats data:',
+                response.data);
+            error(response.data);
           }
       );
     };
@@ -774,7 +779,8 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
             }
           }).
           error(function(data, status, headers, config) {
-            DebugService.debug('Error executing request:', config);
+            DebugService.debug('Error executing request:',
+                {method: config.method, url: config.url, status: status});
             DebugService.debug('REST API output:', data);
             error(data);
           });
@@ -810,12 +816,14 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
               success(cluster);
             } catch (exception) {
               DebugService.debug('Error parsing cluster data:', exception);
-              DebugService.debug('REST APIs output:', responses);
+              DebugService.debug('REST APIs output:',
+                  responses.map(function(r) { return r.data; }));
               error(exception);
             }
           },
           function(response) {
-            DebugService.debug('Error requesting cluster data:', response);
+            DebugService.debug('Error requesting cluster data:',
+                response.data);
             error(response);
           }
       );
@@ -846,14 +854,17 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
               success(cluster);
             } catch (exception) {
               DebugService.debug('Error parsing cluster data:', exception);
-              DebugService.debug('REST APIs output:', responses);
+              DebugService.debug('REST APIs output:',
+                  responses.map(function(r) { return r.data; }));
               error(exception);
             }
           },
           function(response) {
-            DebugService.debug('Error requesting cluster data:', params);
-            DebugService.debug('REST API output:', response);
-            AlertService.error('Error requesting cluster data', response);
+            DebugService.debug('Error requesting cluster data for host:',
+                host);
+            DebugService.debug('REST API output:', response.data);
+            AlertService.error('Error requesting cluster data',
+                response.data);
             instance.cluster = undefined;
           }
       );
@@ -907,8 +918,9 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
                     instance.setBrokenCluster(false);
                   }
                 },
-                function(response) {
-                  AlertService.error('Error loading cluster data', response);
+                function(exception) {
+                  AlertService.error('Error loading cluster data',
+                      exception);
                   instance.cluster = undefined;
                 }
             );
@@ -932,7 +944,8 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
                     AlertService.error(message);
                     instance.setBrokenCluster(true);
                   } else {
-                    AlertService.error('Error loading cluster data', response);
+                    AlertService.error('Error loading cluster data',
+                        response.data);
                     instance.cluster = undefined;
                   }
                 }
