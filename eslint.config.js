@@ -19,6 +19,13 @@ module.exports = [
         doCSV: 'readonly',
         // kopf's own globals. Every src/kopf file is concatenated into a
         // single bundle, so these are shared across files by design.
+        //
+        // Node, Request and NodeFilter are deliberately absent: kopf
+        // defines all three at bundle scope, shadowing the DOM Node, the
+        // Fetch Request and the TreeWalker NodeFilter that globals.browser
+        // already supplies. Cross-file uses therefore satisfy no-undef by
+        // coincidence rather than by declaration. Declaring them here would
+        // not change that; renaming them in the source would.
         kopf: 'writable',
         AceEditor: 'readonly',
         Alias: 'readonly',
