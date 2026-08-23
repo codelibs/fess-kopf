@@ -6,53 +6,69 @@ This directory contains the test suite for Fess KOPF, ensuring robust OpenSearch
 
 ### Jest Tests (Node.js 20+)
 
-The project uses Jest for modern JavaScript testing with the following test files:
+The project uses Jest for all JavaScript testing. `jest.config.js` matches
+`**/tests/**/*.test.js`, so every file listed below is the only thing that
+actually runs; there is no other test runner in this project.
+
+As of this writing there are **22 test files** totaling **705 test cases**
+(`npx jest` reports `Test Suites: 22 passed, 22 total` /
+`Tests: 705 passed, 705 total`). Re-run `npx jest` after adding or removing
+tests to keep these numbers current.
 
 #### Core Functionality Tests
 
-1. **`version.test.js`** - Version Detection and Comparison
-   - OpenSearch version parsing (2.x, 3.x, 4.x+)
-   - Version comparison logic
-   - Distribution parameter handling
-   - Edge cases and error handling
-   - Future version compatibility
-   - **73 test cases**
+- **`version.test.js`** - Version Detection and Comparison
+  - OpenSearch version parsing (2.x, 3.x, 4.x+)
+  - Version comparison logic
+  - Distribution parameter handling
+  - Edge cases and error handling
+  - Future version compatibility
 
-2. **`util.test.js`** - Utility Functions
-   - `isDefined()` function tests
-   - `notEmpty()` function tests
-   - `getProperty()` function tests
-   - `readablizeBytes()` function tests
-   - **22 test cases**
+- **`util.test.js`** - Utility Functions
+  - `isDefined()`, `notEmpty()`, `getProperty()`, `readablizeBytes()`
 
-3. **`external_settings.test.js`** - Configuration Service
-   - OpenSearch host configuration
-   - Root path settings (opensearch_root_path vs elasticsearch_root_path)
-   - Backward compatibility with Elasticsearch naming
-   - Theme and refresh rate settings
-   - Migration scenarios
-   - Edge case handling
-   - **29 test cases**
+- **`external_settings.test.js`** - Configuration Service
+  - OpenSearch host and root path settings
+  - Theme and refresh rate settings
+  - Asserts that the legacy Elasticsearch naming
+    (`getElasticsearchHost`, `getElasticsearchRootPath`) is **absent** from
+    `src/kopf/services/external_settings.js` — there is no
+    `elasticsearch_root_path` backward-compatibility fallback in this
+    codebase, only `opensearch_root_path`
 
-4. **`opensearch_integration.test.js`** - Integration Tests
-   - Service integration between ExternalSettingsService and OpenSearchService
-   - Configuration precedence testing
-   - Docker environment compatibility
-   - Default configuration validation
-   - Method deprecation strategy
-   - Real-world usage scenarios
-   - **19 test cases**
+- **`opensearch_integration.test.js`** - Integration Tests
+  - Service integration between `ExternalSettingsService` and
+    `OpenSearchService`
+  - Configuration precedence testing
+  - Docker environment compatibility
 
-**Total: 143+ test cases covering critical functionality**
+- **`alerts.test.js`** - Alerts service
 
-### Jasmine Tests (Legacy)
+#### Filters
 
-Located in `tests/jasmine/`, these are older AngularJS-specific tests that complement the Jest tests:
+- **`filters/bytes.test.js`**, **`filters/time-interval.test.js`**
 
-- Service tests (external_settings, opensearch, etc.)
-- Controller tests
-- Directive tests
-- Filter tests
+#### Models
+
+- **`models/alias-filter.test.js`**, **`models/index-filter.test.js`**,
+  **`models/index-template-filter.test.js`**, **`models/node-filter.test.js`**,
+  **`models/paginator.test.js`**, **`models/query_dsl_completer.test.js`**,
+  **`models/snapshot-filter.test.js`**
+
+#### OpenSearch Service Tests
+
+- **`opensearch/cluster-changes.test.js`**,
+  **`opensearch/cluster-closed-index.test.js`**,
+  **`opensearch/cluster-partial.test.js`**,
+  **`opensearch/editable-index-settings.test.js`**,
+  **`opensearch/index.test.js`**, **`opensearch/node.test.js`**,
+  **`opensearch/repository.test.js`**, **`opensearch/shard.test.js`**
+
+There is no other test tree. The Jasmine specs and QUnit harness that used
+to live under `tests/` (`tests/jasmine/**`, `tests/all.html`,
+`tests/qunit.*`, `tests/karma.config.js`, and their supporting model/mock
+files) never ran under Jest's `testMatch` and were deleted along with the
+Grunt `qunit`/`karma` tasks that referenced them.
 
 ## Running Tests
 
@@ -80,48 +96,11 @@ npx jest --watch
 
 The Jest tests focus on:
 
-- ✅ **OpenSearch 3 Support**: Comprehensive version detection and comparison
-- ✅ **Configuration Management**: Settings precedence and backward compatibility
-- ✅ **Migration Scenarios**: Smooth upgrade path from Elasticsearch to OpenSearch naming
-- ✅ **Edge Cases**: Null/undefined handling, invalid inputs, boundary conditions
-- ✅ **Integration**: Service interaction and Docker deployment scenarios
-
-## Key Test Scenarios
-
-### OpenSearch 3 Version Detection
-
-```javascript
-// Tests verify proper detection of OpenSearch 3.x
-const version = new Version('3.0.0');
-expect(version.isOpenSearch3OrLater()).toBe(true);
-expect(version.isOpenSearch2OrLater()).toBe(true);
-```
-
-### Backward Compatibility
-
-```javascript
-// Old elasticsearch_root_path still works
-service.settings = {
-  elasticsearch_root_path: '/es'
-};
-expect(service.getOpenSearchRootPath()).toBe('/es');
-
-// New opensearch_root_path takes precedence
-service.settings = {
-  opensearch_root_path: '/opensearch',
-  elasticsearch_root_path: '/old'
-};
-expect(service.getOpenSearchRootPath()).toBe('/opensearch');
-```
-
-### Migration Testing
-
-```javascript
-// Tests ensure smooth transition
-// From: elasticsearch_root_path
-// To: opensearch_root_path
-// While maintaining full backward compatibility
-```
+- **OpenSearch 3 Support**: Version detection and comparison
+- **Configuration Management**: Settings precedence, and confirming legacy
+  Elasticsearch naming has been removed rather than kept for compatibility
+- **Edge Cases**: Null/undefined handling, invalid inputs, boundary conditions
+- **Integration**: Service interaction and Docker deployment scenarios
 
 ## Requirements
 
@@ -137,6 +116,7 @@ When adding new tests:
 3. Test both success and failure cases
 4. Include edge cases and boundary conditions
 5. Follow the existing test structure and naming conventions
+6. Update the file/test counts in this README if they change
 
 ### Example Test Structure
 
@@ -165,24 +145,6 @@ Tests are automatically run on:
 - Release builds
 
 All tests must pass before code can be merged.
-
-## Test Quality Standards
-
-- **Coverage**: Aim for comprehensive coverage of critical paths
-- **Clarity**: Tests should be self-documenting
-- **Independence**: Each test should be independent and isolated
-- **Speed**: Tests should run quickly (< 5 seconds for full suite)
-- **Reliability**: Tests should not be flaky or dependent on timing
-
-## OpenSearch Version Support Matrix
-
-Our tests verify compatibility with:
-
-| OpenSearch Version | Support Status | Test Coverage |
-|-------------------|----------------|---------------|
-| 2.0.x - 2.17.x    | ✅ Supported   | Comprehensive |
-| 3.0.x - 3.x.x     | ✅ Supported   | Comprehensive |
-| 4.x.x+            | ✅ Future-proof| Basic         |
 
 ## Debugging Tests
 
