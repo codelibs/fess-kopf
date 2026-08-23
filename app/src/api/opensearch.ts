@@ -5,6 +5,7 @@ import {NodeStats} from '@/model/cluster-node';
 import {ShardStats} from '@/model/shard';
 import {Alias, IndexAliases} from '@/model/alias';
 import {IndexTemplate, type IndexTemplateBody} from '@/model/index-template';
+import {Repository, Snapshot, type SnapshotInfo} from '@/model/snapshot';
 import {
   IndexMetadata,
   Token,
@@ -418,4 +419,60 @@ export function createIndexTemplate(name: string, body: string): Promise<unknown
 
 export function deleteIndexTemplate(name: string): Promise<unknown> {
   return request(`/_template/${encodeURIComponent(name)}`, {method: 'DELETE'});
+}
+
+/** Every registered snapshot repository. */
+export async function fetchRepositories(signal?: AbortSignal): Promise<Repository[]> {
+  type RepositoryInfo = {type?: string; settings?: Record<string, string>};
+  const response = await request<Record<string, RepositoryInfo>>('/_snapshot/_all', {signal});
+  return Object.keys(response).map((name) => new Repository(name, response[name]));
+}
+
+export function createRepository(name: string, body: string): Promise<unknown> {
+  return request(`/_snapshot/${encodeURIComponent(name)}`, {method: 'POST', body});
+}
+
+export function deleteRepository(name: string): Promise<unknown> {
+  return request(`/_snapshot/${encodeURIComponent(name)}`, {method: 'DELETE'});
+}
+
+/** Every snapshot in one repository. */
+export async function fetchSnapshots(
+  repository: string,
+  signal?: AbortSignal,
+): Promise<Snapshot[]> {
+  const response = await request<{snapshots: SnapshotInfo[]}>(
+    `/_snapshot/${encodeURIComponent(repository)}/_all`,
+    {signal},
+  );
+  return response.snapshots.map((info) => new Snapshot(info));
+}
+
+export function createSnapshot(
+  repository: string,
+  snapshot: string,
+  body: string,
+): Promise<unknown> {
+  return request(
+    `/_snapshot/${encodeURIComponent(repository)}/${encodeURIComponent(snapshot)}`,
+    {method: 'PUT', body},
+  );
+}
+
+export function deleteSnapshot(repository: string, snapshot: string): Promise<unknown> {
+  return request(
+    `/_snapshot/${encodeURIComponent(repository)}/${encodeURIComponent(snapshot)}`,
+    {method: 'DELETE'},
+  );
+}
+
+export function restoreSnapshot(
+  repository: string,
+  snapshot: string,
+  body: string,
+): Promise<unknown> {
+  return request(
+    `/_snapshot/${encodeURIComponent(repository)}/${encodeURIComponent(snapshot)}/_restore`,
+    {method: 'POST', body},
+  );
 }
