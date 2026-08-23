@@ -104,21 +104,13 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
       });
       this.clusterRequest('GET', '/', {}, {},
           function(data) {
-            if (data.OK) { // detected https://github.com/Asquera/elasticsearch-http-basic
-              DebugService.debug('elasticsearch-http-basic plugin detected');
-              DebugService.debug('Attemping to connect with [' + host + '/]');
-              instance.connect(host + '/');
+            instance.setVersion(data.version.number);
+            instance.connected = true;
+            if (!instance.autoRefreshStarted) {
+              instance.autoRefreshStarted = true;
+              instance.autoRefreshCluster();
             } else {
-              var distribution = isDefined(data.version.distribution) ?
-                  data.version.distribution : 'opensearch';
-              instance.setVersion(data.version.number, distribution);
-              instance.connected = true;
-              if (!instance.autoRefreshStarted) {
-                instance.autoRefreshStarted = true;
-                instance.autoRefreshCluster();
-              } else {
-                instance.refresh();
-              }
+              instance.refresh();
             }
           },
           function(data, status) {
@@ -144,8 +136,8 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
       );
     };
 
-    this.setVersion = function(version, distribution) {
-      this.version = new Version(version, distribution);
+    this.setVersion = function(version) {
+      this.version = new Version(version);
       if (!this.version.isValid()) {
         DebugService.debug('Invalid OpenSearch version[' + version + ']');
         throw 'Invalid OpenSearch version[' + version + ']';
@@ -162,7 +154,7 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
 
     this.versionCheck = function(version) {
       if (isDefined(this.version.isValid())) {
-        return this.version.isGreater(new Version(version));
+        return this.version.isAtLeast(new Version(version));
       } else {
         return true;
       }

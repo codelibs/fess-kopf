@@ -1,10 +1,11 @@
+// kopf targets OpenSearch 2.x and later. Anything older is unsupported.
+var MIN_OPENSEARCH_MAJOR = 2;
+
 kopf.controller('GlobalController', ['$scope', '$location', '$sce',
   'AlertService', 'OpenSearchService', 'ExternalSettingsService',
   'PageService',
   function($scope, $location, $sce, AlertService, OpenSearchService,
            ExternalSettingsService, PageService) {
-
-    $scope.version = '2.0.0';
 
     $scope.modal = new ModalControls();
 
@@ -15,11 +16,10 @@ kopf.controller('GlobalController', ['$scope', '$location', '$sce',
         function(newValue, oldValue) {
           var version = OpenSearchService.getVersion();
           if (version && version.isValid()) {
-            var major = version.getMajor();
-            if (major < parseInt($scope.version.charAt(0))) {
+            if (version.getMajor() < MIN_OPENSEARCH_MAJOR) {
               AlertService.warn(
-                  'This version is not compatible with your OpenSearch version',
-                  'Upgrading to newest supported version is recommended'
+                  'This version of kopf supports OpenSearch 2.x and later',
+                  'Detected OpenSearch ' + version.getValue()
               );
             }
           }
