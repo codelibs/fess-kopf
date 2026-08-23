@@ -51,6 +51,15 @@ function Index(indexName, clusterState, indexStats, aliases) {
     return index !== null && index.name == this.name;
   };
 
+  // Closed indices still appear in the routing table since ES 7.2, so
+  // Cluster builds them as open first and marks them afterwards. Keep
+  // state and the derived flags in one place so they cannot drift.
+  this.markClosed = function() {
+    this.state = 'close';
+    this.closed = true;
+    this.open = false;
+  };
+
   this.closed = this.state === 'close';
 
   this.open = this.state === 'open';

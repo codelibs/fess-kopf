@@ -501,6 +501,7 @@ function Cluster(health, state, stats, nodesStats, settings, aliases, nodes,
   var indicesNames = Object.keys(state.routing_table.indices);
   var specialIndices = 0;
   var closedIndices = 0;
+  var indicesByName = {};
   this.indices = indicesNames.map(function(indexName) {
     var indexStats = stats.indices[indexName];
     var indexAliases = aliases[indexName];
@@ -508,6 +509,7 @@ function Cluster(health, state, stats, nodesStats, settings, aliases, nodes,
     if (index.special) {
       specialIndices++;
     }
+    indicesByName[indexName] = index;
     return index;
   });
 
@@ -516,7 +518,17 @@ function Cluster(health, state, stats, nodesStats, settings, aliases, nodes,
     Object.keys(state.blocks.indices).forEach(function(indexName) {
       // INDEX_CLOSED_BLOCK = new ClusterBlock(4, "index closed", ...
       if (state.blocks.indices[indexName]['4']) {
-        indices.push(new Index(indexName));
+        var known = indicesByName[indexName];
+        if (isDefined(known)) {
+          known.markClosed();
+        } else {
+          // Not in the routing table at all: build it without the
+          // cluster state, which leaves it closed by default.
+          var closed = new Index(indexName, undefined, undefined,
+              aliases[indexName]);
+          indices.push(closed);
+          indicesByName[indexName] = closed;
+        }
         closedIndices++;
       }
     });
@@ -845,6 +857,15 @@ function Index(indexName, clusterState, indexStats, aliases) {
 
   this.equals = function(index) {
     return index !== null && index.name == this.name;
+  };
+
+  // Closed indices still appear in the routing table since ES 7.2, so
+  // Cluster builds them as open first and marks them afterwards. Keep
+  // state and the derived flags in one place so they cannot drift.
+  this.markClosed = function() {
+    this.state = 'close';
+    this.closed = true;
+    this.open = false;
   };
 
   this.closed = this.state === 'close';
