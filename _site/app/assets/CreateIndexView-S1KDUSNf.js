@@ -1,1 +1,0 @@
-import{_ as e,c as t,i as n,o as r,u as i}from"./runtime-core.esm-bundler-KANP8vnJ.js";var a={class:`alert alert-secondary`,role:`status`},o=i({__name:`CreateIndexView`,setup(i){return(i,o)=>(e(),r(`div`,a,[...o[0]||=[n(`strong`,null,`createIndex`,-1),t(` has not been ported yet. `,-1)]]))}});export{o as default};
