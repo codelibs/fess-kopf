@@ -80,6 +80,7 @@ Configure Fess KOPF using the `kopf_external_settings.json` file:
 
 ```json
 {
+  "location": "",
   "opensearch_root_path": "",
   "with_credentials": false,
   "theme": "fess",
@@ -89,6 +90,9 @@ Configure Fess KOPF using the `kopf_external_settings.json` file:
 
 ### Configuration Options
 
+- **location**: OpenSearch host URL. Leave empty when kopf is served by
+  Fess; set it only for local development, for example
+  `http://localhost:9200` when running `grunt server`.
 - **opensearch_root_path**: OpenSearch root path (default: "")
 - **with_credentials**: Include credentials in cross-origin requests (default: false)
 - **theme**: UI theme (`fess`, `light`, `dark`)
