@@ -143,12 +143,6 @@ module.exports = function(grunt) {
         ]
       }
     },
-    qunit: {
-      all: ['tests/all.html']
-    },
-    karma: {
-      unit: {configFile: 'tests/karma.config.js', keepalive: true}
-    },
     jscs: {
       src: ['src/kopf/**/*.js'],
       options: {
@@ -164,13 +158,9 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks('grunt-contrib-qunit');
-  grunt.loadNpmTasks('grunt-karma');
   grunt.loadNpmTasks("grunt-jscs");
-  grunt.registerTask('dev', ['karma', 'watch'])
-  grunt.registerTask('test', ['karma'])
   grunt.registerTask('build',
-      ['clean', 'jshint', /*'qunit',*/ 'copy', 'concat', 'jscs']);
+      ['clean', 'jshint', 'copy', 'concat', 'jscs']);
   grunt.registerTask('server',
-      ['clean', 'jshint', /*'qunit',*/ 'copy', 'concat', 'connect:server']);
+      ['clean', 'jshint', 'copy', 'concat', 'connect:server']);
 };
