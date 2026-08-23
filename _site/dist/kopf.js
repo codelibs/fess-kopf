@@ -1103,13 +1103,12 @@ function Token(token, startOffset, endOffset, position) {
   this.position = position;
 }
 
-function Version(version, distribution) {
+function Version(version) {
   var checkVersion = new RegExp('(\\d+)\\.(\\d+)\\.(\\d+)\\.*');
   var major;
   var minor;
   var patch;
   var value = version;
-  var dist = distribution || 'opensearch';
   var valid = false;
 
   if (checkVersion.test(value)) {
@@ -1140,24 +1139,15 @@ function Version(version, distribution) {
     return value;
   };
 
-  this.isGreater = function(other) {
-    var higherMajor = major > other.getMajor();
-    var higherMinor = major == other.getMajor() && minor > other.getMinor();
-    var higherPatch = (
-        major == other.getMajor() &&
-        minor == other.getMinor() &&
-        patch >= other.getPatch()
-    );
-    return (higherMajor || higherMinor || higherPatch);
-  };
-
-  // OpenSearch 2.x and 3.x version checks
-  this.isOpenSearch2OrLater = function() {
-    return major >= 2;
-  };
-
-  this.isOpenSearch3OrLater = function() {
-    return major >= 3;
+  // True when this version is the same as, or newer than, other.
+  this.isAtLeast = function(other) {
+    if (major !== other.getMajor()) {
+      return major > other.getMajor();
+    }
+    if (minor !== other.getMinor()) {
+      return minor > other.getMinor();
+    }
+    return patch >= other.getPatch();
   };
 
 }
@@ -3281,21 +3271,13 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
       });
       this.clusterRequest('GET', '/', {}, {},
           function(data) {
-            if (data.OK) { // detected https://github.com/Asquera/elasticsearch-http-basic
-              DebugService.debug('elasticsearch-http-basic plugin detected');
-              DebugService.debug('Attemping to connect with [' + host + '/]');
-              instance.connect(host + '/');
+            instance.setVersion(data.version.number);
+            instance.connected = true;
+            if (!instance.autoRefreshStarted) {
+              instance.autoRefreshStarted = true;
+              instance.autoRefreshCluster();
             } else {
-              var distribution = isDefined(data.version.distribution) ?
-                  data.version.distribution : 'opensearch';
-              instance.setVersion(data.version.number, distribution);
-              instance.connected = true;
-              if (!instance.autoRefreshStarted) {
-                instance.autoRefreshStarted = true;
-                instance.autoRefreshCluster();
-              } else {
-                instance.refresh();
-              }
+              instance.refresh();
             }
           },
           function(data, status) {
@@ -3321,8 +3303,8 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
       );
     };
 
-    this.setVersion = function(version, distribution) {
-      this.version = new Version(version, distribution);
+    this.setVersion = function(version) {
+      this.version = new Version(version);
       if (!this.version.isValid()) {
         DebugService.debug('Invalid OpenSearch version[' + version + ']');
         throw 'Invalid OpenSearch version[' + version + ']';
@@ -3339,7 +3321,7 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
 
     this.versionCheck = function(version) {
       if (isDefined(this.version.isValid())) {
-        return this.version.isGreater(new Version(version));
+        return this.version.isAtLeast(new Version(version));
       } else {
         return true;
       }
@@ -5372,13 +5354,14 @@ kopf.controller('DebugController', ['$scope', 'DebugService',
 
 ]);
 
+// kopf targets OpenSearch 2.x and later. Anything older is unsupported.
+var MIN_OPENSEARCH_MAJOR = 2;
+
 kopf.controller('GlobalController', ['$scope', '$location', '$sce',
   'AlertService', 'OpenSearchService', 'ExternalSettingsService',
   'PageService',
   function($scope, $location, $sce, AlertService, OpenSearchService,
            ExternalSettingsService, PageService) {
-
-    $scope.version = '2.0.0';
 
     $scope.modal = new ModalControls();
 
@@ -5389,11 +5372,10 @@ kopf.controller('GlobalController', ['$scope', '$location', '$sce',
         function(newValue, oldValue) {
           var version = OpenSearchService.getVersion();
           if (version && version.isValid()) {
-            var major = version.getMajor();
-            if (major < parseInt($scope.version.charAt(0))) {
+            if (version.getMajor() < MIN_OPENSEARCH_MAJOR) {
               AlertService.warn(
-                  'This version is not compatible with your OpenSearch version',
-                  'Upgrading to newest supported version is recommended'
+                  'This version of kopf supports OpenSearch 2.x and later',
+                  'Detected OpenSearch ' + version.getValue()
               );
             }
           }
