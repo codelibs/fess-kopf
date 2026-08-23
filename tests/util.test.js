@@ -152,41 +152,6 @@ describe('Utility Functions', () => {
     });
   });
 
-  describe('isNumber', () => {
-    test('should return true for integer string', () => {
-      expect(isNumber('123')).toBe(true);
-    });
-
-    test('should return true for number', () => {
-      expect(isNumber(123)).toBe(true);
-    });
-
-    test('should return true for string containing digits', () => {
-      expect(isNumber('abc123def')).toBe(true);
-    });
-
-    test('should return false for string without digits', () => {
-      expect(isNumber('abc')).toBe(false);
-    });
-
-    test('should return false for empty string', () => {
-      expect(isNumber('')).toBe(false);
-    });
-
-    test('should return true for zero', () => {
-      expect(isNumber('0')).toBe(true);
-      expect(isNumber(0)).toBe(true);
-    });
-
-    test('should return true for negative number string', () => {
-      expect(isNumber('-123')).toBe(true);
-    });
-
-    test('should return true for decimal string', () => {
-      expect(isNumber('12.34')).toBe(true);
-    });
-  });
-
   describe('getTimeString', () => {
     test('should format time with leading zeros', () => {
       const date = new Date(2024, 0, 1, 9, 5, 3);
@@ -292,6 +257,12 @@ describe('Utility Functions', () => {
 
     test('should return true for boolean false (toString gives "false")', () => {
       expect(notEmpty(false)).toBe(true);
+    });
+  });
+
+  describe('removed helpers', () => {
+    test('should not export isNumber, which only benchmark used', () => {
+      expect(typeof isNumber).toBe('undefined');
     });
   });
 });

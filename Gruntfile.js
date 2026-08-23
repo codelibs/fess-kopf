@@ -109,7 +109,6 @@ module.exports = function(grunt) {
       appcss: {
         src: [
           'src/kopf/kopf.css',
-          'src/kopf/css/percolator.css',
           'src/kopf/css/common.css',
           'src/kopf/css/aliases.css',
           'src/kopf/css/analysis.css',
@@ -118,7 +117,6 @@ module.exports = function(grunt) {
           'src/kopf/css/cluster_overview.css',
           'src/kopf/css/navbar.css',
           'src/kopf/css/rest_client.css',
-          'src/kopf/css/warmers.css',
           'src/kopf/css/repository.css',
           'src/kopf/css/nodes.css',
           'src/kopf/css/hotthreads.css'

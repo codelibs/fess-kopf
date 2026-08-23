@@ -50,15 +50,6 @@ kopf.config(function($routeProvider, $locationProvider) {
         templateUrl: 'partials/analysis.html',
         controller: 'AnalysisController'
       }).
-      // Percolator and Warmers are deprecated in OpenSearch 2.x/3.x
-      // when('/percolator', {
-      //   templateUrl: 'partials/percolator.html',
-      //   controller: 'PercolatorController'
-      // }).
-      // when('/warmers', {
-      //   templateUrl: 'partials/warmers.html',
-      //   controller: 'WarmersController'
-      // }).
       when('/snapshot', {
         templateUrl: 'partials/snapshot.html',
         controller: 'SnapshotController'
@@ -672,7 +663,6 @@ function EditableIndexSettings(settings) {
     'index.blocks.metadata',
     // index
     'index.number_of_replicas',
-    'index.warmer.enabled',
     'index.refresh_interval',
     'index.gc_deletes',
     'index.codec',
@@ -994,67 +984,6 @@ function OpenSearchConnection(url, withCredentials) {
 
 }
 
-function PercolateQuery(queryInfo) {
-  this.index = queryInfo._index;
-  this.id = queryInfo._id;
-  this.source = queryInfo._source;
-  this.filter = {};
-
-  this.sourceAsJSON = function() {
-    try {
-      return JSON.stringify(this.source, undefined, 2);
-    } catch (error) {
-
-    }
-  };
-
-  this.equals = function(other) {
-    return (other instanceof PercolateQuery &&
-      this.index == other.index &&
-      this.id == other.id &&
-      this.source == other.source);
-  };
-}
-
-function PercolatorsPage(from, size, total, percolators) {
-  this.from = from;
-  this.size = size;
-  this.total = total;
-  this.percolators = percolators;
-
-  this.hasNextPage = function() {
-    return from + size < total;
-  };
-
-  this.hasPreviousPage = function() {
-    return from > 0;
-  };
-
-  this.firstResult = function() {
-    return total > 0 ? from + 1 : 0;
-  };
-
-  this.lastResult = function() {
-    return this.hasNextPage() ? from + size : total;
-  };
-
-  this.nextOffset = function() {
-    return this.hasNextPage() ? from + size : from;
-  };
-
-  this.previousOffset = function() {
-    return this.hasPreviousPage() ? from - size : from;
-  };
-
-  this.getPage = function() {
-    return percolators;
-  };
-
-  this.total = function() {
-    return total;
-  };
-}
-
 function Repository(name, info) {
   this.name = name;
   this.type = info.type;
@@ -1233,13 +1162,6 @@ function Version(version, distribution) {
 
 }
 
-function Warmer(id, index, body) {
-  this.id = id;
-  this.index = index;
-  this.source = body.source;
-  this.types = body.types;
-}
-
 function AceEditor(target) {
   // ace editor
   ace.config.set('basePath', 'dist/');
@@ -1347,142 +1269,6 @@ function AliasFilter(index, alias) {
       }
       return matches;
     }
-  };
-
-}
-
-function Benchmark() {
-  this.name = '';
-  this.num_executor = 1;
-  this.percentiles = '[10, 25, 50, 75, 90, 99]';
-  this.competitors = [];
-
-  this.addCompetitor = function(competitor) {
-    this.competitors.push(competitor);
-  };
-
-  this.toJson = function() {
-    var body = {};
-    body.name = this.name;
-    if (notEmpty(this.num_executor)) {
-      body.num_executor_nodes = this.num_executor;
-    }
-    if (notEmpty(this.percentiles)) {
-      body.percentiles = JSON.parse(this.percentiles);
-    }
-    if (this.competitors.length > 0) {
-      body.competitors = this.competitors.map(function(c) {
-        return c.toJson();
-      });
-    }
-    if (notEmpty(this.iterations)) {
-      body.iterations = this.iterations;
-    }
-    if (notEmpty(this.concurrency)) {
-      body.concurrency = this.concurrency;
-    }
-    if (notEmpty(this.multiplier)) {
-      body.multiplier = this.multiplier;
-    }
-    if (notEmpty(this.num_slowest)) {
-      body.num_slowest = this.num_slowest;
-    }
-    return JSON.stringify(body, null, 4);
-  };
-
-}
-
-function Competitor() {
-  this.name = '';
-
-  // override benchmark options
-  this.iterations = '';
-  this.concurrency = '';
-  this.multiplier = '';
-  this.num_slowest = '';
-  this.warmup = true;
-  this.requests = [];
-
-  // defined only by competitor
-  this.search_type = 'query_then_fetch';
-  this.indices = '';
-  this.types = '';
-
-  // cache
-  this.filter_cache = false;
-  this.field_data = false;
-  this.recycler_cache = false;
-  this.id_cache = false;
-
-  this.cache_fields = '';
-  this.cache_keys = '';
-
-  this.toJson = function() {
-    var body = {};
-    body.name = this.name;
-    if (notEmpty(this.requests)) {
-      body.requests = JSON.parse(this.requests);
-    }
-    if (notEmpty(this.iterations)) {
-      if (isNumber(this.iterations)) {
-        body.iterations = parseInt(this.iterations);
-      } else {
-        throw 'Iterations must be a valid number';
-      }
-    }
-    if (notEmpty(this.concurrency)) {
-      if (isNumber(this.concurrency)) {
-        body.concurrency = parseInt(this.concurrency);
-      } else {
-        throw 'Concurrency must be a valid number';
-      }
-    }
-    if (notEmpty(this.multiplier)) {
-      if (isNumber(this.multiplier)) {
-        body.multiplier = parseInt(this.multiplier);
-      } else {
-        throw 'Multiplier must be a valid number';
-      }
-    }
-    if (notEmpty(this.num_slowest)) {
-      if (isNumber(this.num_slowest)) {
-        body.num_slowest = parseInt(this.num_slowest);
-      } else {
-        throw 'Num slowest must be a valid number';
-      }
-    }
-    if (notEmpty(this.indices)) {
-      body.indices = this.indices.split(',').map(function(index) {
-        return index.trim();
-      });
-    }
-    if (notEmpty(this.types)) {
-      body.types = this.types.split(',').map(function(type) {
-        return type.trim();
-      });
-    }
-
-    body.search_type = this.search_type;
-
-    body.clear_caches = {};
-    body.clear_caches.filter = this.filter_cache;
-    body.clear_caches.field_data = this.field_data;
-    body.clear_caches.id = this.id_cache;
-    body.clear_caches.recycler = this.recycler_cache;
-    if (notEmpty(this.cache_fields)) {
-      body.clear_caches.fields = this.cache_fields.split(',').map(
-        function(field) {
-          return field.trim();
-        });
-    }
-    if (notEmpty(this.cache_keys)) {
-      body.clear_caches.filter_keys = this.cache_keys.split(',').map(
-        function(key) {
-          return key.trim();
-        });
-    }
-
-    return body;
   };
 
 }
@@ -3047,38 +2833,6 @@ function URLAutocomplete(mappings) {
 
 }
 
-function WarmerFilter(id) {
-
-  this.id = id;
-
-  this.clone = function() {
-    return new WarmerFilter(this.id);
-  };
-
-  this.getSorting = function() {
-    return function(a, b) {
-      return a.id.localeCompare(b.id);
-    };
-  };
-
-  this.equals = function(other) {
-    return other !== null && this.id == other.id;
-  };
-
-  this.isBlank = function() {
-    return !notEmpty(this.id);
-  };
-
-  this.matches = function(warmer) {
-    if (this.isBlank()) {
-      return true;
-    } else {
-      return warmer.id.indexOf(this.id) != -1;
-    }
-  };
-
-}
-
 kopf.factory('AceEditorService', function() {
 
   this.init = function(name) {
@@ -3744,45 +3498,6 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
     };
 
     /**
-     * Deletes a warmer
-     *
-     * @param {Warmer} warmer - warmer to be deleted
-     * @callback success - invoked on success
-     * @callback error - invoked on error
-     */
-    this.deleteWarmer = function(warmer, success, error) {
-      var path = '/' + encode(warmer.index) + '/_warmer/' + encode(warmer.id);
-      this.clusterRequest('DELETE', path, {}, {}, success, error);
-    };
-
-    /**
-     * Deletes a percolator
-     *
-     * @param {string} index - percolator target index
-     * @param {string} id - percolator id
-     * @callback success - invoked on success
-     * @callback error - invoked on error
-     */
-    this.deletePercolatorQuery = function(index, id, success, error) {
-      var path = '/' + encode(index) + '/.percolator/' + encode(id);
-      this.clusterRequest('DELETE', path, {}, {}, success, error);
-    };
-
-    /**
-     * Creates a percolator query
-     *
-     * @param {Percolator} percolator - percolator to be created
-     * @callback success - invoked on success
-     * @callback error - invoked on error
-     */
-    this.createPercolatorQuery = function(percolator, success, error) {
-      var index = percolator.index;
-      var id = percolator.id;
-      var path = '/' + encode(index) + '/.percolator/' + encode(id);
-      this.clusterRequest('PUT', path, {}, percolator.source, success, error);
-    };
-
-    /**
      * Creates a repository
      *
      * @param {string} repository - repository name
@@ -3846,35 +3561,6 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
      */
     this.createSnapshot = function(repository, snapshot, body, success, error) {
       var path = '/_snapshot/' + encode(repository) + '/' + encode(snapshot);
-      this.clusterRequest('PUT', path, {}, body, success, error);
-    };
-
-    /**
-     * Executes a benchmark
-     *
-     * @param {Object} body - benchmark settings
-     * @callback success - invoked on success
-     * @callback error - invoked on error
-     */
-    this.executeBenchmark = function(body, success, error) {
-      var path = '/_bench';
-      this.clusterRequest('PUT', path, {}, body, success, error);
-    };
-
-    /**
-     * Registers a warmer query
-     *
-     * @param {Warmer} warmer - Warmer query
-     * @callback success - invoked on success
-     * @callback error - invoked on error
-     */
-    this.registerWarmer = function(warmer, success, error) {
-      var path = '/' + encode(warmer.index);
-      if (notEmpty(warmer.types)) {
-        path += '/' + encode(warmer.types);
-      }
-      path += '/_warmer/' + encode(warmer.id.trim());
-      var body = warmer.source;
       this.clusterRequest('PUT', path, {}, body, success, error);
     };
 
@@ -4133,38 +3819,6 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
 
     this.analyzeByAnalyzer = function(index, analyzer, text, success, error) {
       analyze(index, {text: text, analyzer: analyzer}, success, error);
-    };
-
-    this.getIndexWarmers = function(index, warmer, success, error) {
-      var path = '/' + encode(index) + '/_warmer/' + encode(warmer.trim());
-      var parseWarmers = function(response) {
-        var warmers = [];
-        Object.keys(response).forEach(function(i) {
-          var index = i;
-          var indexWarmers = response[index].warmers;
-          Object.keys(indexWarmers).forEach(function(warmerId) {
-            warmers.push(new Warmer(warmerId, index, indexWarmers[warmerId]));
-          });
-        });
-        success(warmers);
-      };
-      this.clusterRequest('GET', path, {}, {}, parseWarmers, error);
-    };
-
-    this.fetchPercolateQueries = function(index, query, success, error) {
-      var path = '/' + encode(index) + '/.percolator/_search';
-      var parsePercolators = function(response) {
-        var collection = response.hits.hits.map(function(q) {
-          return new PercolateQuery(q);
-        });
-        var from = query.from;
-        var total = response.hits.total;
-        var size = query.size;
-        var percolators = new PercolatorsPage(from, size, total, collection);
-        success(percolators);
-      };
-      var body = JSON.stringify(query);
-      this.clusterRequest('POST', path, {}, body, parsePercolators, error);
     };
 
     this.getRepositories = function(success, error) {
@@ -5020,64 +4674,6 @@ kopf.controller('AnalysisController', ['$scope', '$location', '$timeout',
 
     $scope.initializeController = function() {
       $scope.indices = OpenSearchService.getOpenIndices();
-    };
-
-  }
-]);
-
-kopf.controller('BenchmarkController', ['$scope', '$location', '$timeout',
-  'AlertService', 'OpenSearchService',
-  function($scope, $location, $timeout, AlertService, OpenSearchService) {
-
-    $scope.bench = new Benchmark();
-    $scope.competitor = new Competitor();
-    $scope.indices = [];
-    $scope.types = [];
-
-    $scope.initializeController = function() {
-      $scope.indices = OpenSearchService.getIndices();
-    };
-
-    $scope.addCompetitor = function() {
-      if (notEmpty($scope.competitor.name)) {
-        this.bench.addCompetitor($scope.competitor);
-        $scope.competitor = new Competitor();
-      } else {
-        AlertService.error('Competitor needs a name');
-      }
-    };
-
-    $scope.removeCompetitor = function(index) {
-      $scope.bench.competitors.splice(index, 1);
-    };
-
-    $scope.editCompetitor = function(index) {
-      var edit = $scope.bench.competitors.splice(index, 1);
-      $scope.competitor = edit[0];
-    };
-
-    $scope.runBenchmark = function() {
-      $('#benchmark-result').html('');
-      try {
-        var json = $scope.bench.toJson();
-        OpenSearchService.executeBenchmark(json,
-            function(response) {
-              $scope.result = JSONTree.create(response);
-              $('#benchmark-result').html($scope.result);
-            },
-            function(error, status) {
-              if (status == 503) {
-                AlertService.info('No available nodes for benchmarking. ' +
-                    'At least one node must be started with ' +
-                    '\'--node.bench true\' option.');
-              } else {
-                AlertService.error(error.error);
-              }
-            }
-        );
-      } catch (error) {
-        AlertService.error(error);
-      }
     };
 
   }
@@ -6149,164 +5745,6 @@ kopf.controller('NodesController', ['$scope', 'ConfirmDialogService',
 
 ]);
 
-kopf.controller('PercolatorController', ['$scope', 'ConfirmDialogService',
-  'AlertService', 'AceEditorService', 'OpenSearchService',
-  function($scope, ConfirmDialogService, AlertService, AceEditorService,
-           OpenSearchService) {
-    $scope.editor = undefined;
-    $scope.pagination = new PercolatorsPage(0, 0, 0, []);
-
-    $scope.filter = '';
-    $scope.id = '';
-
-    $scope.index = null;
-    $scope.indices = [];
-    $scope.new_query = new PercolateQuery({});
-
-    $scope.$watch(
-        function() {
-          return OpenSearchService.cluster;
-        },
-        function(filter, previous) {
-          $scope.indices = OpenSearchService.getIndices();
-        },
-        true
-    );
-
-    $scope.initEditor = function() {
-      if (!angular.isDefined($scope.editor)) {
-        $scope.editor = AceEditorService.init('percolator-query-editor');
-      }
-    };
-
-    $scope.previousPage = function() {
-      $scope.loadPercolatorQueries(this.pagination.previousOffset());
-    };
-
-    $scope.nextPage = function() {
-      $scope.loadPercolatorQueries(this.pagination.nextOffset());
-    };
-
-    $scope.parseSearchParams = function() {
-      var queries = [];
-      var id = $scope.id;
-      if (id.trim().length > 0) {
-        queries.push({'query_string': {default_field: '_id', query: id}});
-      }
-      if ($scope.filter.trim().length > 0) {
-        var filter = JSON.parse($scope.filter);
-        Object.keys(filter).forEach(function(field) {
-          var q = {};
-          q[field] = filter[field];
-          queries.push({'term': q});
-        });
-      }
-      return queries;
-    };
-
-    $scope.deletePercolatorQuery = function(query) {
-      ConfirmDialogService.open('are you sure you want to delete query ' +
-              query.id + ' for index ' + query.index + '?',
-          query.sourceAsJSON(),
-          'Delete',
-          function() {
-            OpenSearchService.deletePercolatorQuery(query.index, query.id,
-                function(response) {
-                  var refreshIndex = query.index;
-                  OpenSearchService.refreshIndex(refreshIndex,
-                      function(response) {
-                        AlertService.success('Query successfully deleted',
-                            response);
-                        $scope.loadPercolatorQueries();
-                      },
-                      function(error) {
-                        AlertService.error('Error while reloading queries',
-                            error);
-                      }
-                  );
-                },
-                function(error) {
-                  AlertService.error('Error while deleting query', error);
-                }
-            );
-          }
-      );
-    };
-
-    $scope.createNewQuery = function() {
-      if (!notEmpty($scope.new_query.index) || !notEmpty($scope.new_query.id)) {
-        AlertService.error('Both index and query id must be specified');
-        return;
-      }
-
-      $scope.new_query.source = $scope.editor.format();
-      if (isDefined($scope.editor.error)) {
-        AlertService.error('Invalid percolator query');
-        return;
-      }
-
-      if (!notEmpty($scope.new_query.source)) {
-        AlertService.error('Query must be defined');
-        return;
-      }
-      OpenSearchService.createPercolatorQuery($scope.new_query,
-          function(response) {
-            var refreshIndex = $scope.new_query.index;
-            OpenSearchService.refreshIndex(refreshIndex,
-                function(response) {
-                  AlertService.success('Percolator Query successfully created',
-                      response);
-                  $scope.index = $scope.new_query.index;
-                  $scope.loadPercolatorQueries(0);
-                },
-                function(error) {
-                  AlertService.success('Error while reloading queries', error);
-                }
-            );
-          },
-          function(error) {
-            AlertService.error('Error while creating percolator query', error);
-          }
-      );
-    };
-
-    $scope.searchPercolatorQueries = function() {
-      if (isDefined($scope.index)) {
-        $scope.loadPercolatorQueries();
-      } else {
-        AlertService.info('No index is selected');
-      }
-    };
-
-    $scope.loadPercolatorQueries = function(from) {
-      try {
-        from = isDefined(from) ? from : 0;
-        var queries = $scope.parseSearchParams();
-        var body = {from: from, size: 10};
-        if (queries.length > 0) {
-          body.query = {bool: {must: queries}};
-        }
-        OpenSearchService.fetchPercolateQueries($scope.index, body,
-            function(percolators) {
-              $scope.pagination = percolators;
-            },
-            function(error) {
-              AlertService.error('Error loading percolate queries', error);
-            }
-        );
-      } catch (error) {
-        AlertService.error('Filter is not a valid JSON');
-      }
-    };
-
-    $scope.initializeController = function() {
-      $scope.indices = OpenSearchService.getIndices();
-      $scope.initEditor();
-    };
-
-  }
-]);
-
 kopf.controller('RestController', ['$scope', '$location', '$timeout',
   'ExplainService', 'AlertService', 'AceEditorService', 'OpenSearchService',
   'ClipboardService',
@@ -6758,111 +6196,6 @@ kopf.controller('SnapshotController', ['$scope', 'ConfirmDialogService',
   }
 ]);
 
-kopf.controller('WarmersController', [
-  '$scope', 'ConfirmDialogService', 'AlertService', 'AceEditorService',
-  'OpenSearchService',
-  function($scope, ConfirmDialogService, AlertService, AceEditorService,
-           OpenSearchService) {
-    $scope.editor = undefined;
-    $scope.indices = [];
-    $scope.index = null;
-    $scope.paginator = new Paginator(1, 10, [], new WarmerFilter(''));
-    $scope.page = $scope.paginator.getPage();
-
-    $scope.warmer = new Warmer('', '', {types: [], source: {}});
-
-    $scope.warmers = [];
-    $scope.loadingWarmers = false;
-
-    $scope.$watch(
-        function() {
-          return OpenSearchService.cluster;
-        },
-        function(filter, previous) {
-          $scope.indices = OpenSearchService.getIndices();
-        },
-        true
-    );
-
-    $scope.$watch('paginator', function(filter, previous) {
-      $scope.page = $scope.paginator.getPage();
-    }, true);
-
-    $scope.initEditor = function() {
-      if (!angular.isDefined($scope.editor)) {
-        $scope.editor = AceEditorService.init('warmer-editor');
-      }
-    };
-
-    $scope.createWarmer = function() {
-      if ($scope.editor.hasContent()) {
-        $scope.editor.format();
-        if (!isDefined($scope.editor.error)) {
-          $scope.warmer.source = $scope.editor.getValue();
-          OpenSearchService.registerWarmer($scope.warmer,
-              function(response) {
-                $scope.loadIndexWarmers();
-                AlertService.success('Warmer successfully created', response);
-              },
-              function(error) {
-                AlertService.error('Request returned invalid JSON', error);
-              }
-          );
-        }
-      } else {
-        AlertService.error('Warmer query can\'t be empty');
-      }
-    };
-
-    $scope.deleteWarmer = function(warmer) {
-      ConfirmDialogService.open(
-          'are you sure you want to delete warmer ' + warmer.id + '?',
-          warmer.source,
-          'Delete',
-          function() {
-            OpenSearchService.deleteWarmer(warmer, // FIXME: better send name + id
-                function(response) {
-                  AlertService.success('Warmer successfully deleted', response);
-                  $scope.loadIndexWarmers();
-                },
-                function(error) {
-                  AlertService.error('Error while deleting warmer', error);
-                }
-            );
-          }
-      );
-    };
-
-    $scope.loadIndexWarmers = function() {
-      if (isDefined($scope.index)) {
-        $scope.loadingWarmers = true;
-        OpenSearchService.getIndexWarmers($scope.index, '',
-            function(warmers) {
-              $scope.paginator.setCollection(warmers);
-              $scope.page = $scope.paginator.getPage();
-              $scope.loadingWarmers = false;
-            },
-            function(error) {
-              $scope.paginator.setCollection([]);
-              $scope.page = $scope.paginator.getPage();
-              $scope.loadingWarmers = false;
-              AlertService.error('Error while fetching warmers', error);
-            }
-        );
-      } else {
-        $scope.paginator.setCollection([]);
-        $scope.page = $scope.paginator.getPage();
-      }
-    };
-
-    $scope.initializeController = function() {
-      $scope.indices = OpenSearchService.getIndices();
-      $scope.initEditor();
-    };
-
-  }
-]);
-
 function readablizeBytes(bytes) {
   if (bytes > 0) {
     var s = ['b', 'KB', 'MB', 'GB', 'TB', 'PB'];
@@ -6899,11 +6232,6 @@ function isDefined(value) {
 // string.trim().length is grater than 0
 function notEmpty(value) {
   return isDefined(value) && value.toString().trim().length > 0;
-}
-
-function isNumber(value) {
-  var exp = /\d+/;
-  return exp.test(value);
 }
 
 // Returns the given date as a String formatted as hh:MM:ss

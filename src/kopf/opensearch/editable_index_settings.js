@@ -16,7 +16,6 @@ function EditableIndexSettings(settings) {
     'index.blocks.metadata',
     // index
     'index.number_of_replicas',
-    'index.warmer.enabled',
     'index.refresh_interval',
     'index.gc_deletes',
     'index.codec',
