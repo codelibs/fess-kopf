@@ -10,17 +10,19 @@ The project uses Jest for all JavaScript testing. `jest.config.js` matches
 `**/tests/**/*.test.js`, so every file listed below is the only thing that
 actually runs; there is no other test runner in this project.
 
-As of this writing there are **22 test files** totaling **705 test cases**
-(`npx jest` reports `Test Suites: 22 passed, 22 total` /
-`Tests: 705 passed, 705 total`). Re-run `npx jest` after adding or removing
+As of this writing there are **24 test files** totaling **709 test cases**
+(`npx jest` reports `Test Suites: 24 passed, 24 total` /
+`Tests: 709 passed, 709 total`). Re-run `npx jest` after adding or removing
 tests to keep these numbers current.
+
+`tests/support/` holds helpers, not tests. Its files do not end in
+`.test.js`, so `testMatch` does not pick them up.
 
 #### Core Functionality Tests
 
 - **`version.test.js`** - Version Detection and Comparison
   - OpenSearch version parsing (2.x, 3.x, 4.x+)
-  - Version comparison logic
-  - Distribution parameter handling
+  - `isAtLeast()` comparison logic, including the equal-version boundary
   - Edge cases and error handling
   - Future version compatibility
 
@@ -42,7 +44,11 @@ tests to keep these numbers current.
   - Configuration precedence testing
   - Docker environment compatibility
 
-- **`alerts.test.js`** - Alerts service
+- **`alerts.test.js`** - Alerts service, including that alerts created in
+  the same millisecond get distinct ids
+
+- **`services/opensearch-cluster-request.test.js`** - `clusterRequest`'s
+  callback contract, using the harness described below
 
 #### Filters
 
@@ -62,7 +68,16 @@ tests to keep these numbers current.
   **`opensearch/cluster-partial.test.js`**,
   **`opensearch/editable-index-settings.test.js`**,
   **`opensearch/index.test.js`**, **`opensearch/node.test.js`**,
-  **`opensearch/repository.test.js`**, **`opensearch/shard.test.js`**
+  **`opensearch/repository.test.js`**, **`opensearch/shard.test.js`**,
+  **`opensearch/broken-cluster.test.js`**
+
+#### Test Support
+
+- **`support/angular-service.js`** - not a test. Evaluates `src/kopf`
+  sources with a stubbed `kopf` module object and returns the registration
+  arrays they hand it, so an AngularJS factory can be mounted on a real
+  injector without extracting its body with a regular expression. Use it
+  for any further service or controller tests.
 
 There is no other test tree. The Jasmine specs and QUnit harness that used
 to live under `tests/` (`tests/jasmine/**`, `tests/all.html`,

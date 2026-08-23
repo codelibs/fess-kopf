@@ -50,6 +50,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Detection of Asquera's `elasticsearch-http-basic` plugin, an
   Elasticsearch 1.x add-on that cannot be present on OpenSearch (#33)
 - `dataset/create.sh`, which assumed mapping types and could not run (#33)
+- The `ClusterHealth` model, which had no callers anywhere; the cluster
+  health screen reads the API response directly (#39)
 
 ### Changed
 - Bundled Bootstrap updated from 3.0.0 to 3.4.1 (#26)

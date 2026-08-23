@@ -22,7 +22,8 @@ npm run build
 # Run linting only
 npm run lint
 
-# Start development server with hot reload (runs on http://localhost:9000)
+# Build and serve on http://localhost:9000. This does not watch for
+# changes - re-run it, or run `grunt watch`, after editing a source file
 grunt server
 
 # Run tests
