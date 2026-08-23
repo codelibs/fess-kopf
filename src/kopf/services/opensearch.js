@@ -797,12 +797,22 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
       var host = this.connection.host;
       var params = {'headers':{'Content-Type':'application/json'}};
       this.addAuth(params);
+      // Cluster settings are the only response the UI can do without, so
+      // a denied or failing /_cluster/settings must not blank the page.
+      // Resolve to a response-shaped value so every entry in the $q.all
+      // array is read the same way.
+      var optionalSettings = $http.get(host + '/_cluster/settings', params).
+          then(null, function(response) {
+            DebugService.debug('Cluster settings unavailable:',
+                response.status);
+            return {data: {}};
+          });
       $q.all([
         $http.get(host + '/_cluster/state/master_node,routing_table,blocks/',
             params),
         $http.get(host + '/_stats/docs,store', params),
         $http.get(host + '/_nodes/stats/jvm,fs,os,process', params),
-        $http.get(host + '/_cluster/settings', params),
+        optionalSettings,
         $http.get(host + '/_aliases', params),
         $http.get(host + '/_cluster/health', params),
         $http.get(host + '/_nodes/_all/os,jvm', params),

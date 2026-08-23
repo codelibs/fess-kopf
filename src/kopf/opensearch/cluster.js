@@ -41,6 +41,8 @@ function Cluster(health, state, stats, nodesStats, settings, aliases, nodes,
   }
 
   this.settings = settings;
+  this.settingsAvailable = isDefined(settings) &&
+      (isDefined(settings.persistent) || isDefined(settings.transient));
 
   this.nodes = Object.keys(nodes.nodes).map(function(nodeId) {
     var nodeStats = nodesStats.nodes[nodeId];
