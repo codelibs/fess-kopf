@@ -24,6 +24,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Tolerate an unavailable `/_cluster/settings` response instead of
   blanking every screen (#22)
 - List a closed index once instead of twice, and keep its aliases (#27)
+- Count a special index that exists only in the cluster blocks, which
+  `special_indices` previously missed (#36)
+- Give alerts created in the same millisecond distinct ids, so one
+  alert's timeout no longer removes another (#36)
+- Report cluster settings as available in basic mode, where they are
+  fetched successfully but the screen claimed they could not be read (#36)
+- Surface a missing concat source at build time instead of silently
+  dropping it from the bundle (#32)
 
 ### Removed
 - Public GitHub Gist sharing of cluster state (#23)
@@ -31,9 +39,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   localStorage in clear text (#24)
 - The `?location=` query parameter; use the `location` key in
   `kopf_external_settings.json` for local development (#25)
+- Percolator queries, index warmers and the benchmark API. The 2.0.0
+  entry below already claimed these were gone; the code was still there
+  (#30)
+- The dead Jasmine and QUnit test trees, which no runner had executed
+  since the move to Jest (#31)
+- `Version`'s unused `distribution` argument, and the
+  `isOpenSearch2OrLater` / `isOpenSearch3OrLater` helpers, which had no
+  callers outside their own tests (#33)
+- Detection of Asquera's `elasticsearch-http-basic` plugin, an
+  Elasticsearch 1.x add-on that cannot be present on OpenSearch (#33)
+- `dataset/create.sh`, which assumed mapping types and could not run (#33)
 
 ### Changed
 - Bundled Bootstrap updated from 3.0.0 to 3.4.1 (#26)
+- `Version.isGreater` renamed to `isAtLeast`. It always implemented
+  "same or newer", which is what its one consumer needs; only the name
+  said otherwise (#33)
+- The compatibility warning now compares against a named minimum major
+  version instead of a hardcoded `'2.0.0'` that had drifted from the
+  real package version (#33)
+- jscs and jshint replaced by ESLint. jshint ran with defaults and
+  reported nothing; most of jscs's output was the google preset
+  rejecting the `@callback` convention used throughout this codebase (#34)
+- CI now gates on lint and build instead of ignoring both, runs on pull
+  requests against any base branch so stacked pull requests are checked
+  at all, and fails when the committed `_site` does not match a fresh
+  build (#29, #35)
+- AngularJS services can now be tested: `tests/support/angular-service.js`
+  mounts them on a real injector, and `clusterRequest` has its first
+  tests (#37)
 
 ## [15.8.0] - 2026
 

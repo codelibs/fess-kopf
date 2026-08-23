@@ -75,6 +75,10 @@ src/kopf/
 3. **OpenSearch Integration**: This tool is designed exclusively for OpenSearch 2.x and 3.x (not Elasticsearch). It connects to OpenSearch clusters via REST API and provides a web UI for cluster management.
 
 4. **Fess Integration**: The built application is served through Fess at `/_plugin/kopf/`. Configuration is handled via `kopf_external_settings.json` which includes:
+   - `location`: OpenSearch URL for local development. Empty in the
+     shipped file; Fess serves kopf from the same origin. This is the
+     only way to point kopf elsewhere - the `?location=` query parameter
+     was removed
    - `opensearch_root_path`: OpenSearch connection path
    - `with_credentials`: CORS credentials flag
    - `theme`: UI theme (fess, light, dark)
@@ -109,4 +113,3 @@ src/kopf/
 - `jest.config.js`: Test configuration
 - `package.json`: Dependencies and npm scripts
 - `kopf_external_settings.json`: Runtime configuration (in _site/)
-- `plugin-descriptor.properties`: Plugin metadata for Fess integration
