@@ -3088,6 +3088,7 @@ var Alert = function(message, response, level, _class, icon) {
   this.icon = icon;
   this.timestamp = getTimeString(currentDate);
   this.id = 'alert_box_' + currentDate.getTime();
+  this.expanded = level === 'error' && isDefined(response);
 
   this.hasResponse = function() {
     return isDefined(this.response);
@@ -3122,7 +3123,7 @@ kopf.factory('AlertService', function() {
 
   // creates an error alert
   this.error = function(msg, resp, timeout) {
-    timeout = isDefined(timeout) ? timeout : 7500;
+    timeout = isDefined(timeout) ? timeout : 30000;
     var alert = new Alert(msg, resp, 'error', 'alert-danger', 'fa fa-warning');
     return this.addAlert(alert, timeout);
   };
@@ -3466,6 +3467,8 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
 
     this.brokenCluster = false;
 
+    this.autoRefreshEnabled = true;
+
     this.encodeURIComponent = function(text) {
       return encodeURIComponent(text);
     };
@@ -3481,6 +3484,7 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
       this.connection = undefined;
       this.connected = false;
       this.cluster = undefined;
+      this.autoRefreshEnabled = true;
     };
 
     this.getIndices = function() {
@@ -3569,12 +3573,12 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
               }
             }
           },
-          function(data) {
-            if (data.status == 503) {
+          function(data, status) {
+            if (status === 401 || status === 403) {
+              AlertService.error(
+                  'Authentication required (HTTP ' + status + ')', data);
+            } else if (status === 503) {
               DebugService.debug('No active master, switching to basic mode');
-              var distribution = isDefined(data.version.distribution) ?
-                  data.version.distribution : 'opensearch';
-              instance.setVersion(data.version.number, distribution);
               instance.connected = true;
               instance.setBrokenCluster(true);
               AlertService.error('No active master, switching to basic mode');
@@ -4219,22 +4223,26 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
       var config = {method: method, url: url, data: data, params: params,
         'headers':{'Content-Type':'application/json'}};
       this.addAuth(config);
-      $http(config).
-          success(function(data, status, headers, config) {
+      $http(config).then(
+          function(response) {
             try {
-              success(data);
+              success(response.data);
             } catch (exception) {
               DebugService.debug('Error parsing REST API data:', exception);
-              DebugService.debug('REST API output:', data);
-              error(exception);
+              DebugService.debug('REST API output:', response.data);
+              error(exception, response.status);
             }
-          }).
-          error(function(data, status, headers, config) {
-            DebugService.debug('Error executing request:',
-                {method: config.method, url: config.url, status: status});
-            DebugService.debug('REST API output:', data);
-            error(data);
-          });
+          },
+          function(response) {
+            DebugService.debug('Error executing request:', {
+              method: response.config.method,
+              url: response.config.url,
+              status: response.status
+            });
+            DebugService.debug('REST API output:', response.data);
+            error(response.data, response.status);
+          }
+      );
     };
 
     this.getClusterDetail = function(success, error) {
@@ -4389,7 +4397,16 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
                   instance.alertClusterChanges();
                 },
                 function(response) {
-                  if (response.status === 503) {
+                  var status = response.status;
+                  if (status === 401 || status === 403) {
+                    instance.stopAutoRefresh();
+                    AlertService.error(
+                        'Authentication required (HTTP ' + status + '). ' +
+                        'Automatic refresh stopped. Reload the page after ' +
+                        'fixing credentials.',
+                        response.data, 60000);
+                    instance.cluster = undefined;
+                  } else if (status === 503) {
                     var message = 'No active master, switching to basic mode';
                     DebugService.debug(message);
                     AlertService.error(message);
@@ -4422,10 +4439,16 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
       instance.refresh();
     };
 
+    this.stopAutoRefresh = function() {
+      instance.autoRefreshEnabled = false;
+    };
+
     this.autoRefreshCluster = function() {
       this.refresh();
       var nextRefresh = function() {
-        instance.autoRefreshCluster();
+        if (instance.autoRefreshEnabled) {
+          instance.autoRefreshCluster();
+        }
       };
       $timeout(nextRefresh, ExternalSettingsService.getRefreshRate());
     };
@@ -6537,7 +6560,7 @@ kopf.controller('RestController', ['$scope', '$location', '$timeout',
                   $scope.request.method, $scope.request.body);
             },
             function(error, status) {
-              if (status !== 0) {
+              if (status > 0) {
                 AlertService.error('Request was not successful');
                 _handleResponse(error);
               } else {
