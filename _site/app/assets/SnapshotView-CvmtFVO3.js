@@ -1,0 +1,1 @@
+import{c as e,d as t,f as n,p as r,u as i}from"./index-FHqTlRRG.js";var a={class:`alert alert-secondary`,role:`status`},o=n({__name:`SnapshotView`,setup(n){return(n,o)=>(r(),i(`div`,a,[...o[0]||=[e(`strong`,null,`snapshot`,-1),t(` has not been ported yet. `,-1)]]))}});export{o as default};
