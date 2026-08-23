@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import {Cluster, type ClusterSettingsResponse} from '@/model/cluster';
-import type {ClusterState, IndexAliases} from '@/model/opensearch-index';
+import type {ClusterState, IndexAliasesResponse} from '@/model/opensearch-index';
 import {emptyStats, health, nodes, nodesStats, shardRouting, state} from './fixtures';
 
 /**
@@ -14,7 +14,7 @@ const main = {name: 'search01'};
 function build(
   clusterState: ClusterState,
   settings: ClusterSettingsResponse | undefined = {},
-  aliases: Record<string, IndexAliases> = {},
+  aliases: Record<string, IndexAliasesResponse> = {},
 ): Cluster {
   return new Cluster(
     health(),
@@ -46,7 +46,7 @@ const closedState: ClusterState = {
   blocks: {indices: {'closed-one': {'4': {description: 'index closed'}}}},
 };
 
-const closedAliases: Record<string, IndexAliases> = {
+const closedAliases: Record<string, IndexAliasesResponse> = {
   'closed-one': {aliases: {'an-alias': {}}},
 };
 

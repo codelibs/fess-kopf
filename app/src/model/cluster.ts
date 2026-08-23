@@ -1,6 +1,6 @@
 import {ClusterChanges} from './cluster-changes';
 import {ClusterNode, type NodeInfo} from './cluster-node';
-import {Index, type ClusterState, type IndexAliases} from './opensearch-index';
+import {Index, type ClusterState, type IndexAliasesResponse} from './opensearch-index';
 import {Shard} from './shard';
 import {getProperty, getTimeString, isDefined} from './util';
 
@@ -83,7 +83,7 @@ export class Cluster {
     stats: IndicesStats,
     nodesStats: NodesStatsResponse,
     settings: ClusterSettingsResponse | undefined,
-    aliases: Record<string, IndexAliases>,
+    aliases: Record<string, IndexAliasesResponse>,
     nodes: NodesResponse,
     main: {name: string; version?: {number?: string}},
   ) {
