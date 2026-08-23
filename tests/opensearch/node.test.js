@@ -81,7 +81,7 @@ describe('Node', () => {
 
       expect(node.id).toBe('node1');
       expect(node.name).toBe('test-node');
-      expect(node.elasticVersion).toBe('2.11.1');
+      expect(node.version).toBe('2.11.1');
       expect(node.jvmVersion).toBe('17.0.2');
       expect(node.availableProcessors).toBe(8);
       expect(node.transportAddress).toBe('127.0.0.1:9300');
@@ -283,6 +283,33 @@ describe('Node', () => {
       expect(node.master).toBe(true);
       expect(node.data).toBe(true);
       expect(node.client).toBe(false);
+    });
+
+    test('should treat cluster_manager role as master', () => {
+      const nodeInfo = createMockNodeInfo({ roles: ['cluster_manager'] });
+      const nodeStats = createMockNodeStats();
+      const node = new Node('node-1', nodeStats, nodeInfo);
+      expect(node.master).toBe(true);
+      expect(node.data).toBe(false);
+      expect(node.client).toBe(false);
+    });
+
+    test('should handle OpenSearch 3.x role set', () => {
+      const nodeInfo = createMockNodeInfo({
+        roles: ['cluster_manager', 'data', 'ingest', 'ml']
+      });
+      const nodeStats = createMockNodeStats();
+      const node = new Node('node-1', nodeStats, nodeInfo);
+      expect(node.master).toBe(true);
+      expect(node.data).toBe(true);
+      expect(node.client).toBe(false);
+    });
+
+    test('should expose the node version', () => {
+      const nodeInfo = createMockNodeInfo({ version: '3.8.0' });
+      const nodeStats = createMockNodeStats();
+      const node = new Node('node-1', nodeStats, nodeInfo);
+      expect(node.version).toBe('3.8.0');
     });
   });
 });
