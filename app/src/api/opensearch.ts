@@ -344,3 +344,16 @@ export async function fetchShardStats(
   );
   return new ShardStats(shard, index, recovering[0]);
 }
+
+/**
+ * Writes index settings.
+ *
+ * The body carries only the updatable settings: create-time settings such as
+ * index.codec make the whole call fail if they are resent.
+ */
+export function updateIndexSettings(
+  index: string,
+  settings: Record<string, string>,
+): Promise<unknown> {
+  return request(`/${encodeURIComponent(index)}/_settings`, {method: 'PUT', body: settings});
+}
