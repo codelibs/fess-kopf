@@ -7,13 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **The front end is now Vue 3, built by Vite, in TypeScript.** It replaced the
+  AngularJS 1.4.7 application screen by screen; `src/`, `Gruntfile.js` and the
+  Jest suite are gone, and `_site/` is now entirely the Vite build. jQuery,
+  Bootstrap 3, ace, angular-tree-dnd, jsontree, typeahead and jquery.csv are
+  no longer shipped. Nothing on the Fess side changed: the bundle is still
+  served from the same path, still addresses its assets relatively, and still
+  routes on the hash
+- Bootstrap 3.4.1 to Bootstrap 5.3, the version the Fess admin interface
+  already ships
+
 ### Added
-- Start replacing the AngularJS front end with a Vue 3 application built by
-  Vite, under `app/`, shipped to `_site/app/`. Both applications ship while
-  screens are ported one at a time; `_site/index.html` remains the entry
-  point Fess serves until the port is complete. This change adds only the
-  foundation: routing, the alert stack, the cluster poll, the settings
-  loader and the HTTP client
+- Query skeletons on the REST client for the query types a Fess cluster is
+  operated with: match, knn, neural, neural_sparse and hybrid
+- A type check (`npm run typecheck`) in CI. The bundler strips types without
+  reading them, so nothing else would
 
 ### Fixed
 - Recognize the `cluster_manager` node role, so the current-master marker,
@@ -42,6 +51,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   dropping it from the bundle (#32)
 
 ### Removed
+- The cluster health and cluster settings screens. Nothing in the shipped
+  interface linked to either one, and both failed against a default OpenSearch
+  install
+- The 784-line Query DSL completer. It served the REST client alone and was
+  larger than every other controller put together; the screen offers query
+  skeletons (match, knn, neural, neural_sparse, hybrid) instead
 - Public GitHub Gist sharing of cluster state (#23)
 - The unreachable host history service, which stored credentials in
   localStorage in clear text (#24)

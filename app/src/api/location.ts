@@ -38,7 +38,7 @@ export function searchEngineBaseUrl(): string | null {
 /** Resolves a file shipped at the root of _site. */
 export function resolveSiteFile(name: string): string {
   const root = kopfRootUrl();
-  // Without the marker we are not under Fess; the dev server serves _site
-  // alongside the app, so climb one level out of app/.
-  return root === null ? `../${name}` : `${root}${name}`;
+  // Without the marker we are not under Fess -- vite dev, or a plain static
+  // server -- where the file sits beside index.html.
+  return root === null ? `./${name}` : `${root}${name}`;
 }

@@ -82,14 +82,13 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: build-output
-        path: _site/dist/
+        path: _site/
         retention-days: 7
 
     # Runs after the upload so a failure here still leaves the freshly
     # built _site downloadable to diff against the committed one.
-    # git status, not git diff: diff only reports tracked files, and the
-    # copy target globs src/lib/angularjs/*.map, so a new vendor map would
-    # land in _site/dist untracked and slip past a diff-based check.
+    # git status, not git diff: diff only reports tracked files, and a new
+    # emitted file would land untracked and slip past a diff-based check.
     - name: Verify _site is in sync with src
       run: |
         if [ -n "$(git status --porcelain -- _site)" ]; then
