@@ -25,10 +25,15 @@ export class Shard {
   }
 }
 
-/** Per-index shard statistics, paired with the shard they belong to. */
+/**
+ * Statistics for one shard copy.
+ *
+ * `shard` is the shard number, not a Shard: that is what getShardStats passes,
+ * and it is the only place this is constructed.
+ */
 export class ShardStats {
   constructor(
-    readonly shard: Shard,
+    readonly shard: number,
     readonly index: string,
     readonly stats: unknown,
   ) {}

@@ -51,10 +51,11 @@ describe('Shard', () => {
 });
 
 describe('ShardStats', () => {
-  it('pairs a shard with its index and stats', () => {
-    const shard = new Shard(shardRouting());
-    const stats = new ShardStats(shard, 'test-index', {docs: 1});
-    expect(stats.shard).toBe(shard);
+  it('carries the shard number, its index and the stats payload', () => {
+    // The number, not a Shard: getShardStats is the only constructor site and
+    // that is what it passes.
+    const stats = new ShardStats(2, 'test-index', {docs: 1});
+    expect(stats.shard).toBe(2);
     expect(stats.index).toBe('test-index');
     expect(stats.stats).toEqual({docs: 1});
   });

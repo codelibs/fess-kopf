@@ -2,6 +2,7 @@ import {RequestError, request, requestAll} from './client';
 import {CatResult} from '@/model/cat-result';
 import {HotThreads, type NodeHotThreads} from '@/model/hot-threads';
 import {NodeStats} from '@/model/cluster-node';
+import {ShardStats} from '@/model/shard';
 import {
   IndexMetadata,
   Token,
@@ -242,4 +243,104 @@ export function analyzeByAnalyzer(
   signal?: AbortSignal,
 ): Promise<Token[]> {
   return analyze(index, {text, analyzer}, signal);
+}
+
+/* ---------------------------------------------------------------------------
+ * Index operations. Every one of these changes the cluster; the screens gate
+ * them behind a confirmation dialog.
+ * ------------------------------------------------------------------------ */
+
+/** Accepts a comma-separated list, which is how the bulk actions are issued. */
+export function deleteIndex(index: string): Promise<unknown> {
+  return request(`/${encodeURIComponent(index)}`, {method: 'DELETE'});
+}
+
+export function optimizeIndex(index: string): Promise<unknown> {
+  return request(`/${encodeURIComponent(index)}/_forcemerge`, {method: 'POST'});
+}
+
+export function refreshIndex(index: string): Promise<unknown> {
+  return request(`/${encodeURIComponent(index)}/_refresh`, {method: 'POST'});
+}
+
+export function clearIndexCache(index: string): Promise<unknown> {
+  return request(`/${encodeURIComponent(index)}/_cache/clear`, {method: 'POST'});
+}
+
+export function openIndex(index: string): Promise<unknown> {
+  return request(`/${encodeURIComponent(index)}/_open`, {method: 'POST'});
+}
+
+export function closeIndex(index: string): Promise<unknown> {
+  return request(`/${encodeURIComponent(index)}/_close`, {method: 'POST'});
+}
+
+/** Transient, so it does not survive a full cluster restart. */
+export function setShardAllocation(enabled: boolean): Promise<unknown> {
+  return request('/_cluster/settings', {
+    method: 'PUT',
+    body: {transient: {'cluster.routing.allocation.enable': enabled ? 'all' : 'none'}},
+  });
+}
+
+export function relocateShard(
+  shard: number,
+  index: string,
+  fromNode: string,
+  toNode: string,
+): Promise<unknown> {
+  return request('/_cluster/reroute', {
+    method: 'POST',
+    body: {commands: [{move: {shard, index, from_node: fromNode, to_node: toNode}}]},
+  });
+}
+
+interface ShardsStatsResponse {
+  indices: Record<string, {shards: Record<string, {routing: {node: string}}[]>}>;
+}
+
+interface RecoveryResponse {
+  [index: string]: {shards: {id: number; target: {id: string}}[]};
+}
+
+/**
+ * Stats for one shard copy.
+ *
+ * A started shard is described by _stats; one that is still recovering is not,
+ * so _recovery answers for it instead. Both are requested together because
+ * which one applies is only known from the first response.
+ */
+export async function fetchShardStats(
+  shard: number,
+  index: string,
+  nodeId: string,
+  signal?: AbortSignal,
+): Promise<ShardStats> {
+  const results = await requestAll({
+    stats: request<ShardsStatsResponse>(
+      `/${encodeURIComponent(index)}/_stats?level=shards&human`,
+      {signal},
+    ),
+    recovery: request<RecoveryResponse>(
+      `/${encodeURIComponent(index)}/_recovery?active_only=true&human`,
+      {signal},
+    ),
+  });
+  if (results.stats.error !== undefined) {
+    throw results.stats.error;
+  }
+
+  const copies = results.stats.value!.indices[index]?.shards[String(shard)] ?? [];
+  const started = copies.filter((copy) => copy.routing.node === nodeId);
+  if (started.length === 1) {
+    return new ShardStats(shard, index, started[0]);
+  }
+
+  if (results.recovery.error !== undefined) {
+    throw results.recovery.error;
+  }
+  const recovering = (results.recovery.value![index]?.shards ?? []).filter(
+    (entry) => entry.target.id === nodeId && entry.id === shard,
+  );
+  return new ShardStats(shard, index, recovering[0]);
 }
