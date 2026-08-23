@@ -50,15 +50,6 @@ kopf.config(function($routeProvider, $locationProvider) {
         templateUrl: 'partials/analysis.html',
         controller: 'AnalysisController'
       }).
-      // Percolator and Warmers are deprecated in OpenSearch 2.x/3.x
-      // when('/percolator', {
-      //   templateUrl: 'partials/percolator.html',
-      //   controller: 'PercolatorController'
-      // }).
-      // when('/warmers', {
-      //   templateUrl: 'partials/warmers.html',
-      //   controller: 'WarmersController'
-      // }).
       when('/snapshot', {
         templateUrl: 'partials/snapshot.html',
         controller: 'SnapshotController'

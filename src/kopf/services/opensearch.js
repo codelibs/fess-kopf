@@ -321,45 +321,6 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
     };
 
     /**
-     * Deletes a warmer
-     *
-     * @param {Warmer} warmer - warmer to be deleted
-     * @callback success - invoked on success
-     * @callback error - invoked on error
-     */
-    this.deleteWarmer = function(warmer, success, error) {
-      var path = '/' + encode(warmer.index) + '/_warmer/' + encode(warmer.id);
-      this.clusterRequest('DELETE', path, {}, {}, success, error);
-    };
-
-    /**
-     * Deletes a percolator
-     *
-     * @param {string} index - percolator target index
-     * @param {string} id - percolator id
-     * @callback success - invoked on success
-     * @callback error - invoked on error
-     */
-    this.deletePercolatorQuery = function(index, id, success, error) {
-      var path = '/' + encode(index) + '/.percolator/' + encode(id);
-      this.clusterRequest('DELETE', path, {}, {}, success, error);
-    };
-
-    /**
-     * Creates a percolator query
-     *
-     * @param {Percolator} percolator - percolator to be created
-     * @callback success - invoked on success
-     * @callback error - invoked on error
-     */
-    this.createPercolatorQuery = function(percolator, success, error) {
-      var index = percolator.index;
-      var id = percolator.id;
-      var path = '/' + encode(index) + '/.percolator/' + encode(id);
-      this.clusterRequest('PUT', path, {}, percolator.source, success, error);
-    };
-
-    /**
      * Creates a repository
      *
      * @param {string} repository - repository name
@@ -423,35 +384,6 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
      */
     this.createSnapshot = function(repository, snapshot, body, success, error) {
       var path = '/_snapshot/' + encode(repository) + '/' + encode(snapshot);
-      this.clusterRequest('PUT', path, {}, body, success, error);
-    };
-
-    /**
-     * Executes a benchmark
-     *
-     * @param {Object} body - benchmark settings
-     * @callback success - invoked on success
-     * @callback error - invoked on error
-     */
-    this.executeBenchmark = function(body, success, error) {
-      var path = '/_bench';
-      this.clusterRequest('PUT', path, {}, body, success, error);
-    };
-
-    /**
-     * Registers a warmer query
-     *
-     * @param {Warmer} warmer - Warmer query
-     * @callback success - invoked on success
-     * @callback error - invoked on error
-     */
-    this.registerWarmer = function(warmer, success, error) {
-      var path = '/' + encode(warmer.index);
-      if (notEmpty(warmer.types)) {
-        path += '/' + encode(warmer.types);
-      }
-      path += '/_warmer/' + encode(warmer.id.trim());
-      var body = warmer.source;
       this.clusterRequest('PUT', path, {}, body, success, error);
     };
 
@@ -710,38 +642,6 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
 
     this.analyzeByAnalyzer = function(index, analyzer, text, success, error) {
       analyze(index, {text: text, analyzer: analyzer}, success, error);
-    };
-
-    this.getIndexWarmers = function(index, warmer, success, error) {
-      var path = '/' + encode(index) + '/_warmer/' + encode(warmer.trim());
-      var parseWarmers = function(response) {
-        var warmers = [];
-        Object.keys(response).forEach(function(i) {
-          var index = i;
-          var indexWarmers = response[index].warmers;
-          Object.keys(indexWarmers).forEach(function(warmerId) {
-            warmers.push(new Warmer(warmerId, index, indexWarmers[warmerId]));
-          });
-        });
-        success(warmers);
-      };
-      this.clusterRequest('GET', path, {}, {}, parseWarmers, error);
-    };
-
-    this.fetchPercolateQueries = function(index, query, success, error) {
-      var path = '/' + encode(index) + '/.percolator/_search';
-      var parsePercolators = function(response) {
-        var collection = response.hits.hits.map(function(q) {
-          return new PercolateQuery(q);
-        });
-        var from = query.from;
-        var total = response.hits.total;
-        var size = query.size;
-        var percolators = new PercolatorsPage(from, size, total, collection);
-        success(percolators);
-      };
-      var body = JSON.stringify(query);
-      this.clusterRequest('POST', path, {}, body, parsePercolators, error);
     };
 
     this.getRepositories = function(success, error) {
