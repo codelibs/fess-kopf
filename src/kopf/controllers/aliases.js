@@ -46,14 +46,14 @@ kopf.controller('AliasesController', ['$scope', 'AlertService',
           // if alias already exists, check if its already associated with index
           var collection = $scope.paginator.getCollection();
           var indices = collection.filter(function(a) {
-            return a.index == indexName;
+            return a.index === indexName;
           });
           if (indices.length === 0) {
             collection.push(new IndexAliases(indexName, [$scope.new_alias]));
           } else {
             var indexAliases = indices[0];
             var aliases = indexAliases.aliases.filter(function(a) {
-              return aliasName == a.alias;
+              return aliasName === a.alias;
             });
             if (aliases.length > 0) {
               throw 'Alias is already associated with this index';
@@ -78,7 +78,7 @@ kopf.controller('AliasesController', ['$scope', 'AlertService',
     $scope.removeIndexAliases = function(index) {
       var collection = $scope.paginator.getCollection();
       for (var position = 0; position < collection.length; position++) {
-        if (index == collection[position].index) {
+        if (index === collection[position].index) {
           collection.splice(position, 1);
           break;
         }
@@ -92,14 +92,14 @@ kopf.controller('AliasesController', ['$scope', 'AlertService',
       var indexPosition = 0;
       var collection = $scope.paginator.getCollection();
       for (; indexPosition < collection.length; indexPosition++) {
-        if (index == collection[indexPosition].index) {
+        if (index === collection[indexPosition].index) {
           break;
         }
       }
       var indexAliases = collection[indexPosition];
       var size = indexAliases.aliases.length;
       for (var aliasPosition = 0; aliasPosition < size; aliasPosition++) {
-        if (alias == indexAliases.aliases[aliasPosition].alias) {
+        if (alias === indexAliases.aliases[aliasPosition].alias) {
           indexAliases.aliases.splice(aliasPosition, 1);
           if (indexAliases.aliases.length === 0) {
             collection.splice(indexPosition, 1);

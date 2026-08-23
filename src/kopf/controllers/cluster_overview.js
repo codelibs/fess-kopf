@@ -1,7 +1,7 @@
 kopf.controller('ClusterOverviewController', ['$scope', '$window',
   'ConfirmDialogService', 'AlertService', 'OpenSearchService', 'AppState',
-  function($scope, $window, ConfirmDialogService, AlertService, OpenSearchService,
-           AppState) {
+  function($scope, $window, ConfirmDialogService, AlertService,
+           OpenSearchService, AppState) {
 
     $scope.cluster = undefined;
 

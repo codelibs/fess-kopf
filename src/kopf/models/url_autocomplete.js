@@ -1,3 +1,4 @@
+/* exported URLAutocomplete */
 function URLAutocomplete(mappings) {
 
   var PATHS = [

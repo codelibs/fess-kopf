@@ -1,5 +1,6 @@
 kopf.factory('PageService', ['OpenSearchService', 'DebugService', '$rootScope',
-  '$document', function(OpenSearchService, DebugService, $rootScope, $document) {
+  '$document',
+  function(OpenSearchService, DebugService, $rootScope, $document) {
 
     var instance = this;
 

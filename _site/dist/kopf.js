@@ -85,6 +85,7 @@ kopf.config(function($routeProvider, $locationProvider) {
       otherwise({redirectTo: '/cluster'});
 });
 
+/* exported Alias */
 function IndexAliases(index, aliases) {
   this.index = index;
   this.aliases = aliases;
@@ -103,7 +104,7 @@ IndexAliases.diff = function(original, modified) {
   modified.forEach(function(ia) {
     var isNew = true;
     original.forEach(function(origIA) {
-      if (ia.index == origIA.index) {
+      if (ia.index === origIA.index) {
         isNew = false;
         ia.aliases.forEach(function(alias) {
           var originalAliases = origIA.aliases.filter(function(originalAlias) {
@@ -177,6 +178,7 @@ function Alias(alias, index, filter, indexRouting, searchRouting) {
   };
 }
 
+/* exported BrokenCluster */
 function BrokenCluster(health, state, nodesStats, settings, nodes) {
 
   this.status = health.status;
@@ -218,6 +220,7 @@ function BrokenCluster(health, state, nodesStats, settings, nodes) {
   this.indices = [];
 }
 
+/* exported CatResult */
 function CatResult(result) {
   var lines = result.split('\n');
   var header = lines[0];
@@ -235,6 +238,7 @@ function CatResult(result) {
   this.lines = values;
 }
 
+/* exported ClusterChanges */
 function ClusterChanges() {
 
   this.nodeJoins = null;
@@ -326,6 +330,7 @@ function ClusterChanges() {
 
 }
 
+/* exported ClusterHealth */
 function ClusterHealth(health) {
   this.status = health.status;
   this.cluster_name = health.cluster_name;
@@ -342,6 +347,7 @@ function ClusterHealth(health) {
   this.fetched_at = getTimeString(new Date());
 }
 
+/* exported ClusterMapping */
 function ClusterMapping(data) {
 
   this.getIndices = function() {
@@ -402,6 +408,7 @@ function ClusterMapping(data) {
 
 }
 
+/* exported ClusterSettings */
 function ClusterSettings(settings) {
   // Every key here was verified against OpenSearch 3.8.0. Keys that answer
   // "unknown setting" are not listed, because rendering them as form
@@ -427,6 +434,7 @@ function ClusterSettings(settings) {
   });
 }
 
+/* exported Cluster */
 function Cluster(health, state, stats, nodesStats, settings, aliases, nodes,
                  main) {
   this.created_at = new Date().getTime();
@@ -462,9 +470,9 @@ function Cluster(health, state, stats, nodesStats, settings, aliases, nodes,
       'transient.cluster.routing.allocation.enable', '');
 
   if (transientAllocation !== '') {
-    this.disableAllocation = transientAllocation == 'all' ? 'false' : 'true';
+    this.disableAllocation = transientAllocation === 'all' ? 'false' : 'true';
   } else {
-    if (persistentAllocation != 'all') {
+    if (persistentAllocation !== 'all') {
       this.disableAllocation = 'true';
     }
   }
@@ -551,7 +559,7 @@ function Cluster(health, state, stats, nodesStats, settings, aliases, nodes,
         }
       });
 
-      if (oldCluster.nodes.length != nodes.length || !changes.hasJoins()) {
+      if (oldCluster.nodes.length !== nodes.length || !changes.hasJoins()) {
         nodes.forEach(function(node) {
           for (var i = 0; i < oldCluster.nodes.length; i++) {
             if (oldCluster.nodes[i].equals(node)) {
@@ -578,7 +586,7 @@ function Cluster(health, state, stats, nodesStats, settings, aliases, nodes,
         }
       });
 
-      var equalNumberOfIndices = oldCluster.indices.length != indices.length;
+      var equalNumberOfIndices = oldCluster.indices.length !== indices.length;
       if (equalNumberOfIndices || !changes.hasCreatedIndices()) {
         indices.forEach(function(index) {
           for (var i = 0; i < oldCluster.indices.length; i++) {
@@ -593,7 +601,8 @@ function Cluster(health, state, stats, nodesStats, settings, aliases, nodes,
         });
       }
       var docDelta = this.num_docs - oldCluster.num_docs;
-      // var docRate = docDelta / ((this.created_at - old_cluster.created_at) / 1000);
+      // var docRate =
+      //     docDelta / ((this.created_at - old_cluster.created_at) / 1000);
       changes.setDocDelta(docDelta);
       var dataDelta = this.total_size_in_bytes - oldCluster.total_size_in_bytes;
       changes.setDataDelta(dataDelta);
@@ -645,6 +654,7 @@ function Cluster(health, state, stats, nodesStats, settings, aliases, nodes,
 
 }
 
+/* exported EditableIndexSettings */
 // Settings that OpenSearch only accepts at index creation time.
 // Resending them on an update makes the whole _settings call fail.
 var STATIC_INDEX_SETTINGS = [
@@ -704,18 +714,21 @@ function EditableIndexSettings(settings) {
   };
 }
 
+/* exported HotThread */
 function HotThread(header) {
   this.header = header;
   this.subHeader = undefined;
   this.stack = [];
 }
 
+/* exported HotThreads */
 function HotThreads(data) {
   this.nodes_hot_threads = data.split(':::').slice(1).map(function(data) {
     return new NodeHotThreads(data);
   });
 }
 
+/* exported IndexMetadata */
 function IndexMetadata(index, metadata) {
   this.index = index;
   this.mappings = metadata.mappings;
@@ -735,7 +748,7 @@ function IndexMetadata(index, metadata) {
         if (setting.indexOf('index.analysis.analyzer') === 0) {
           var analyzer = setting.substring('index.analysis.analyzer.'.length);
           analyzer = analyzer.substring(0, analyzer.indexOf('.'));
-          if ($.inArray(analyzer, analyzers) == -1) {
+          if ($.inArray(analyzer, analyzers) === -1) {
             analyzers.push(analyzer);
           }
         }
@@ -750,7 +763,7 @@ function IndexMetadata(index, metadata) {
     var analyzableTypes = ['float', 'double', 'byte', 'short', 'integer',
       'long', 'nested', 'object'
     ];
-    return analyzableTypes.indexOf(type) == -1;
+    return analyzableTypes.indexOf(type) === -1;
   }
 
   this.getFields = function(type) {
@@ -769,14 +782,14 @@ function IndexMetadata(index, metadata) {
     for (var field in fields) {
       // multi field
       if (isDefined(fields[field].fields)) {
-        var addPrefix = fields[field].path != 'just_name';
+        var addPrefix = fields[field].path !== 'just_name';
         var multiPrefix = addPrefix ? prefix + field : prefix;
         var multiProps = this.getProperties(multiPrefix, fields[field].fields);
         validFields = validFields.concat(multiProps);
       }
       // nested and object types
-      var nestedType = fields[field].type == 'nested';
-      var objectType = fields[field].type == 'object';
+      var nestedType = fields[field].type === 'nested';
+      var objectType = fields[field].type === 'object';
       if (nestedType || objectType || !isDefined(fields[field].type)) {
         var nestedProperties = this.getProperties(prefix + field,
             fields[field].properties);
@@ -791,11 +804,13 @@ function IndexMetadata(index, metadata) {
   };
 }
 
+/* exported IndexTemplate */
 function IndexTemplate(name, body) {
   this.name = name;
   this.body = body;
 }
 
+/* exported Index */
 function Index(indexName, clusterState, indexStats, aliases) {
   this.name = indexName;
   this.shards = null;
@@ -836,7 +851,7 @@ function Index(indexName, clusterState, indexStats, aliases) {
     var shardsMap = clusterState.routing_table.indices[this.name].shards;
     Object.keys(shardsMap).forEach(function(shardNum) {
       shardsMap[shardNum].forEach(function(shard) {
-        if (shard.state != 'STARTED') {
+        if (shard.state !== 'STARTED') {
           instance.unhealthy = true;
         }
       });
@@ -846,7 +861,7 @@ function Index(indexName, clusterState, indexStats, aliases) {
   this.special = this.name.indexOf('.') === 0 || this.name.indexOf('_') === 0;
 
   this.equals = function(index) {
-    return index !== null && index.name == this.name;
+    return index !== null && index.name === this.name;
   };
 
   // Closed indices still appear in the routing table since ES 7.2, so
@@ -864,11 +879,12 @@ function Index(indexName, clusterState, indexStats, aliases) {
 
 }
 
+/* exported NodeHotThreads */
 function NodeHotThreads(data) {
   var lines = data.split('\n');
   this.header = lines[0];
   // pre 4859ce5d79a786b58b1cd2fb131614677efd6b91
-  var BackwardCompatible = lines[1].indexOf('Hot threads at') == -1;
+  var BackwardCompatible = lines[1].indexOf('Hot threads at') === -1;
   var HeaderLines = BackwardCompatible ? 2 : 3;
   this.subHeader = BackwardCompatible ? undefined : lines[1];
   this.node = this.header.substring(
@@ -899,12 +915,14 @@ function NodeHotThreads(data) {
 
 }
 
+/* exported NodeStats */
 function NodeStats(id, stats) {
   this.id = id;
   this.name = stats.name;
   this.stats = stats;
 }
 
+/* exported Node */
 function Node(nodeId, nodeStats, nodeInfo) {
   this.id = nodeId;
   this.name = nodeInfo.name;
@@ -958,6 +976,7 @@ function Node(nodeId, nodeStats, nodeInfo) {
 
 }
 
+/* exported OpenSearchConnection */
 // Expects URL according to /^(https|http):\/\/(\w+):(\w+)@(.*)/i;
 // Examples:
 // http://localhost:9200
@@ -984,6 +1003,7 @@ function OpenSearchConnection(url, withCredentials) {
 
 }
 
+/* exported Repository */
 function Repository(name, info) {
   this.name = name;
   this.type = info.type;
@@ -1067,12 +1087,14 @@ function Repository(name, info) {
   };
 }
 
+/* exported ShardStats */
 function ShardStats(shard, index, stats) {
   this.shard = shard;
   this.index = index;
   this.stats = stats;
 }
 
+/* exported Shard */
 function Shard(routing) {
   this.primary = routing.primary;
   this.shard = routing.shard;
@@ -1082,6 +1104,7 @@ function Shard(routing) {
   this.id = this.node + '_' + this.shard + '_' + this.index;
 }
 
+/* exported Snapshot */
 function Snapshot(info) {
   this.name = info.snapshot;
   this.indices = info.indices;
@@ -1095,6 +1118,7 @@ function Snapshot(info) {
   this.shards = info.shards;
 }
 
+/* exported Token */
 /** TYPES **/
 function Token(token, startOffset, endOffset, position) {
   this.token = token;
@@ -1103,6 +1127,7 @@ function Token(token, startOffset, endOffset, position) {
   this.position = position;
 }
 
+/* exported Version */
 function Version(version) {
   var checkVersion = new RegExp('(\\d+)\\.(\\d+)\\.(\\d+)\\.*');
   var major;
@@ -1152,6 +1177,7 @@ function Version(version) {
 
 }
 
+/* exported AceEditor */
 function AceEditor(target) {
   // ace editor
   ace.config.set('basePath', 'dist/');
@@ -1216,6 +1242,7 @@ function AceEditor(target) {
   };
 }
 
+/* exported AliasFilter */
 function AliasFilter(index, alias) {
 
   this.index = index;
@@ -1233,8 +1260,8 @@ function AliasFilter(index, alias) {
 
   this.equals = function(other) {
     return (other !== null &&
-      this.index == other.index &&
-      this.alias == other.alias);
+      this.index === other.index &&
+      this.alias === other.alias);
   };
 
   this.isBlank = function() {
@@ -1247,14 +1274,14 @@ function AliasFilter(index, alias) {
     } else {
       var matches = true;
       if (notEmpty(this.index)) {
-        matches = indexAlias.index.indexOf(this.index) != -1;
+        matches = indexAlias.index.indexOf(this.index) !== -1;
       }
       if (matches && notEmpty(this.alias)) {
         matches = false;
         var aliases = indexAlias.aliases;
         for (var i = 0; !matches && i < aliases.length; i++) {
           var alias = aliases[i];
-          matches = alias.alias.indexOf(this.alias) != -1;
+          matches = alias.alias.indexOf(this.alias) !== -1;
         }
       }
       return matches;
@@ -1263,6 +1290,7 @@ function AliasFilter(index, alias) {
 
 }
 
+/* exported IndexFilter */
 function IndexFilter(name, closed, special, healthy, asc, timestamp) {
   this.name = name;
   this.closed = closed;
@@ -1345,13 +1373,13 @@ function IndexFilter(name, closed, special, healthy, asc, timestamp) {
           }
         }
       }
-      catch (err) { // if not valid regexp, still try normal matching
-        matches = index.name.indexOf(this.name.toLowerCase()) != -1;
+      catch (_err) { // if not valid regexp, still try normal matching
+        matches = index.name.indexOf(this.name.toLowerCase()) !== -1;
         if (!matches) {
           for (var idx2 = 0; idx2 < index.aliases.length; idx2++) {
             var alias = index.aliases[idx2].toLowerCase();
             matches = true;
-            if ((matches = (alias.indexOf(this.name.toLowerCase()) != -1))) {
+            if ((matches = (alias.indexOf(this.name.toLowerCase()) !== -1))) {
               break;
             }
           }
@@ -1363,6 +1391,7 @@ function IndexFilter(name, closed, special, healthy, asc, timestamp) {
 
 }
 
+/* exported IndexTemplateFilter */
 function IndexTemplateFilter(name, template) {
 
   this.name = name;
@@ -1394,10 +1423,10 @@ function IndexTemplateFilter(name, template) {
     } else {
       var matches = true;
       if (notEmpty(this.name)) {
-        matches = template.name.indexOf(this.name) != -1;
+        matches = template.name.indexOf(this.name) !== -1;
       }
       if (matches && notEmpty(this.template)) {
-        matches = template.body.template.indexOf(this.template) != -1;
+        matches = template.body.template.indexOf(this.template) !== -1;
       }
       return matches;
     }
@@ -1405,6 +1434,7 @@ function IndexTemplateFilter(name, template) {
 
 }
 
+/* exported ModalControls */
 function ModalControls() {
   this.alert = null;
   this.active = false;
@@ -1412,6 +1442,7 @@ function ModalControls() {
   this.info = '';
 }
 
+/* exported NodeFilter */
 function NodeFilter(name, data, master, client, timestamp) {
   this.name = name;
   this.data = data;
@@ -1432,11 +1463,11 @@ function NodeFilter(name, data, master, client, timestamp) {
   this.equals = function(other) {
     return (
       other !== null &&
-      this.name == other.name &&
-      this.data == other.data &&
-      this.master == other.master &&
-      this.client == other.client &&
-      this.timestamp == other.timestamp
+      this.name === other.name &&
+      this.data === other.data &&
+      this.master === other.master &&
+      this.client === other.client &&
+      this.timestamp === other.timestamp
       );
   };
 
@@ -1462,7 +1493,7 @@ function NodeFilter(name, data, master, client, timestamp) {
 
   this.matchesName = function(name) {
     if (notEmpty(this.name)) {
-      return name.toLowerCase().indexOf(this.name.toLowerCase()) != -1;
+      return name.toLowerCase().indexOf(this.name.toLowerCase()) !== -1;
     } else {
       return true;
     }
@@ -1470,6 +1501,7 @@ function NodeFilter(name, data, master, client, timestamp) {
 
 }
 
+/* exported Paginator */
 function Paginator(page, pageSize, collection, filter) {
 
   this.filter = filter;
@@ -1561,6 +1593,7 @@ function Page(elements, total, first, last, next, previous) {
   this.previous = previous;
 }
 
+/* exported createQueryDslCompleter */
 /**
  * Query DSL autocomplete for OpenSearch in Ace Editor.
  *
@@ -1869,7 +1902,6 @@ function QueryDslContextParser(text, cursorRow, cursorCol) {
   var inString = false;
   var isKey = true;  // JSON objects start expecting a key after '{'
   var lastKey = '';
-  var partial = '';
 
   for (var c = 0; c < textToCursor.length; c++) {
     var ch = textToCursor[c];
@@ -2617,6 +2649,7 @@ function createQueryDslCompleter(mappingProvider) {
   };
 }
 
+/* exported Request */
 function Request(path, method, body) {
   this.timestamp = getTimeString(new Date());
   this.path = path;
@@ -2652,6 +2685,7 @@ function Request(path, method, body) {
   };
 }
 
+/* exported SnapshotFilter */
 function SnapshotFilter(name) {
 
   this.name = name;
@@ -2668,7 +2702,7 @@ function SnapshotFilter(name) {
 
   this.equals = function(other) {
     return (other !== null &&
-      this.name == other.name);
+      this.name === other.name);
   };
 
   this.isBlank = function() {
@@ -2682,7 +2716,7 @@ function SnapshotFilter(name) {
       var matches = true;
       if (notEmpty(this.name)) {
         matches = snapshot.name.toLowerCase().indexOf(
-            this.name.toLowerCase()) != -1;
+            this.name.toLowerCase()) !== -1;
       }
       return matches;
     }
@@ -2690,6 +2724,7 @@ function SnapshotFilter(name) {
 
 }
 
+/* exported URLAutocomplete */
 function URLAutocomplete(mappings) {
 
   var PATHS = [
@@ -2870,7 +2905,7 @@ kopf.factory('AlertService', function() {
       $(this).remove();
     });
     this.alerts = this.alerts.filter(function(a) {
-      return id != a.id;
+      return id !== a.id;
     });
   };
 
@@ -2936,7 +2971,7 @@ kopf.factory('ClipboardService', ['AlertService', '$document', '$window',
         textarea.select();
         $document[0].execCommand('copy');
         success();
-      } catch (error) {
+      } catch (_error) {
         failure();
       }
     };
@@ -3070,7 +3105,7 @@ kopf.factory('ExternalSettingsService', ['DebugService',
           Object.keys(data).forEach(function(setting) {
             settings[setting] = data[setting];
           });
-        } catch (error) {
+        } catch (_error) {
           throw {
             message: 'Error processing external settings',
             body: data
@@ -3145,7 +3180,7 @@ kopf.factory('ExternalSettingsService', ['DebugService',
         if (content) {
           settings = JSON.parse(content);
         }
-      } catch (error) {
+      } catch (_error) {
         DebugService.debug('Error while loading settings from local storage');
       }
       return settings;
@@ -3738,14 +3773,14 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
                     return stats.routing.node === nodeId;
                   }
               );
-              if (shardStats.length == 1) { // shard is started
+              if (shardStats.length === 1) { // shard is started
                 success(new ShardStats(shard, index, shardStats[0]));
               } else { // non started shard
                 var indexRecovery = responses[1].data;
                 var shardRecoveries = indexRecovery[index].shards.filter(
                     function(recovery) {
                       return recovery.target.id === nodeId &&
-                        recovery.id == shard;
+                        recovery.id === shard;
                     });
                 success(new ShardStats(shard, index, shardRecoveries[0]));
               }
@@ -4088,7 +4123,8 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
   }]);
 
 kopf.factory('PageService', ['OpenSearchService', 'DebugService', '$rootScope',
-  '$document', function(OpenSearchService, DebugService, $rootScope, $document) {
+  '$document',
+  function(OpenSearchService, DebugService, $rootScope, $document) {
 
     var instance = this;
 
@@ -4287,13 +4323,13 @@ kopf.directive('ngPagination', ['$document', function($document) {
         if ($target.is('input, textarea')) {
           return;
         }
-        if (event.keyCode == 39 && scope.page.next) {
+        if (event.keyCode === 39 && scope.page.next) {
           scope.$apply(function() {
             scope.paginator.nextPage();
             event.preventDefault();
           });
         }
-        if (event.keyCode == 37 && scope.page.previous) {
+        if (event.keyCode === 37 && scope.page.previous) {
           scope.$apply(function() {
             scope.paginator.previousPage();
             event.preventDefault();
@@ -4433,14 +4469,14 @@ kopf.controller('AliasesController', ['$scope', 'AlertService',
           // if alias already exists, check if its already associated with index
           var collection = $scope.paginator.getCollection();
           var indices = collection.filter(function(a) {
-            return a.index == indexName;
+            return a.index === indexName;
           });
           if (indices.length === 0) {
             collection.push(new IndexAliases(indexName, [$scope.new_alias]));
           } else {
             var indexAliases = indices[0];
             var aliases = indexAliases.aliases.filter(function(a) {
-              return aliasName == a.alias;
+              return aliasName === a.alias;
             });
             if (aliases.length > 0) {
               throw 'Alias is already associated with this index';
@@ -4465,7 +4501,7 @@ kopf.controller('AliasesController', ['$scope', 'AlertService',
     $scope.removeIndexAliases = function(index) {
       var collection = $scope.paginator.getCollection();
       for (var position = 0; position < collection.length; position++) {
-        if (index == collection[position].index) {
+        if (index === collection[position].index) {
           collection.splice(position, 1);
           break;
         }
@@ -4479,14 +4515,14 @@ kopf.controller('AliasesController', ['$scope', 'AlertService',
       var indexPosition = 0;
       var collection = $scope.paginator.getCollection();
       for (; indexPosition < collection.length; indexPosition++) {
-        if (index == collection[indexPosition].index) {
+        if (index === collection[indexPosition].index) {
           break;
         }
       }
       var indexAliases = collection[indexPosition];
       var size = indexAliases.aliases.length;
       for (var aliasPosition = 0; aliasPosition < size; aliasPosition++) {
-        if (alias == indexAliases.aliases[aliasPosition].alias) {
+        if (alias === indexAliases.aliases[aliasPosition].alias) {
           indexAliases.aliases.splice(aliasPosition, 1);
           if (indexAliases.aliases.length === 0) {
             collection.splice(indexPosition, 1);
@@ -4771,8 +4807,8 @@ kopf.controller('ClusterHealthController', ['$scope', '$location', '$timeout',
 
 kopf.controller('ClusterOverviewController', ['$scope', '$window',
   'ConfirmDialogService', 'AlertService', 'OpenSearchService', 'AppState',
-  function($scope, $window, ConfirmDialogService, AlertService, OpenSearchService,
-           AppState) {
+  function($scope, $window, ConfirmDialogService, AlertService,
+           OpenSearchService, AppState) {
 
     $scope.cluster = undefined;
 
@@ -5787,7 +5823,7 @@ kopf.controller('RestController', ['$scope', '$location', '$timeout',
           JSON.parse(rawHistory).forEach(function(h) {
             history.push(new Request().loadFromJSON(h));
           });
-        } catch (error) {
+        } catch (_error) {
           localStorage.setItem('kopf_request_history', null);
         }
       }
@@ -5830,7 +5866,7 @@ kopf.controller('RestController', ['$scope', '$location', '$timeout',
         $scope.request.body = $scope.editor.format();
         $scope.response = '';
         $scope.explanationResults = [];
-        if ($scope.request.method == 'GET' && '{}' !== $scope.request.body) {
+        if ($scope.request.method === 'GET' && '{}' !== $scope.request.body) {
           AlertService.info('You are executing a GET request with body ' +
               'content. Maybe you meant to use POST or PUT?');
         }
@@ -6001,7 +6037,7 @@ kopf.controller('SnapshotController', ['$scope', 'ConfirmDialogService',
           function(response) {
             AlertService.success('Repository successfully deleted', response);
             if (notEmpty($scope.snapshot_repository) &&
-                $scope.snapshot_repository == repository.name) {
+                $scope.snapshot_repository === repository.name) {
               $scope.snapshot_repository = '';
             }
             $scope.reload();
@@ -6025,7 +6061,8 @@ kopf.controller('SnapshotController', ['$scope', 'ConfirmDialogService',
 
     $scope.restoreSnapshot = function() {
       var body = {};
-      // dont add to body if not present, these are optional, all indices included by default
+      // dont add to body if not present, these are optional, all indices
+      // included by default
       if (angular.isDefined($scope.restore_snap.indices) &&
           $scope.restore_snap.indices.length > 0) {
         body.indices = $scope.restore_snap.indices.join(',');
@@ -6094,7 +6131,8 @@ kopf.controller('SnapshotController', ['$scope', 'ConfirmDialogService',
         return;
       }
 
-      // dont add to body if not present, these are optional, all indices included by default
+      // dont add to body if not present, these are optional, all indices
+      // included by default
       if (isDefined($scope.new_snap.indices) &&
           $scope.new_snap.indices.length > 0) {
         body.indices = $scope.new_snap.indices.join(',');
@@ -6178,6 +6216,7 @@ kopf.controller('SnapshotController', ['$scope', 'ConfirmDialogService',
   }
 ]);
 
+/* exported readablizeBytes, getProperty, notEmpty, getTimeString */
 function readablizeBytes(bytes) {
   if (bytes > 0) {
     var s = ['b', 'KB', 'MB', 'GB', 'TB', 'PB'];

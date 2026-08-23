@@ -1,3 +1,4 @@
+/* exported Request */
 function Request(path, method, body) {
   this.timestamp = getTimeString(new Date());
   this.path = path;

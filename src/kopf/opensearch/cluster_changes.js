@@ -1,3 +1,4 @@
+/* exported ClusterChanges */
 function ClusterChanges() {
 
   this.nodeJoins = null;

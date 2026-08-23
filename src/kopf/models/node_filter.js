@@ -1,3 +1,4 @@
+/* exported NodeFilter */
 function NodeFilter(name, data, master, client, timestamp) {
   this.name = name;
   this.data = data;
@@ -18,11 +19,11 @@ function NodeFilter(name, data, master, client, timestamp) {
   this.equals = function(other) {
     return (
       other !== null &&
-      this.name == other.name &&
-      this.data == other.data &&
-      this.master == other.master &&
-      this.client == other.client &&
-      this.timestamp == other.timestamp
+      this.name === other.name &&
+      this.data === other.data &&
+      this.master === other.master &&
+      this.client === other.client &&
+      this.timestamp === other.timestamp
       );
   };
 
@@ -48,7 +49,7 @@ function NodeFilter(name, data, master, client, timestamp) {
 
   this.matchesName = function(name) {
     if (notEmpty(this.name)) {
-      return name.toLowerCase().indexOf(this.name.toLowerCase()) != -1;
+      return name.toLowerCase().indexOf(this.name.toLowerCase()) !== -1;
     } else {
       return true;
     }

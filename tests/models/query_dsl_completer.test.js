@@ -2366,7 +2366,6 @@ describe('createQueryDslCompleter', function() {
         var provider = function() {
           return new ClusterMapping(mappingData);
         };
-        var text = '{\n  "sort": [\n    {\n      \n    }\n  ]\n}';
         // cursor inside the object within the sort array — but the parser
         // puts isInArray=false because the immediate parent is an object.
         // So the sort-array branch requires isInArray=true at path 'sort'.

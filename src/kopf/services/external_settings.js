@@ -40,7 +40,7 @@ kopf.factory('ExternalSettingsService', ['DebugService',
           Object.keys(data).forEach(function(setting) {
             settings[setting] = data[setting];
           });
-        } catch (error) {
+        } catch (_error) {
           throw {
             message: 'Error processing external settings',
             body: data
@@ -115,7 +115,7 @@ kopf.factory('ExternalSettingsService', ['DebugService',
         if (content) {
           settings = JSON.parse(content);
         }
-      } catch (error) {
+      } catch (_error) {
         DebugService.debug('Error while loading settings from local storage');
       }
       return settings;

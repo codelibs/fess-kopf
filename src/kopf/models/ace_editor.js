@@ -1,3 +1,4 @@
+/* exported AceEditor */
 function AceEditor(target) {
   // ace editor
   ace.config.set('basePath', 'dist/');

@@ -571,14 +571,14 @@ kopf.factory('OpenSearchService', ['$http', '$q', '$timeout', '$location',
                     return stats.routing.node === nodeId;
                   }
               );
-              if (shardStats.length == 1) { // shard is started
+              if (shardStats.length === 1) { // shard is started
                 success(new ShardStats(shard, index, shardStats[0]));
               } else { // non started shard
                 var indexRecovery = responses[1].data;
                 var shardRecoveries = indexRecovery[index].shards.filter(
                     function(recovery) {
                       return recovery.target.id === nodeId &&
-                        recovery.id == shard;
+                        recovery.id === shard;
                     });
                 success(new ShardStats(shard, index, shardRecoveries[0]));
               }

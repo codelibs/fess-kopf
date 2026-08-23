@@ -14,6 +14,7 @@ const filterCode = fs.readFileSync(
 
 // Mock the kopf.filter to capture the filter function
 let timeIntervalFilter;
+// eslint-disable-next-line no-unused-vars -- only used inside eval() below
 const kopf = {
   filter: (name, fn) => {
     if (name === 'timeInterval') {

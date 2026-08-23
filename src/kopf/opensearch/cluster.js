@@ -1,3 +1,4 @@
+/* exported Cluster */
 function Cluster(health, state, stats, nodesStats, settings, aliases, nodes,
                  main) {
   this.created_at = new Date().getTime();
@@ -33,9 +34,9 @@ function Cluster(health, state, stats, nodesStats, settings, aliases, nodes,
       'transient.cluster.routing.allocation.enable', '');
 
   if (transientAllocation !== '') {
-    this.disableAllocation = transientAllocation == 'all' ? 'false' : 'true';
+    this.disableAllocation = transientAllocation === 'all' ? 'false' : 'true';
   } else {
-    if (persistentAllocation != 'all') {
+    if (persistentAllocation !== 'all') {
       this.disableAllocation = 'true';
     }
   }
@@ -122,7 +123,7 @@ function Cluster(health, state, stats, nodesStats, settings, aliases, nodes,
         }
       });
 
-      if (oldCluster.nodes.length != nodes.length || !changes.hasJoins()) {
+      if (oldCluster.nodes.length !== nodes.length || !changes.hasJoins()) {
         nodes.forEach(function(node) {
           for (var i = 0; i < oldCluster.nodes.length; i++) {
             if (oldCluster.nodes[i].equals(node)) {
@@ -149,7 +150,7 @@ function Cluster(health, state, stats, nodesStats, settings, aliases, nodes,
         }
       });
 
-      var equalNumberOfIndices = oldCluster.indices.length != indices.length;
+      var equalNumberOfIndices = oldCluster.indices.length !== indices.length;
       if (equalNumberOfIndices || !changes.hasCreatedIndices()) {
         indices.forEach(function(index) {
           for (var i = 0; i < oldCluster.indices.length; i++) {
@@ -164,7 +165,8 @@ function Cluster(health, state, stats, nodesStats, settings, aliases, nodes,
         });
       }
       var docDelta = this.num_docs - oldCluster.num_docs;
-      // var docRate = docDelta / ((this.created_at - old_cluster.created_at) / 1000);
+      // var docRate =
+      //     docDelta / ((this.created_at - old_cluster.created_at) / 1000);
       changes.setDocDelta(docDelta);
       var dataDelta = this.total_size_in_bytes - oldCluster.total_size_in_bytes;
       changes.setDataDelta(dataDelta);

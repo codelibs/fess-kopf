@@ -17,7 +17,7 @@ kopf.factory('ClipboardService', ['AlertService', '$document', '$window',
         textarea.select();
         $document[0].execCommand('copy');
         success();
-      } catch (error) {
+      } catch (_error) {
         failure();
       }
     };

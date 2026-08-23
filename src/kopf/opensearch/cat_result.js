@@ -1,3 +1,4 @@
+/* exported CatResult */
 function CatResult(result) {
   var lines = result.split('\n');
   var header = lines[0];

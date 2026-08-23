@@ -1,3 +1,4 @@
+/* exported ClusterHealth */
 function ClusterHealth(health) {
   this.status = health.status;
   this.cluster_name = health.cluster_name;

@@ -1,3 +1,4 @@
+/* exported IndexTemplateFilter */
 function IndexTemplateFilter(name, template) {
 
   this.name = name;
@@ -29,10 +30,10 @@ function IndexTemplateFilter(name, template) {
     } else {
       var matches = true;
       if (notEmpty(this.name)) {
-        matches = template.name.indexOf(this.name) != -1;
+        matches = template.name.indexOf(this.name) !== -1;
       }
       if (matches && notEmpty(this.template)) {
-        matches = template.body.template.indexOf(this.template) != -1;
+        matches = template.body.template.indexOf(this.template) !== -1;
       }
       return matches;
     }

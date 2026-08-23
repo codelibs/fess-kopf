@@ -1,3 +1,4 @@
+/* exported Snapshot */
 function Snapshot(info) {
   this.name = info.snapshot;
   this.indices = info.indices;

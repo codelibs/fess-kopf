@@ -1,3 +1,4 @@
+/* exported Version */
 function Version(version) {
   var checkVersion = new RegExp('(\\d+)\\.(\\d+)\\.(\\d+)\\.*');
   var major;

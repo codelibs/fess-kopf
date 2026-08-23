@@ -1,8 +1,9 @@
+/* exported NodeHotThreads */
 function NodeHotThreads(data) {
   var lines = data.split('\n');
   this.header = lines[0];
   // pre 4859ce5d79a786b58b1cd2fb131614677efd6b91
-  var BackwardCompatible = lines[1].indexOf('Hot threads at') == -1;
+  var BackwardCompatible = lines[1].indexOf('Hot threads at') === -1;
   var HeaderLines = BackwardCompatible ? 2 : 3;
   this.subHeader = BackwardCompatible ? undefined : lines[1];
   this.node = this.header.substring(

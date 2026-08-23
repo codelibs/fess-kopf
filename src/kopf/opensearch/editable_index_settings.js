@@ -1,3 +1,4 @@
+/* exported EditableIndexSettings */
 // Settings that OpenSearch only accepts at index creation time.
 // Resending them on an update makes the whole _settings call fail.
 var STATIC_INDEX_SETTINGS = [

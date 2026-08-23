@@ -56,7 +56,6 @@ describe('OpenSearch Integration Tests', () => {
         /function\(DebugService\)\s*\{([\s\S]*)\}\]\);/
       );
       const factoryBody = factoryMatch[1];
-      // eslint-disable-next-line no-new-func
       const factory = new Function('DebugService', factoryBody + '\nreturn this;');
       settingsService = factory.call({}, mockDebugService);
     });
@@ -165,7 +164,6 @@ describe('OpenSearch Integration Tests', () => {
         /function\(DebugService\)\s*\{([\s\S]*)\}\]\);/
       );
       const factoryBody = factoryMatch[1];
-      // eslint-disable-next-line no-new-func
       const factory = new Function('DebugService', factoryBody + '\nreturn this;');
       settingsService = factory.call({}, mockDebugService);
     });

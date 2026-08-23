@@ -1,3 +1,4 @@
+/* exported AliasFilter */
 function AliasFilter(index, alias) {
 
   this.index = index;
@@ -15,8 +16,8 @@ function AliasFilter(index, alias) {
 
   this.equals = function(other) {
     return (other !== null &&
-      this.index == other.index &&
-      this.alias == other.alias);
+      this.index === other.index &&
+      this.alias === other.alias);
   };
 
   this.isBlank = function() {
@@ -29,14 +30,14 @@ function AliasFilter(index, alias) {
     } else {
       var matches = true;
       if (notEmpty(this.index)) {
-        matches = indexAlias.index.indexOf(this.index) != -1;
+        matches = indexAlias.index.indexOf(this.index) !== -1;
       }
       if (matches && notEmpty(this.alias)) {
         matches = false;
         var aliases = indexAlias.aliases;
         for (var i = 0; !matches && i < aliases.length; i++) {
           var alias = aliases[i];
-          matches = alias.alias.indexOf(this.alias) != -1;
+          matches = alias.alias.indexOf(this.alias) !== -1;
         }
       }
       return matches;

@@ -1,3 +1,4 @@
+/* exported Node */
 function Node(nodeId, nodeStats, nodeInfo) {
   this.id = nodeId;
   this.name = nodeInfo.name;

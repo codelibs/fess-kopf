@@ -7,7 +7,7 @@
     "test": "jest",
     "test:coverage": "jest --coverage",
     "build": "grunt build",
-    "lint": "grunt jshint",
+    "lint": "eslint src/kopf tests",
     "version:set": "node scripts/set-version.js",
     "version:release": "node scripts/set-version.js release",
     "version:snapshot": "node scripts/set-version.js snapshot"
@@ -22,20 +22,19 @@
     "url": "https://github.com/codelibs/fess-kopf/issues"
   },
   "devDependencies": {
+    "eslint": "^9.39.5",
+    "globals": "^17.11.0",
     "grunt": "^1.6.1",
     "grunt-contrib-clean": "^2.0.1",
     "grunt-contrib-concat": "^2.1.0",
     "grunt-contrib-connect": "^3.0.0",
     "grunt-contrib-copy": "^1.0.0",
-    "grunt-contrib-jshint": "^3.2.0",
     "grunt-contrib-watch": "^1.1.0",
-    "grunt-jscs": "^3.0.1",
     "jest": "^29.7.0"
   },
   "directories": {
     "test": "tests"
   },
-  "dependencies": {},
   "engines": {
     "node": ">=20.0.0"
   }
