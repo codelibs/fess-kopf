@@ -1,3 +1,4 @@
+/* exported Alias */
 function IndexAliases(index, aliases) {
   this.index = index;
   this.aliases = aliases;
@@ -16,7 +17,7 @@ IndexAliases.diff = function(original, modified) {
   modified.forEach(function(ia) {
     var isNew = true;
     original.forEach(function(origIA) {
-      if (ia.index == origIA.index) {
+      if (ia.index === origIA.index) {
         isNew = false;
         ia.aliases.forEach(function(alias) {
           var originalAliases = origIA.aliases.filter(function(originalAlias) {

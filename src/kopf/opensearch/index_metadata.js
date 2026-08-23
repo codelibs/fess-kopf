@@ -1,3 +1,4 @@
+/* exported IndexMetadata */
 function IndexMetadata(index, metadata) {
   this.index = index;
   this.mappings = metadata.mappings;
@@ -17,7 +18,7 @@ function IndexMetadata(index, metadata) {
         if (setting.indexOf('index.analysis.analyzer') === 0) {
           var analyzer = setting.substring('index.analysis.analyzer.'.length);
           analyzer = analyzer.substring(0, analyzer.indexOf('.'));
-          if ($.inArray(analyzer, analyzers) == -1) {
+          if ($.inArray(analyzer, analyzers) === -1) {
             analyzers.push(analyzer);
           }
         }
@@ -32,7 +33,7 @@ function IndexMetadata(index, metadata) {
     var analyzableTypes = ['float', 'double', 'byte', 'short', 'integer',
       'long', 'nested', 'object'
     ];
-    return analyzableTypes.indexOf(type) == -1;
+    return analyzableTypes.indexOf(type) === -1;
   }
 
   this.getFields = function(type) {
@@ -51,14 +52,14 @@ function IndexMetadata(index, metadata) {
     for (var field in fields) {
       // multi field
       if (isDefined(fields[field].fields)) {
-        var addPrefix = fields[field].path != 'just_name';
+        var addPrefix = fields[field].path !== 'just_name';
         var multiPrefix = addPrefix ? prefix + field : prefix;
         var multiProps = this.getProperties(multiPrefix, fields[field].fields);
         validFields = validFields.concat(multiProps);
       }
       // nested and object types
-      var nestedType = fields[field].type == 'nested';
-      var objectType = fields[field].type == 'object';
+      var nestedType = fields[field].type === 'nested';
+      var objectType = fields[field].type === 'object';
       if (nestedType || objectType || !isDefined(fields[field].type)) {
         var nestedProperties = this.getProperties(prefix + field,
             fields[field].properties);

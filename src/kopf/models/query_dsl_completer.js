@@ -1,3 +1,4 @@
+/* exported createQueryDslCompleter */
 /**
  * Query DSL autocomplete for OpenSearch in Ace Editor.
  *
@@ -306,7 +307,6 @@ function QueryDslContextParser(text, cursorRow, cursorCol) {
   var inString = false;
   var isKey = true;  // JSON objects start expecting a key after '{'
   var lastKey = '';
-  var partial = '';
 
   for (var c = 0; c < textToCursor.length; c++) {
     var ch = textToCursor[c];

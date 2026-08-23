@@ -142,23 +142,6 @@ module.exports = function(grunt) {
           keepalive: true
         }
       }
-    },
-    jshint: {
-      kopf: {
-        src: [
-          'src/kopf/kopf.js',
-          'src/kopf/*/*.js',
-          'src/kopf/util.js',
-        ]
-      }
-    },
-    jscs: {
-      src: ['src/kopf/**/*.js'],
-      options: {
-        preset: 'google',
-        excludeFiles: ['src/kopf/theme-kopf.js'],
-        requireCamelCaseOrUpperCaseIdentifiers: "ignoreProperties"
-      }
     }
   });
   grunt.loadNpmTasks('grunt-contrib-clean');
@@ -166,10 +149,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-connect');
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-watch');
-  grunt.loadNpmTasks('grunt-contrib-jshint');
-  grunt.loadNpmTasks("grunt-jscs");
   grunt.registerTask('build',
-      ['clean', 'jshint', 'copy', 'concat', 'jscs']);
+      ['clean', 'copy', 'concat']);
   grunt.registerTask('server',
-      ['clean', 'jshint', 'copy', 'concat', 'connect:server']);
+      ['clean', 'copy', 'concat', 'connect:server']);
 };

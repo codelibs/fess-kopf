@@ -1,3 +1,4 @@
+/* exported Paginator */
 function Paginator(page, pageSize, collection, filter) {
 
   this.filter = filter;

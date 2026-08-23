@@ -1,3 +1,4 @@
+/* exported ClusterSettings */
 function ClusterSettings(settings) {
   // Every key here was verified against OpenSearch 3.8.0. Keys that answer
   // "unknown setting" are not listed, because rendering them as form

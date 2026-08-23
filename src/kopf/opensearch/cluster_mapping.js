@@ -1,3 +1,4 @@
+/* exported ClusterMapping */
 function ClusterMapping(data) {
 
   this.getIndices = function() {

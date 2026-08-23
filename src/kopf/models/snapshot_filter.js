@@ -1,3 +1,4 @@
+/* exported SnapshotFilter */
 function SnapshotFilter(name) {
 
   this.name = name;
@@ -14,7 +15,7 @@ function SnapshotFilter(name) {
 
   this.equals = function(other) {
     return (other !== null &&
-      this.name == other.name);
+      this.name === other.name);
   };
 
   this.isBlank = function() {
@@ -28,7 +29,7 @@ function SnapshotFilter(name) {
       var matches = true;
       if (notEmpty(this.name)) {
         matches = snapshot.name.toLowerCase().indexOf(
-            this.name.toLowerCase()) != -1;
+            this.name.toLowerCase()) !== -1;
       }
       return matches;
     }

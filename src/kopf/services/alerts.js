@@ -36,7 +36,7 @@ kopf.factory('AlertService', function() {
       $(this).remove();
     });
     this.alerts = this.alerts.filter(function(a) {
-      return id != a.id;
+      return id !== a.id;
     });
   };
 

@@ -1,3 +1,4 @@
+/* exported readablizeBytes, getProperty, notEmpty, getTimeString */
 function readablizeBytes(bytes) {
   if (bytes > 0) {
     var s = ['b', 'KB', 'MB', 'GB', 'TB', 'PB'];

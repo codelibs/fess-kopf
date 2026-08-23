@@ -35,7 +35,6 @@ describe('ExternalSettingsService', () => {
     }
 
     const factoryBody = factoryMatch[1];
-    // eslint-disable-next-line no-new-func
     const factory = new Function('DebugService', factoryBody + '\nreturn this;');
     service = factory.call({}, mockDebugService);
   });

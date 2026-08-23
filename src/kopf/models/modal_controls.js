@@ -1,3 +1,4 @@
+/* exported ModalControls */
 function ModalControls() {
   this.alert = null;
   this.active = false;

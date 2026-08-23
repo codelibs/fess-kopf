@@ -66,7 +66,7 @@ kopf.controller('SnapshotController', ['$scope', 'ConfirmDialogService',
           function(response) {
             AlertService.success('Repository successfully deleted', response);
             if (notEmpty($scope.snapshot_repository) &&
-                $scope.snapshot_repository == repository.name) {
+                $scope.snapshot_repository === repository.name) {
               $scope.snapshot_repository = '';
             }
             $scope.reload();
@@ -90,7 +90,8 @@ kopf.controller('SnapshotController', ['$scope', 'ConfirmDialogService',
 
     $scope.restoreSnapshot = function() {
       var body = {};
-      // dont add to body if not present, these are optional, all indices included by default
+      // dont add to body if not present, these are optional, all indices
+      // included by default
       if (angular.isDefined($scope.restore_snap.indices) &&
           $scope.restore_snap.indices.length > 0) {
         body.indices = $scope.restore_snap.indices.join(',');
@@ -159,7 +160,8 @@ kopf.controller('SnapshotController', ['$scope', 'ConfirmDialogService',
         return;
       }
 
-      // dont add to body if not present, these are optional, all indices included by default
+      // dont add to body if not present, these are optional, all indices
+      // included by default
       if (isDefined($scope.new_snap.indices) &&
           $scope.new_snap.indices.length > 0) {
         body.indices = $scope.new_snap.indices.join(',');

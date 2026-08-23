@@ -13,13 +13,13 @@ kopf.directive('ngPagination', ['$document', function($document) {
         if ($target.is('input, textarea')) {
           return;
         }
-        if (event.keyCode == 39 && scope.page.next) {
+        if (event.keyCode === 39 && scope.page.next) {
           scope.$apply(function() {
             scope.paginator.nextPage();
             event.preventDefault();
           });
         }
-        if (event.keyCode == 37 && scope.page.previous) {
+        if (event.keyCode === 37 && scope.page.previous) {
           scope.$apply(function() {
             scope.paginator.previousPage();
             event.preventDefault();

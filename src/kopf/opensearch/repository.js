@@ -1,3 +1,4 @@
+/* exported Repository */
 function Repository(name, info) {
   this.name = name;
   this.type = info.type;

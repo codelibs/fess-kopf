@@ -58,7 +58,7 @@ kopf.controller('RestController', ['$scope', '$location', '$timeout',
           JSON.parse(rawHistory).forEach(function(h) {
             history.push(new Request().loadFromJSON(h));
           });
-        } catch (error) {
+        } catch (_error) {
           localStorage.setItem('kopf_request_history', null);
         }
       }
@@ -101,7 +101,7 @@ kopf.controller('RestController', ['$scope', '$location', '$timeout',
         $scope.request.body = $scope.editor.format();
         $scope.response = '';
         $scope.explanationResults = [];
-        if ($scope.request.method == 'GET' && '{}' !== $scope.request.body) {
+        if ($scope.request.method === 'GET' && '{}' !== $scope.request.body) {
           AlertService.info('You are executing a GET request with body ' +
               'content. Maybe you meant to use POST or PUT?');
         }

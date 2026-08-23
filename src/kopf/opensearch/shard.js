@@ -1,3 +1,4 @@
+/* exported Shard */
 function Shard(routing) {
   this.primary = routing.primary;
   this.shard = routing.shard;

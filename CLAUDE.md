@@ -16,7 +16,7 @@ The project uses Grunt as its build system with npm scripts as the primary inter
 # Install dependencies
 npm install
 
-# Build for production (clean, lint, copy assets, concatenate files)
+# Build for production (clean, copy assets, concatenate files)
 npm run build
 
 # Run linting only
@@ -91,8 +91,9 @@ src/kopf/
 
 ### Code Quality
 
-- JSHint is configured for linting (run via `npm run lint`)
-- JSCS enforces Google JavaScript style guide (excludes theme-kopf.js)
+- ESLint is the only linter, configured in `eslint.config.js` and run via
+  `npm run lint`. It is not part of the Grunt build; CI runs it separately.
+  `src/kopf/theme-kopf.js` is excluded - it is a minified vendored ace theme.
 - Jest is used for unit testing with tests in `tests/` directory
 - Coverage reports are generated in `coverage/` directory
 

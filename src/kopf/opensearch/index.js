@@ -1,3 +1,4 @@
+/* exported Index */
 function Index(indexName, clusterState, indexStats, aliases) {
   this.name = indexName;
   this.shards = null;
@@ -38,7 +39,7 @@ function Index(indexName, clusterState, indexStats, aliases) {
     var shardsMap = clusterState.routing_table.indices[this.name].shards;
     Object.keys(shardsMap).forEach(function(shardNum) {
       shardsMap[shardNum].forEach(function(shard) {
-        if (shard.state != 'STARTED') {
+        if (shard.state !== 'STARTED') {
           instance.unhealthy = true;
         }
       });
@@ -48,7 +49,7 @@ function Index(indexName, clusterState, indexStats, aliases) {
   this.special = this.name.indexOf('.') === 0 || this.name.indexOf('_') === 0;
 
   this.equals = function(index) {
-    return index !== null && index.name == this.name;
+    return index !== null && index.name === this.name;
   };
 
   // Closed indices still appear in the routing table since ES 7.2, so

@@ -1,3 +1,4 @@
+/* exported BrokenCluster */
 function BrokenCluster(health, state, nodesStats, settings, nodes) {
 
   this.status = health.status;

@@ -1,3 +1,4 @@
+/* exported Token */
 /** TYPES **/
 function Token(token, startOffset, endOffset, position) {
   this.token = token;

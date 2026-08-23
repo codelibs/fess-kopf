@@ -1,3 +1,4 @@
+/* exported OpenSearchConnection */
 // Expects URL according to /^(https|http):\/\/(\w+):(\w+)@(.*)/i;
 // Examples:
 // http://localhost:9200
