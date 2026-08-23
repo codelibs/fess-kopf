@@ -12,7 +12,7 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [18.x, 20.x, 22.x]
+        node-version: [20.x, 22.x]
 
     steps:
     - name: Checkout code
@@ -52,7 +52,6 @@ jobs:
 
     - name: Run linter
       run: npm run lint
-      continue-on-error: true
 
   build:
     name: Build
@@ -72,7 +71,7 @@ jobs:
       run: npm ci
 
     - name: Build project
-      run: npm run build -- --force
+      run: npm run build
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
@@ -80,3 +79,17 @@ jobs:
         name: build-output
         path: _site/dist/
         retention-days: 7
+
+    # Runs after the upload so a failure here still leaves the freshly
+    # built _site downloadable to diff against the committed one.
+    # git status, not git diff: diff only reports tracked files, and the
+    # copy target globs src/lib/angularjs/*.map, so a new vendor map would
+    # land in _site/dist untracked and slip past a diff-based check.
+    - name: Verify _site is in sync with src
+      run: |
+        if [ -n "$(git status --porcelain -- _site)" ]; then
+          git status --porcelain -- _site
+          git diff -- _site
+          echo "::error::_site is out of date. Run 'npm run build' and commit _site."
+          exit 1
+        fi

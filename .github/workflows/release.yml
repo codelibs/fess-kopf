@@ -26,8 +26,11 @@ jobs:
       - name: Run tests
         run: npm test
 
+      - name: Run linter
+        run: npm run lint
+
       - name: Build project
-        run: npm run build -- --force
+        run: npm run build
 
       - name: Create release archive
         run: |
