@@ -70,7 +70,14 @@ module.exports = function(grunt) {
       }
     },
     concat: {
+      // grunt-contrib-concat silently skips sources that do not exist.
+      // A stale path then disappears from the shipped bundle without a
+      // word - which is how a dangling gist_share.css reference lived
+      // here for about twelve years. `nonull` must sit on each target
+      // below (a sibling of src/dest), not under a shared `options`
+      // block - grunt's file-list expansion only reads it from there.
       vendorjs: {
+        nonull: true,
         src: [
           'src/lib/jquery/jquery-1.12.4.min.js',
           'src/lib/angularjs/angular.min.js',
@@ -87,6 +94,7 @@ module.exports = function(grunt) {
         dest: '_site/dist/lib.js'
       },
       vendorcss: {
+        nonull: true,
         src: [
           'src/lib/bootstrap/css/bootstrap.css',
           'src/lib/angular-tree-dnd/ng-tree-dnd.css'
@@ -94,6 +102,7 @@ module.exports = function(grunt) {
         dest: '_site/dist/lib.css'
       },
       appjs: {
+        nonull: true,
         src: [
           'src/kopf/kopf.js',
           'src/kopf/opensearch/*.js',
@@ -107,8 +116,8 @@ module.exports = function(grunt) {
         dest: '_site/dist/kopf.js'
       },
       appcss: {
+        nonull: true,
         src: [
-          'src/kopf/kopf.css',
           'src/kopf/css/common.css',
           'src/kopf/css/aliases.css',
           'src/kopf/css/analysis.css',
