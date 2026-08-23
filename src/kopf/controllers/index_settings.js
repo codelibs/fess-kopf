@@ -8,15 +8,7 @@ kopf.controller('IndexSettingsController', ['$scope', '$location',
 
     $scope.save = function() {
       var index = $scope.index;
-      var settings = $scope.settings;
-      var newSettings = {};
-      var editableSettings = $scope.editable_settings;
-      // TODO: could move that to editable_index_settings model
-      editableSettings.valid_settings.forEach(function(setting) {
-        if (notEmpty(editableSettings[setting])) {
-          newSettings[setting] = editableSettings[setting];
-        }
-      });
+      var newSettings = $scope.editable_settings.getUpdatable();
       OpenSearchService.updateIndexSettings(index,
           JSON.stringify(newSettings, undefined, ''),
           function(response) {
