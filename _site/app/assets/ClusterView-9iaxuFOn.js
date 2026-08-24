@@ -1,0 +1,1 @@
+import{c as e,g as t,i as n,o as r,u as i}from"./runtime-core.esm-bundler-JqXSl6NV.js";var a={class:`alert alert-secondary`,role:`status`},o=i({__name:`ClusterView`,setup(i){return(i,o)=>(t(),r(`div`,a,[...o[0]||=[n(`strong`,null,`cluster`,-1),e(` has not been ported yet. `,-1)]]))}});export{o as default};

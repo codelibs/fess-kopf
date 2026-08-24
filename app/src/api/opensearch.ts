@@ -1,6 +1,7 @@
 import {RequestError, request, requestAll} from './client';
 import {CatResult} from '@/model/cat-result';
 import {HotThreads, type NodeHotThreads} from '@/model/hot-threads';
+import {NodeStats} from '@/model/cluster-node';
 import {BrokenCluster} from '@/model/broken-cluster';
 import {
   Cluster,
@@ -172,4 +173,23 @@ export async function fetchHotThreads(
   });
   const body = await request<string>(`/_nodes${target}/hot_threads?${query}`, {signal});
   return new HotThreads(typeof body === 'string' ? body : JSON.stringify(body)).nodes_hot_threads;
+}
+
+/**
+ * Full stats for one node, for the details dialog.
+ *
+ * ?human asks OpenSearch to add the readable variants beside the raw numbers.
+ * The AngularJS version built NodeStats with an undefined `name` identifier
+ * that resolved to window.name, so the id it carried was the window's, not the
+ * node's; the node id is passed here.
+ */
+export async function fetchNodeStats(
+  nodeId: string,
+  signal?: AbortSignal,
+): Promise<NodeStats> {
+  const response = await request<{nodes: Record<string, {name: string}>}>(
+    `/_nodes/${encodeURIComponent(nodeId)}/stats?human`,
+    {signal},
+  );
+  return new NodeStats(nodeId, response.nodes[nodeId]);
 }
