@@ -1,4 +1,5 @@
 import {RequestError, request, requestAll} from './client';
+import {CatResult} from '@/model/cat-result';
 import {BrokenCluster} from '@/model/broken-cluster';
 import {
   Cluster,
@@ -126,4 +127,23 @@ export async function fetchBrokenCluster(signal?: AbortSignal): Promise<BrokenCl
     results.settings.value,
     results.nodes.value!,
   );
+}
+
+/**
+ * The _cat APIs the screen offers.
+ *
+ * Nine more exist and are deliberately absent here, matching what the
+ * AngularJS screen shipped; restoring indices/nodes/shards/health is its own
+ * change, not part of the port.
+ */
+export const CAT_APIS = ['aliases', 'count', 'master', 'plugins', 'recovery'] as const;
+
+export type CatApi = (typeof CAT_APIS)[number];
+
+/** Runs one _cat call. ?v asks for the header row the parser needs. */
+export async function fetchCat(api: string, signal?: AbortSignal): Promise<CatResult> {
+  const text = await request<string>(`/_cat/${encodeURIComponent(api)}?v`, {signal});
+  // request() parses JSON when it can; _cat without format=json is plain text,
+  // and comes back as the string it already is.
+  return new CatResult(typeof text === 'string' ? text : JSON.stringify(text));
 }

@@ -1,1 +1,0 @@
-import{a as e,i as t,n,r,t as i}from"./index-BSwIi3bj.js";var a={class:`alert alert-secondary`,role:`status`},o=t({__name:`IndexTemplatesView`,setup(t){return(t,o)=>(e(),n(`div`,a,[...o[0]||=[i(`strong`,null,`indexTemplates`,-1),r(` has not been ported yet. `,-1)]]))}});export{o as default};
