@@ -1,5 +1,6 @@
 import {RequestError, request, requestAll} from './client';
 import {CatResult} from '@/model/cat-result';
+import {HotThreads, type NodeHotThreads} from '@/model/hot-threads';
 import {BrokenCluster} from '@/model/broken-cluster';
 import {
   Cluster,
@@ -146,4 +147,29 @@ export async function fetchCat(api: string, signal?: AbortSignal): Promise<CatRe
   // request() parses JSON when it can; _cat without format=json is plain text,
   // and comes back as the string it already is.
   return new CatResult(typeof text === 'string' ? text : JSON.stringify(text));
+}
+
+export interface HotThreadsOptions {
+  /** Node id, or empty for every node. */
+  node?: string;
+  type: 'cpu' | 'wait' | 'block';
+  threads: number;
+  interval: string;
+  ignoreIdleThreads: boolean;
+}
+
+/** Samples hot threads. The response is plain text, one section per node. */
+export async function fetchHotThreads(
+  options: HotThreadsOptions,
+  signal?: AbortSignal,
+): Promise<NodeHotThreads[]> {
+  const target = options.node ? `/${encodeURIComponent(options.node)}` : '';
+  const query = new URLSearchParams({
+    type: options.type,
+    threads: String(options.threads),
+    ignore_idle_threads: String(options.ignoreIdleThreads),
+    interval: options.interval,
+  });
+  const body = await request<string>(`/_nodes${target}/hot_threads?${query}`, {signal});
+  return new HotThreads(typeof body === 'string' ? body : JSON.stringify(body)).nodes_hot_threads;
 }

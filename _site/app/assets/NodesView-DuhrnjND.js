@@ -1,0 +1,1 @@
+import{c as e,g as t,i as n,o as r,u as i}from"./runtime-core.esm-bundler-V3TkQ8Qe.js";var a={class:`alert alert-secondary`,role:`status`},o=i({__name:`NodesView`,setup(i){return(i,o)=>(t(),r(`div`,a,[...o[0]||=[n(`strong`,null,`nodes`,-1),e(` has not been ported yet. `,-1)]]))}});export{o as default};
