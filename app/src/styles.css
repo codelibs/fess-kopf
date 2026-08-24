@@ -1,12 +1,485 @@
-/* Kept deliberately small: Bootstrap 5.3 supplies the rest, and matching the
-   Fess admin UI (which ships Bootstrap 5.3.0) is the point of using it. */
-body {
-  min-height: 100vh;
+/*
+ * Layout layer.
+ *
+ * Naive UI supplies the controls but no layout primitives, and pulling in a
+ * whole CSS framework for `display: flex` was what made the previous build ship
+ * 230 kB of Bootstrap for a handful of utilities. Everything here reads the
+ * custom properties published by theme.ts, so the layout and the components
+ * cannot end up on different palettes.
+ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
-pre {
-  max-height: 20rem;
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--k-canvas);
+  color: var(--k-text);
+  font-family: var(--k-font);
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------------------------------------------------------------- layout -- */
+
+.k-page {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.k-page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.k-page-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.k-page-sub {
+  margin: 2px 0 0;
+  color: var(--k-text-muted);
+}
+
+.k-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.k-row-top {
+  align-items: flex-start;
+}
+
+.k-wrap {
+  flex-wrap: wrap;
+}
+
+.k-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.k-stack-tight {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+ /* flex-basis 0, not auto: Naive UI's controls carry width:100%, so an auto
+    basis makes two of them in one row each claim the full width and wrap. */
+.k-grow {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.k-push {
+  margin-left: auto;
+}
+
+.k-gap-lg {
+  gap: 16px;
+}
+
+/* Two columns on a wide screen, one when the iframe is narrow. */
+.k-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+@media (min-width: 1000px) {
+  .k-split {
+    grid-template-columns: minmax(0, 22rem) minmax(0, 1fr);
+  }
+
+  .k-split-even {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
+.k-scroll-x {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+/* ------------------------------------------------------------------ type -- */
+
+.k-muted {
+  color: var(--k-text-muted);
+}
+
+.k-faint {
+  color: var(--k-text-faint);
+}
+
+.k-small {
+  font-size: 12px;
+}
+
+.k-strong {
+  font-weight: 600;
+}
+
+.k-mono {
+  font-family: var(--k-mono);
+  font-size: 12px;
+}
+
+.k-label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--k-text-muted);
+}
+
+.k-field + .k-field {
+  margin-top: 12px;
+}
+
+/* A number that should read as a value, not as prose. */
+.k-metric {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+pre.k-pre {
+  margin: 0;
+  padding: 10px 12px;
+  max-height: 22rem;
   overflow: auto;
   white-space: pre-wrap;
   word-break: break-word;
+  background: var(--k-surface-muted);
+  border: 1px solid var(--k-border);
+  border-radius: 6px;
+  font-family: var(--k-mono);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* ----------------------------------------------------------------- chrome -- */
+
+.k-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: wrap;
+  padding: 0 12px;
+  min-height: 44px;
+  background: var(--k-chrome);
+  color: var(--k-chrome-text);
+}
+
+.k-nav {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: wrap;
+}
+
+.k-nav a {
+  display: block;
+  padding: 6px 10px;
+  border-radius: 6px;
+  color: var(--k-chrome-text-muted);
+  text-decoration: none;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.k-nav a:hover {
+  background: rgb(255 255 255 / 8%);
+  color: var(--k-chrome-text);
+}
+
+.k-nav a.router-link-active {
+  background: rgb(255 255 255 / 14%);
+  color: #fff;
+}
+
+.k-statusbar {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+  padding: 8px 16px;
+  background: var(--k-surface);
+  border-bottom: 1px solid var(--k-border);
+}
+
+.k-stat {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.k-stat-label {
+  color: var(--k-text-muted);
+  font-size: 12px;
+}
+
+/* A coloured dot carries cluster health without relying on colour alone -- the
+   status word sits next to it. */
+.k-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.k-dot-green {
+  background: var(--k-success);
+}
+
+.k-dot-yellow {
+  background: var(--k-warning);
+}
+
+.k-dot-red {
+  background: var(--k-error);
+}
+
+.k-dot-grey {
+  background: var(--k-text-faint);
+}
+
+/* ---------------------------------------------------------------- tables -- */
+
+/* Hand-rolled tables rather than a data-grid component: every one of these has
+   a composite cell (heap used/max, disk free/total, a shard matrix) and its own
+   filter model, so a grid would mean more render functions, not fewer. */
+.k-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.k-table th,
+.k-table td {
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--k-border);
+}
+
+.k-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--k-surface-muted);
+  color: var(--k-text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.k-table tbody tr:hover td {
+  background: var(--k-surface-muted);
+}
+
+.k-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* ------------------------------------------------------------ shard grid -- */
+
+/* The cluster overview is a node x index matrix; it has to scroll sideways
+   rather than squeeze, because a squeezed shard box tells you nothing. */
+.k-matrix {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: max-content;
+  min-width: 100%;
+}
+
+.k-matrix th,
+.k-matrix td {
+  border-bottom: 1px solid var(--k-border);
+  border-right: 1px solid var(--k-border);
+  padding: 8px 10px;
+  vertical-align: top;
+  text-align: left;
+}
+
+.k-matrix thead th {
+  background: var(--k-surface-muted);
+  color: var(--k-text-muted);
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+.k-matrix tbody th {
+  background: var(--k-surface);
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  min-width: 12rem;
+}
+
+.k-matrix thead th:first-child {
+  z-index: 2;
+  left: 0;
+  background: var(--k-surface-muted);
+}
+
+.k-shards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.k-shard {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 26px;
+  height: 22px;
+  padding: 0 5px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  background: var(--k-surface-muted);
+  color: var(--k-text);
+}
+
+.k-shard-started {
+  background: color-mix(in srgb, var(--k-success) 16%, transparent);
+  border-color: color-mix(in srgb, var(--k-success) 45%, transparent);
+}
+
+.k-shard-relocating {
+  background: color-mix(in srgb, var(--k-info) 16%, transparent);
+  border-color: color-mix(in srgb, var(--k-info) 45%, transparent);
+}
+
+.k-shard-initializing {
+  background: color-mix(in srgb, var(--k-warning) 20%, transparent);
+  border-color: color-mix(in srgb, var(--k-warning) 50%, transparent);
+}
+
+.k-shard-unassigned {
+  background: color-mix(in srgb, var(--k-error) 14%, transparent);
+  border-color: color-mix(in srgb, var(--k-error) 45%, transparent);
+}
+
+/* A replica reads as lighter than the primary it copies. */
+.k-shard-replica {
+  font-weight: 400;
+}
+
+.k-empty {
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--k-text-muted);
+}
+
+/* ------------------------------------------------------- details dropdown -- */
+
+/* <details> rather than a menu component: the cluster grid puts one of these on
+   every index column and every shard, and a component that teleports its menu
+   into the body would put hundreds of popovers outside the table. */
+.k-menu {
+  position: relative;
+  display: inline-block;
+}
+
+.k-menu > summary {
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+}
+
+.k-menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.k-menu-items {
+  position: absolute;
+  z-index: 20;
+  min-width: 12rem;
+  margin: 4px 0 0;
+  padding: 6px;
+  list-style: none;
+  background: var(--k-surface);
+  border: 1px solid var(--k-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgb(15 23 42 / 14%);
+}
+
+.k-menu-items > li > * {
+  display: block;
+  width: 100%;
+  text-align: left;
+}
+
+/* A summary that should read as a button. */
+.k-menu-button > summary {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--k-border-strong);
+  border-radius: 6px;
+  background: var(--k-surface);
+  font-size: 12px;
+}
+
+.k-menu-button > summary:hover {
+  border-color: var(--k-primary);
+  color: var(--k-primary);
+}
+
+/* The index column heading. */
+.k-index-name > summary {
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.k-index-closed > summary {
+  color: var(--k-text-muted);
+  font-weight: 400;
+}
+
+.k-shard-primary {
+  box-shadow: inset 0 0 0 1px var(--k-border-strong);
+}
+
+.k-shard-selected {
+  outline: 2px solid var(--k-primary);
+  outline-offset: 1px;
+}
+
+.k-shard-target {
+  background: color-mix(in srgb, var(--k-success) 22%, transparent);
+  border-color: var(--k-success);
+  color: var(--k-success);
 }

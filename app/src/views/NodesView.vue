@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {computed, ref} from 'vue';
+import {NButton, NCard, NCheckbox, NInput, NTag} from 'naive-ui';
 import {RequestError} from '@/api/client';
 import {fetchNodeStats} from '@/api/opensearch';
 import {useAlerts} from '@/composables/useAlerts';
@@ -56,57 +57,62 @@ async function showNodeStats(nodeId: string): Promise<void> {
     );
   }
 }
+
+/** Percentages read better with a bar behind them than as bare numbers. */
+function gaugeColour(percent: number | undefined): string {
+  if ((percent ?? 0) >= 90) {
+    return 'var(--k-error)';
+  }
+  return (percent ?? 0) >= 75 ? 'var(--k-warning)' : 'var(--k-success)';
+}
 </script>
 
 <template>
-  <div>
-    <div class="row g-2 mb-3">
-      <div class="col-sm-4">
-        <label class="visually-hidden" for="node-name-filter">filter nodes by name</label>
-        <input
-          id="node-name-filter"
-          v-model="filter.name"
-          class="form-control form-control-sm"
-          placeholder="filter nodes by name"
-        >
-      </div>
-      <div class="col-sm-8 d-flex gap-3 align-items-center">
-        <div class="form-check">
-          <input id="f-master" v-model="filter.master" class="form-check-input" type="checkbox">
-          <label class="form-check-label small" for="f-master">master</label>
-        </div>
-        <div class="form-check">
-          <input id="f-data" v-model="filter.data" class="form-check-input" type="checkbox">
-          <label class="form-check-label small" for="f-data">data</label>
-        </div>
-        <div class="form-check">
-          <input id="f-client" v-model="filter.client" class="form-check-input" type="checkbox">
-          <label class="form-check-label small" for="f-client">client</label>
-        </div>
+  <div class="k-page-head">
+    <div>
+      <h1 class="k-page-title">Nodes</h1>
+      <p class="k-page-sub">{{ nodes.length }} of {{ cluster?.nodes.length ?? 0 }} shown.</p>
+    </div>
+  </div>
+
+  <NCard>
+    <div class="k-row k-wrap k-gap-lg">
+      <label class="k-label" for="node-name-filter" style="margin: 0">filter</label>
+      <NInput
+        v-model:value="filter.name"
+        placeholder="filter nodes by name"
+        clearable
+        style="max-width: 22rem"
+        :input-props="{id: 'node-name-filter'}"
+      />
+      <div class="k-row">
+        <NCheckbox id="f-master" v-model:checked="filter.master">master</NCheckbox>
+        <NCheckbox id="f-data" v-model:checked="filter.data">data</NCheckbox>
+        <NCheckbox id="f-client" v-model:checked="filter.client">client</NCheckbox>
       </div>
     </div>
+  </NCard>
 
-    <div class="table-responsive">
-      <table class="table table-sm table-bordered align-middle">
+  <NCard :content-style="{padding: 0}">
+    <div class="k-scroll-x">
+      <table class="k-table">
         <thead>
           <tr>
             <th v-for="column in COLUMNS" :key="column.property" scope="col">
-              <button
-                type="button"
-                class="btn btn-link btn-sm p-0"
-                @click="setSortBy(column.property)"
-              >
-                {{ column.label }}
-                <span v-if="sortBy === column.property">{{ reverse ? '▼' : '▲' }}</span>
-              </button>
+              <NButton text size="tiny" @click="setSortBy(column.property)">
+                <span class="k-strong" style="color: var(--k-text-muted)">{{ column.label }}</span>
+                <span v-if="sortBy === column.property" style="margin-left: 4px">
+                  {{ reverse ? '▼' : '▲' }}
+                </span>
+              </NButton>
             </th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="node in nodes" :key="node.id">
             <td>
-              <div class="d-flex gap-2 align-items-start">
-                <div class="small text-body-secondary">
+              <div class="k-row k-row-top">
+                <div class="k-small k-muted">
                   <span
                     v-if="node.master"
                     :title="node.current_master ? 'current master' : 'master eligible'"
@@ -116,50 +122,84 @@ async function showNodeStats(nodeId: string): Promise<void> {
                   <span v-if="node.data" title="data node">🗄</span>
                   <span v-if="node.client" title="client node">🔍</span>
                 </div>
-                <div>
-                  <button
-                    type="button"
-                    class="btn btn-link btn-sm p-0"
-                    @click="showNodeStats(node.id)"
-                  >
-                    {{ node.name }}
-                  </button>
-                  <div class="small text-body-secondary">{{ node.host }}</div>
-                  <div class="small text-body-secondary">{{ node.transportAddress }}</div>
-                  <div class="small">
-                    <span class="badge text-bg-secondary">JVM: {{ node.jvmVersion }}</span>
-                    <span class="badge text-bg-secondary ms-1">OS: {{ node.version }}</span>
+                <div class="k-stack-tight">
+                  <NButton text type="primary" size="small" @click="showNodeStats(node.id)">
+                    <span class="k-strong">{{ node.name }}</span>
+                  </NButton>
+                  <div class="k-small k-muted k-mono">{{ node.host }}</div>
+                  <div class="k-small k-muted k-mono">{{ node.transportAddress }}</div>
+                  <div class="k-row">
+                    <NTag size="tiny" :bordered="false">JVM: {{ node.jvmVersion }}</NTag>
+                    <NTag size="tiny" :bordered="false">OS: {{ node.version }}</NTag>
                   </div>
                 </div>
               </div>
             </td>
-            <td>{{ node.load_average ? decimal(node.load_average) : 'N/A' }}</td>
-            <td>{{ decimal(node.cpu) }}</td>
+            <td class="k-metric">
+              {{ node.load_average ? decimal(node.load_average) : 'N/A' }}
+            </td>
             <td>
-              {{ decimal(node.heap_used_percent) }}
-              <div class="small text-body-secondary">used: {{ node.heap_used }}</div>
-              <div class="small text-body-secondary">max: {{ node.heap_max }}</div>
+              <div class="k-metric">{{ decimal(node.cpu) }}</div>
+              <div class="k-gauge">
+                <span :style="{width: `${node.cpu ?? 0}%`, background: gaugeColour(node.cpu)}" />
+              </div>
+            </td>
+            <td>
+              <div class="k-metric">{{ decimal(node.heap_used_percent) }}</div>
+              <div class="k-gauge">
+                <span
+                  :style="{
+                    width: `${node.heap_used_percent ?? 0}%`,
+                    background: gaugeColour(node.heap_used_percent),
+                  }"
+                />
+              </div>
+              <div class="k-small k-muted">used: {{ node.heap_used }}</div>
+              <div class="k-small k-muted">max: {{ node.heap_max }}</div>
             </td>
             <td>
               <template v-if="!node.client">
-                {{ decimal(node.disk_used_percent) }}
-                <div class="small text-body-secondary">
-                  free: {{ bytes(node.disk_free_in_bytes) }}
+                <div class="k-metric">{{ decimal(node.disk_used_percent) }}</div>
+                <div class="k-gauge">
+                  <span
+                    :style="{
+                      width: `${node.disk_used_percent ?? 0}%`,
+                      background: gaugeColour(node.disk_used_percent),
+                    }"
+                  />
                 </div>
-                <div class="small text-body-secondary">
-                  total: {{ bytes(node.disk_total_in_bytes) }}
-                </div>
+                <div class="k-small k-muted">free: {{ bytes(node.disk_free_in_bytes) }}</div>
+                <div class="k-small k-muted">total: {{ bytes(node.disk_total_in_bytes) }}</div>
               </template>
-              <em v-else class="small text-body-secondary">no disk info for client nodes</em>
+              <em v-else class="k-small k-muted">no disk info for client nodes</em>
             </td>
-            <td>{{ timeInterval(node.uptime) }}</td>
+            <td class="k-metric">{{ timeInterval(node.uptime) }}</td>
           </tr>
         </tbody>
       </table>
     </div>
 
-    <p v-if="nodes.length === 0" class="text-center text-body-secondary py-3">
+    <p v-if="nodes.length === 0" class="k-empty">
       No nodes found matching the current filter
     </p>
-  </div>
+  </NCard>
 </template>
+
+<style scoped>
+.k-gauge {
+  width: 100%;
+  min-width: 4rem;
+  max-width: 8rem;
+  height: 4px;
+  margin: 3px 0 5px;
+  border-radius: 2px;
+  background: var(--k-border);
+  overflow: hidden;
+}
+
+.k-gauge > span {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+}
+</style>

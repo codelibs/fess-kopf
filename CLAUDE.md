@@ -7,10 +7,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Fess KOPF is a web administration tool for OpenSearch, integrated with Fess.
 It's a fork of elasticsearch-kopf, customized for OpenSearch 2.x and 3.x.
 
-The application is Vue 3 + Vite + TypeScript, in `app/`, built into `_site/`.
-It replaced an AngularJS 1.4.7 application screen by screen; nothing on the
-Fess side changed in the process, because the serving contract in
-"Serving constraints" below was treated as fixed throughout.
+The application is Vue 3 + Vite + TypeScript with Naive UI, in `app/`, built
+into `_site/`. It replaced an AngularJS 1.4.7 application screen by screen;
+nothing on the Fess side changed in the process, because the serving contract
+in "Serving constraints" below was treated as fixed throughout.
 
 ## Build System
 
@@ -70,7 +70,9 @@ app/
     ├── model/           # data models and formatters
     ├── composables/     # shared state (cluster poll, alerts, dialogs)
     ├── components/
-    └── views/           # one per route
+    ├── views/           # one per route
+    ├── theme.ts         # the palette, and Naive UI's theme overrides
+    └── styles.css       # layout primitives, reading theme.ts's properties
 ```
 
 ### Key Architecture Patterns
@@ -86,9 +88,32 @@ app/
    assembled falls back to the reduced `local=true` view instead of blanking
    every screen.
 
-3. **OpenSearch Integration**: This tool is designed exclusively for OpenSearch 2.x and 3.x (not Elasticsearch). It connects to OpenSearch clusters via REST API and provides a web UI for cluster management.
+3. **One palette, two consumers.** kopf renders inside an iframe in the Fess
+   admin dashboard, so its colours are not a free choice: the canvas
+   (`#f4f6f9`), the dark chrome (`#343a40`) and the semantic colours are what
+   AdminLTE 3.2 paints around it. `app/src/theme.ts` holds both palettes and
+   feeds them to Naive UI's theme overrides *and* to the CSS custom properties
+   `styles.css` reads, so the components and the layout cannot end up on
+   different colours. Note that the Fess admin interface ships AdminLTE 3.2.0
+   with **Bootstrap 4.6.2** and Font Awesome 5.12 - not Bootstrap 5.
 
-4. **Fess Integration**: The built application is served through Fess at
+4. **Naive UI supplies controls, not layout.** Cards, inputs, selects,
+   checkboxes, buttons, tags and alerts are Naive UI. Layout is the small flex
+   and grid layer in `styles.css`; no CSS framework is bundled. Three things
+   are deliberately *not* Naive UI components:
+   - the confirmation and info dialogs are native `<dialog>` elements, because
+     `NModal` teleports to `document.body` and would put the confirmation of a
+     destructive action outside the component tree
+   - the cluster grid's per-index and per-shard menus are `<details>`, because
+     the grid renders hundreds of them and a teleporting menu component would
+     move every popover out of the table
+   - the tables are hand-rolled: each has a composite cell and its own filter
+     and sort model, so a data-grid component would mean more render functions,
+     not fewer
+
+5. **OpenSearch Integration**: This tool is designed exclusively for OpenSearch 2.x and 3.x (not Elasticsearch). It connects to OpenSearch clusters via REST API and provides a web UI for cluster management.
+
+6. **Fess Integration**: The built application is served through Fess at
    `/_plugin/kopf/`. Configuration is handled via `kopf_external_settings.json`
    which includes:
    - `location`: OpenSearch URL for local development. Empty in the
@@ -134,6 +159,11 @@ behaviours constrain any build in this repository:
 
 ### Code Quality
 
+- Naive UI is pinned to the 2.x line, which is MIT. Do not reach for PrimeVue:
+  from 5.0.0 it is distributed under the commercial PrimeUI licence, which
+  requires a licence key and restricts redistribution - and `_site` ships
+  inside Fess to every user. PrimeVue 4.5.5 is still MIT but is the end of that
+  line.
 - ESLint is the only linter, configured in `eslint.config.js` and run via
   `npm run lint`. It uses eslint-plugin-vue and typescript-eslint, both scoped
   with `files` because several of their config entries carry no `files` key of
@@ -141,6 +171,14 @@ behaviours constrain any build in this repository:
 - Vitest runs the suite from `app/tests/`, in jsdom. Views are mounted with
   `@vue/test-utils`; `fetch` is stubbed rather than the API layer, so the
   request each screen actually issues is what gets asserted.
+- `app/tests/support/setup.ts` shims `matchMedia`, `ResizeObserver` and
+  `Element.scrollTo`, none of which jsdom implements and all of which Naive
+  UI's dropdowns call. Without them a mounted view throws before the first
+  assertion.
+- `NSelect` and `NCheckbox` are not native form controls - a non-filterable
+  `NSelect` renders no `<input>` at all - so tests reach them through
+  `app/tests/support/naive.ts`, which matches on the `id` that falls through
+  to their root element.
 - Coverage reports are generated in `coverage/` directory
 
 ## OpenSearch Compatibility

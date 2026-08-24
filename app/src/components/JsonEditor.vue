@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {computed, ref, watch} from 'vue';
+import {NButton, NInput} from 'naive-ui';
 
 const model = defineModel<string>({required: true});
 const props = defineProps<{id: string; rows?: number}>();
@@ -35,18 +36,20 @@ function format(): void {
 
 <template>
   <div>
-    <textarea
-      :id="props.id"
-      v-model="model"
-      class="form-control form-control-sm font-monospace"
-      :class="{'is-invalid': error !== null}"
+    <!-- The id goes on the textarea itself, not on NInput's wrapper: callers
+         label it, and the tests drive it. -->
+    <NInput
+      v-model:value="model"
+      type="textarea"
+      :status="error === null ? undefined : 'error'"
       :rows="props.rows ?? 4"
-      spellcheck="false"
+      :input-props="{id: props.id, spellcheck: 'false'}"
+      :style="{fontFamily: 'var(--k-mono)'}"
     />
-    <div class="d-flex justify-content-between align-items-start">
-      <div v-if="error" class="invalid-feedback d-block small">{{ error }}</div>
-      <span v-else />
-      <button type="button" class="btn btn-link btn-sm p-0" @click="format">format</button>
+    <div class="k-row k-row-top" style="margin-top: 4px">
+      <span v-if="error" class="k-small k-grow" style="color: var(--k-error)">{{ error }}</span>
+      <span v-else class="k-grow" />
+      <NButton text size="tiny" type="primary" @click="format">format</NButton>
     </div>
   </div>
 </template>

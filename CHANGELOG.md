@@ -15,8 +15,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   no longer shipped. Nothing on the Fess side changed: the bundle is still
   served from the same path, still addresses its assets relatively, and still
   routes on the hash
-- Bootstrap 3.4.1 to Bootstrap 5.3, the version the Fess admin interface
-  already ships
+- **The interface was rebuilt on Naive UI.** Bootstrap is gone entirely: the
+  controls, cards, tags and dialogs are Naive UI components, and the layout is
+  a small CSS layer of flex and grid primitives rather than a framework. Every
+  screen gained a heading, and the tables, the shard matrix and the cluster
+  status bar were redesigned. The engine version moved out of the title bar,
+  which no longer carries a product name, and into the cluster status bar with
+  the rest of what the poll reports
+- The palette is now tied to what the Fess admin dashboard paints around the
+  iframe -- canvas `#f4f6f9`, chrome `#343a40`, AdminLTE's semantic colours --
+  and is defined once, in `app/src/theme.ts`, for both Naive UI and the layout
+  layer
 
 ### Added
 - Query skeletons on the REST client for the query types a Fess cluster is

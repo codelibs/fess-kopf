@@ -2,8 +2,6 @@ import {fileURLToPath, URL} from 'node:url';
 import {defineConfig} from 'vitest/config';
 import vue from '@vitejs/plugin-vue';
 
-// The Angular suite still runs under Jest (npm test runs both). This config
-// covers the Vue app only; it goes away with src/ at the end of the migration.
 export default defineConfig({
   plugins: [vue()],
   resolve: {
@@ -11,6 +9,7 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
+    setupFiles: ['app/tests/support/setup.ts'],
     include: ['app/tests/**/*.test.ts'],
     coverage: {
       provider: 'v8',

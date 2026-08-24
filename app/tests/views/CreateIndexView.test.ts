@@ -4,6 +4,7 @@ import CreateIndexView from '@/views/CreateIndexView.vue';
 import {resetSettingsForTest} from '@/api/settings';
 import {refresh, resetClusterForTest} from '@/composables/useCluster';
 import {useAlerts} from '@/composables/useAlerts';
+import {chooseInSelect} from '../support/naive';
 import {okRoutes, stubFetch} from '../api/routes';
 
 const alerts = useAlerts();
@@ -115,7 +116,7 @@ describe('CreateIndexView', () => {
   it('copies settings and mappings from a chosen source index', async () => {
     stubCreate();
     const wrapper = mount(CreateIndexView);
-    await wrapper.find('#ci-source').setValue('test-index');
+    await chooseInSelect(wrapper, 'ci-source', 'test-index');
     await vi.waitFor(() =>
       expect((wrapper.find('#ci-body').element as HTMLTextAreaElement).value).toContain('settings'),
     );

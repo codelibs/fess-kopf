@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import {ref} from 'vue';
+import {computed, ref} from 'vue';
+import {NButton, NCard, NCheckbox, NInput, NSelect} from 'naive-ui';
 import {RequestError} from '@/api/client';
 import {fetchHotThreads, type HotThreadsOptions} from '@/api/opensearch';
 import {useAlerts} from '@/composables/useAlerts';
@@ -19,6 +20,13 @@ const interval = ref('500ms');
 const ignoreIdleThreads = ref(true);
 const results = ref<NodeHotThreads[] | null>(null);
 const running = ref(false);
+
+const threadOptions = computed(() => THREAD_COUNTS.map((n) => ({label: String(n), value: n})));
+const typeOptions = computed(() => TYPES.map((t) => ({label: t, value: t})));
+const nodeOptions = computed(() => [
+  {label: 'all nodes', value: ''},
+  ...(cluster.value?.nodes ?? []).map((n) => ({label: n.name, value: n.id})),
+]);
 
 async function execute(): Promise<void> {
   running.value = true;
@@ -43,75 +51,90 @@ async function execute(): Promise<void> {
 </script>
 
 <template>
-  <div class="card">
-    <div class="card-header">hot threads</div>
-    <div class="card-body">
-      <form class="row g-2 align-items-end mb-3" @submit.prevent="execute">
-        <div class="col-auto">
-          <label class="form-label mb-0 small" for="ht-threads">number of threads</label>
-          <select id="ht-threads" v-model.number="threads" class="form-select form-select-sm">
-            <option v-for="count in THREAD_COUNTS" :key="count" :value="count">{{ count }}</option>
-          </select>
-        </div>
-        <div class="col-auto">
-          <label class="form-label mb-0 small" for="ht-node">node</label>
-          <select id="ht-node" v-model="node" class="form-select form-select-sm">
-            <option value="">all nodes</option>
-            <option v-for="n in cluster?.nodes ?? []" :key="n.id" :value="n.id">
-              {{ n.name }}
-            </option>
-          </select>
-        </div>
-        <div class="col-auto">
-          <label class="form-label mb-0 small" for="ht-type">type</label>
-          <select id="ht-type" v-model="type" class="form-select form-select-sm">
-            <option v-for="t in TYPES" :key="t" :value="t">{{ t }}</option>
-          </select>
-        </div>
-        <div class="col-auto">
-          <label class="form-label mb-0 small" for="ht-interval">sampling interval</label>
-          <input
-            id="ht-interval"
-            v-model="interval"
-            class="form-control form-control-sm"
-            placeholder="sampling interval"
-          >
-        </div>
-        <div class="col-auto">
-          <div class="form-check">
-            <input
-              id="ht-idle"
-              v-model="ignoreIdleThreads"
-              class="form-check-input"
-              type="checkbox"
-            >
-            <label class="form-check-label small" for="ht-idle">ignore idle threads</label>
-          </div>
-        </div>
-        <div class="col-auto">
-          <button type="submit" class="btn btn-sm btn-primary" :disabled="running">
-            {{ running ? 'sampling…' : 'execute' }}
-          </button>
-        </div>
-      </form>
-
-      <div v-if="results">
-        <p v-if="results.length === 0" class="text-body-secondary">no nodes reported</p>
-        <details v-for="(nodeThreads, i) in results" :key="i" class="mb-3" open>
-          <summary>
-            <span class="font-monospace small">:::{{ nodeThreads.header }}</span>
-          </summary>
-          <pre v-if="nodeThreads.subHeader" class="small mb-1">{{ nodeThreads.subHeader }}</pre>
-          <p v-if="nodeThreads.threads.length === 0" class="text-body-secondary small mb-0">
-            no busy threads on this node
-          </p>
-          <div v-for="(thread, t) in nodeThreads.threads" :key="t" class="mb-2">
-            <pre class="small mb-0">{{ thread.header }}</pre>
-            <pre v-if="thread.subHeader" class="small mb-0">{{ thread.subHeader }}</pre>
-            <pre v-if="thread.stack.length" class="small mb-0">{{ thread.stack.join('\n') }}</pre>
-          </div>
-        </details>
-      </div>
+  <div class="k-page-head">
+    <div>
+      <h1 class="k-page-title">Hot threads</h1>
+      <p class="k-page-sub">Sample where the nodes are spending their time.</p>
     </div>
   </div>
+
+  <NCard>
+    <form class="k-row k-wrap k-gap-lg" style="align-items: flex-end" @submit.prevent="execute">
+      <div>
+        <span id="ht-threads-label" class="k-label">number of threads</span>
+        <NSelect
+          id="ht-threads"
+          v-model:value="threads"
+          aria-labelledby="ht-threads-label"
+          :options="threadOptions"
+          style="width: 8rem"
+        />
+      </div>
+      <div>
+        <span id="ht-node-label" class="k-label">node</span>
+        <NSelect
+          id="ht-node"
+          v-model:value="node"
+          aria-labelledby="ht-node-label"
+          :options="nodeOptions"
+          filterable
+          style="width: 14rem"
+        />
+      </div>
+      <div>
+        <span id="ht-type-label" class="k-label">type</span>
+        <NSelect
+          id="ht-type"
+          v-model:value="type"
+          aria-labelledby="ht-type-label"
+          :options="typeOptions"
+          style="width: 8rem"
+        />
+      </div>
+      <div>
+        <label class="k-label" for="ht-interval">sampling interval</label>
+        <NInput
+          v-model:value="interval"
+          placeholder="sampling interval"
+          style="width: 10rem"
+          :input-props="{id: 'ht-interval'}"
+        />
+      </div>
+      <NCheckbox id="ht-idle" v-model:checked="ignoreIdleThreads">ignore idle threads</NCheckbox>
+      <NButton attr-type="submit" type="primary" :loading="running" :disabled="running">
+        {{ running ? 'sampling…' : 'execute' }}
+      </NButton>
+    </form>
+  </NCard>
+
+  <template v-if="results">
+    <NCard v-if="results.length === 0">
+      <p class="k-empty">no nodes reported</p>
+    </NCard>
+    <NCard v-for="(nodeThreads, i) in results" v-else :key="i">
+      <details class="k-threads" open>
+        <summary class="k-mono k-strong">:::{{ nodeThreads.header }}</summary>
+        <pre v-if="nodeThreads.subHeader" class="k-pre" style="margin-top: 8px">{{
+          nodeThreads.subHeader
+        }}</pre>
+        <p v-if="nodeThreads.threads.length === 0" class="k-muted k-small" style="margin: 8px 0 0">
+          no busy threads on this node
+        </p>
+        <div
+          v-for="(thread, t) in nodeThreads.threads" :key="t" class="k-stack-tight"
+          style="margin-top: 10px"
+        >
+          <pre class="k-pre">{{ thread.header }}</pre>
+          <pre v-if="thread.subHeader" class="k-pre">{{ thread.subHeader }}</pre>
+          <pre v-if="thread.stack.length" class="k-pre">{{ thread.stack.join('\n') }}</pre>
+        </div>
+      </details>
+    </NCard>
+  </template>
 </template>
+
+<style scoped>
+.k-threads > summary {
+  cursor: pointer;
+}
+</style>

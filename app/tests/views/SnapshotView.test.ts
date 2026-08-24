@@ -5,6 +5,7 @@ import {resetSettingsForTest} from '@/api/settings';
 import {refresh, resetClusterForTest} from '@/composables/useCluster';
 import {resetDialogsForTest, resolveConfirm, useDialogs} from '@/composables/useDialogs';
 import {useAlerts} from '@/composables/useAlerts';
+import {chooseInSelect, optionLabels, setCheckbox} from '../support/naive';
 import {okRoutes, stubFetch} from '../api/routes';
 
 const alerts = useAlerts();
@@ -86,10 +87,10 @@ describe('SnapshotView', () => {
     it('shows only the settings the chosen type takes', async () => {
       const {wrapper} = await mountLoaded();
       expect(wrapper.find('#sn-set-location').exists()).toBe(false);
-      await wrapper.find('#sn-repo-type').setValue('fs');
+      await chooseInSelect(wrapper, 'sn-repo-type', 'fs');
       expect(wrapper.find('#sn-set-location').exists()).toBe(true);
       expect(wrapper.find('#sn-set-bucket').exists()).toBe(false);
-      await wrapper.find('#sn-repo-type').setValue('s3');
+      await chooseInSelect(wrapper, 'sn-repo-type', 's3');
       expect(wrapper.find('#sn-set-bucket').exists()).toBe(true);
       expect(wrapper.find('#sn-set-location').exists()).toBe(false);
     });
@@ -97,7 +98,7 @@ describe('SnapshotView', () => {
     it('refuses to create without the required setting', async () => {
       const {wrapper, fetcher} = await mountLoaded();
       await wrapper.find('#sn-repo-name').setValue('r');
-      await wrapper.find('#sn-repo-type').setValue('fs');
+      await chooseInSelect(wrapper, 'sn-repo-type', 'fs');
       await wrapper.findAll('form')[0].trigger('submit');
       expect(alerts.alerts.value[0].message).toContain('location is required');
       expect(callOf(fetcher, 'POST')).toBeUndefined();
@@ -106,7 +107,7 @@ describe('SnapshotView', () => {
     it('creates the repository with only its own settings', async () => {
       const {wrapper, fetcher} = await mountLoaded();
       await wrapper.find('#sn-repo-name').setValue('r');
-      await wrapper.find('#sn-repo-type').setValue('fs');
+      await chooseInSelect(wrapper, 'sn-repo-type', 'fs');
       await wrapper.find('#sn-set-location').setValue('/backup');
       await wrapper.findAll('form')[0].trigger('submit');
       await vi.waitFor(() => expect(callOf(fetcher, 'POST')).toBeDefined());
@@ -135,7 +136,7 @@ describe('SnapshotView', () => {
       await wrapper.findAll('form')[1].trigger('submit');
       expect(alerts.alerts.value[0].message).toBe('Repository is required');
 
-      await wrapper.find('#sn-new-repo').setValue('backups');
+      await chooseInSelect(wrapper, 'sn-new-repo', 'backups');
       await wrapper.findAll('form')[1].trigger('submit');
       expect(alerts.alerts.value[0].message).toBe('Snapshot name is required');
       expect(callOf(fetcher, 'PUT')).toBeUndefined();
@@ -144,7 +145,7 @@ describe('SnapshotView', () => {
     it('sends an empty body when nothing optional is chosen', async () => {
       // The optional parameters are left out entirely rather than sent false.
       const {wrapper, fetcher} = await mountLoaded();
-      await wrapper.find('#sn-new-repo').setValue('backups');
+      await chooseInSelect(wrapper, 'sn-new-repo', 'backups');
       await wrapper.find('#sn-new-name').setValue('nightly');
       await wrapper.findAll('form')[1].trigger('submit');
       await vi.waitFor(() => expect(callOf(fetcher, 'PUT')).toBeDefined());
@@ -155,9 +156,9 @@ describe('SnapshotView', () => {
 
     it('includes the options that were ticked', async () => {
       const {wrapper, fetcher} = await mountLoaded();
-      await wrapper.find('#sn-new-repo').setValue('backups');
+      await chooseInSelect(wrapper, 'sn-new-repo', 'backups');
       await wrapper.find('#sn-new-name').setValue('nightly');
-      await wrapper.find('#sn-global').setValue(true);
+      await setCheckbox(wrapper, 'sn-global', true);
       await wrapper.findAll('form')[1].trigger('submit');
       await vi.waitFor(() => expect(callOf(fetcher, 'PUT')).toBeDefined());
       expect(JSON.parse(callOf(fetcher, 'PUT')![1]!.body as string)).toEqual({
@@ -167,9 +168,9 @@ describe('SnapshotView', () => {
 
     it('hides special indices until asked', async () => {
       const {wrapper} = await mountLoaded();
-      const options = () => wrapper.findAll('#sn-new-indices option').map((o) => o.text());
+      const options = () => optionLabels(wrapper, 'sn-new-indices');
       expect(options()).toEqual(['test-index']);
-      await wrapper.find('#sn-special').setValue(true);
+      await setCheckbox(wrapper, 'sn-special', true);
       expect(options()).toEqual(['test-index']);
     });
   });

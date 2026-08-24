@@ -3,7 +3,7 @@
 [![Test](https://github.com/codelibs/fess-kopf/actions/workflows/test.yml/badge.svg)](https://github.com/codelibs/fess-kopf/actions/workflows/test.yml)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Fess KOPF is a simple web administration tool for OpenSearch, integrated with [Fess](https://fess.codelibs.org/). Built with Vue 3, Vite, TypeScript and Bootstrap 5.
+Fess KOPF is a simple web administration tool for OpenSearch, integrated with [Fess](https://fess.codelibs.org/). Built with Vue 3, Vite, TypeScript and Naive UI.
 
 ## Overview
 
@@ -109,7 +109,13 @@ Configure Fess KOPF using the `kopf_external_settings.json` file:
 - `light` - light interface
 - `dark` - dark interface
 
-`dark` switches Bootstrap's colour mode; `fess` and `light` are both light.
+`dark` selects the dark palette; `fess` and `light` are both the light one.
+
+The palette is deliberately not a free choice. kopf renders inside an iframe in
+the Fess admin dashboard, so the canvas (`#f4f6f9`), the dark chrome (`#343a40`)
+and the semantic colours are the ones AdminLTE paints around it. Both palettes
+live in `app/src/theme.ts`, which feeds Naive UI's theme overrides and the CSS
+custom properties the layout layer reads, so the two cannot drift apart.
 
 ## Development
 
@@ -157,7 +163,9 @@ fess-kopf/
 │   │   ├── composables/  # shared state (cluster poll, alerts, dialogs)
 │   │   ├── components/
 │   │   ├── views/        # one per route
-│   │   └── router/
+│   │   ├── router/
+│   │   ├── theme.ts      # the palette, and Naive UI's theme overrides
+│   │   └── styles.css    # layout primitives; reads theme.ts's custom properties
 │   └── tests/
 └── _site/                # build output; this is what ships
 ```

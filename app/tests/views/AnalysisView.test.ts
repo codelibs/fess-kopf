@@ -4,6 +4,7 @@ import AnalysisView from '@/views/AnalysisView.vue';
 import {resetSettingsForTest} from '@/api/settings';
 import {refresh, resetClusterForTest} from '@/composables/useCluster';
 import {useAlerts} from '@/composables/useAlerts';
+import {chooseInSelect, optionLabels, selectById} from '../support/naive';
 import {okRoutes, stubFetch} from '../api/routes';
 
 const alerts = useAlerts();
@@ -55,51 +56,38 @@ afterEach(() => vi.unstubAllGlobals());
 describe('AnalysisView', () => {
   it('offers the cluster open indices in both forms', () => {
     const wrapper = mount(AnalysisView);
-    const options = wrapper.findAll('#an-field-index option').map((o) => o.text());
-    expect(options).toEqual(['select index', 'test-index']);
-    expect(wrapper.findAll('#an-an-index option').map((o) => o.text())).toEqual(options);
+    const options = optionLabels(wrapper, 'an-field-index');
+    expect(options).toEqual(['test-index']);
+    expect(optionLabels(wrapper, 'an-an-index')).toEqual(options);
   });
 
   it('loads types and analyzable fields when an index is chosen', async () => {
     stubAnalysis();
     const wrapper = mount(AnalysisView);
-    await wrapper.find('#an-field-index').setValue('test-index');
-    await vi.waitFor(() =>
-      expect(wrapper.findAll('#an-field-type option')).toHaveLength(2),
-    );
-    expect(wrapper.findAll('#an-field-type option').map((o) => o.text())).toEqual([
-      'select type',
-      '_doc',
-    ]);
+    await chooseInSelect(wrapper, 'an-field-index', 'test-index');
+    await vi.waitFor(() => expect(optionLabels(wrapper, 'an-field-type')).toHaveLength(1));
+    expect(optionLabels(wrapper, 'an-field-type')).toEqual(['_doc']);
 
-    await wrapper.find('#an-field-type').setValue('_doc');
+    await chooseInSelect(wrapper, 'an-field-type', '_doc');
     // boost is a float, so it is not offered.
-    expect(wrapper.findAll('#an-field-field option').map((o) => o.text())).toEqual([
-      'select field',
-      'content',
-    ]);
+    expect(optionLabels(wrapper, 'an-field-field')).toEqual(['content']);
   });
 
   it('loads analyzers for the analyzer form', async () => {
     stubAnalysis();
     const wrapper = mount(AnalysisView);
-    await wrapper.find('#an-an-index').setValue('test-index');
-    await vi.waitFor(() =>
-      expect(wrapper.findAll('#an-an-analyzer option')).toHaveLength(2),
-    );
-    expect(wrapper.findAll('#an-an-analyzer option').map((o) => o.text())).toEqual([
-      'select analyzer',
-      'japanese_analyzer',
-    ]);
+    await chooseInSelect(wrapper, 'an-an-index', 'test-index');
+    await vi.waitFor(() => expect(optionLabels(wrapper, 'an-an-analyzer')).toHaveLength(1));
+    expect(optionLabels(wrapper, 'an-an-analyzer')).toEqual(['japanese_analyzer']);
   });
 
   it('posts the field form and renders the tokens', async () => {
     const fetcher = stubAnalysis();
     const wrapper = mount(AnalysisView);
-    await wrapper.find('#an-field-index').setValue('test-index');
-    await vi.waitFor(() => expect(wrapper.findAll('#an-field-type option')).toHaveLength(2));
-    await wrapper.find('#an-field-type').setValue('_doc');
-    await wrapper.find('#an-field-field').setValue('content');
+    await chooseInSelect(wrapper, 'an-field-index', 'test-index');
+    await vi.waitFor(() => expect(optionLabels(wrapper, 'an-field-type')).toHaveLength(1));
+    await chooseInSelect(wrapper, 'an-field-type', '_doc');
+    await chooseInSelect(wrapper, 'an-field-field', 'content');
     await wrapper.find('#an-field-text').setValue('検索エンジン');
     await wrapper.findAll('form')[0].trigger('submit');
     await vi.waitFor(() => expect(wrapper.text()).toContain('検索'));
@@ -116,9 +104,9 @@ describe('AnalysisView', () => {
   it('posts the analyzer form with the analyzer name', async () => {
     const fetcher = stubAnalysis();
     const wrapper = mount(AnalysisView);
-    await wrapper.find('#an-an-index').setValue('test-index');
-    await vi.waitFor(() => expect(wrapper.findAll('#an-an-analyzer option')).toHaveLength(2));
-    await wrapper.find('#an-an-analyzer').setValue('japanese_analyzer');
+    await chooseInSelect(wrapper, 'an-an-index', 'test-index');
+    await vi.waitFor(() => expect(optionLabels(wrapper, 'an-an-analyzer')).toHaveLength(1));
+    await chooseInSelect(wrapper, 'an-an-analyzer', 'japanese_analyzer');
     await wrapper.find('#an-an-text').setValue('検索エンジン');
     await wrapper.findAll('form')[1].trigger('submit');
     await vi.waitFor(() => expect(wrapper.text()).toContain('エンジン'));
@@ -144,19 +132,19 @@ describe('AnalysisView', () => {
       vi.fn(async () => new Response('{"error":"boom"}', {status: 500})),
     );
     const wrapper = mount(AnalysisView);
-    await wrapper.find('#an-field-index').setValue('test-index');
+    await chooseInSelect(wrapper, 'an-field-index', 'test-index');
     await vi.waitFor(() => expect(alerts.alerts.value.length).toBeGreaterThan(0));
     expect(alerts.alerts.value[0].message).toBe('Error loading index types');
-    expect((wrapper.find('#an-field-index').element as HTMLSelectElement).value).toBe('');
+    expect(selectById(wrapper, 'an-field-index').props('value')).toBe('');
   });
 
   it('reports an analyze failure', async () => {
     stubAnalysis();
     const wrapper = mount(AnalysisView);
-    await wrapper.find('#an-field-index').setValue('test-index');
-    await vi.waitFor(() => expect(wrapper.findAll('#an-field-type option')).toHaveLength(2));
-    await wrapper.find('#an-field-type').setValue('_doc');
-    await wrapper.find('#an-field-field').setValue('content');
+    await chooseInSelect(wrapper, 'an-field-index', 'test-index');
+    await vi.waitFor(() => expect(optionLabels(wrapper, 'an-field-type')).toHaveLength(1));
+    await chooseInSelect(wrapper, 'an-field-type', '_doc');
+    await chooseInSelect(wrapper, 'an-field-field', 'content');
     await wrapper.find('#an-field-text').setValue('text');
 
     vi.stubGlobal(

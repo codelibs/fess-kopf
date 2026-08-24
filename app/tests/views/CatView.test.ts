@@ -4,6 +4,7 @@ import CatView from '@/views/CatView.vue';
 import {CAT_APIS} from '@/api/opensearch';
 import {resetSettingsForTest} from '@/api/settings';
 import {useAlerts} from '@/composables/useAlerts';
+import {chooseInSelect, optionValues} from '../support/naive';
 
 const alerts = useAlerts();
 
@@ -30,8 +31,7 @@ afterEach(() => vi.unstubAllGlobals());
 describe('CatView', () => {
   it('offers exactly the shipped API list', () => {
     const wrapper = mount(CatView);
-    const options = wrapper.findAll('option').map((o) => o.attributes('value'));
-    expect(options).toEqual(['', ...CAT_APIS]);
+    expect(optionValues(wrapper, 'cat-api')).toEqual([...CAT_APIS]);
   });
 
   it('refuses to run without an API and does not call the cluster', async () => {
@@ -45,7 +45,7 @@ describe('CatView', () => {
   it('requests the selected API with ?v and renders the table', async () => {
     const fetcher = stubCat(ALIASES);
     const wrapper = mount(CatView);
-    await wrapper.find('select').setValue('aliases');
+    await chooseInSelect(wrapper, 'cat-api', 'aliases');
     await wrapper.find('form').trigger('submit');
     await vi.waitFor(() => expect(wrapper.find('tbody tr').exists()).toBe(true));
 
@@ -65,7 +65,7 @@ describe('CatView', () => {
   it('reports a failure and clears any previous result', async () => {
     stubCat(ALIASES);
     const wrapper = mount(CatView);
-    await wrapper.find('select').setValue('aliases');
+    await chooseInSelect(wrapper, 'cat-api', 'aliases');
     await wrapper.find('form').trigger('submit');
     await vi.waitFor(() => expect(wrapper.find('tbody tr').exists()).toBe(true));
 
@@ -81,7 +81,7 @@ describe('CatView', () => {
   it('says so when the API answers with no rows', async () => {
     stubCat('epoch      timestamp count\n');
     const wrapper = mount(CatView);
-    await wrapper.find('select').setValue('count');
+    await chooseInSelect(wrapper, 'cat-api', 'count');
     await wrapper.find('form').trigger('submit');
     await vi.waitFor(() => expect(wrapper.text()).toContain('no data available'));
   });

@@ -5,12 +5,12 @@ defineProps<{node: Explanation; depth?: number}>();
 </script>
 
 <template>
-  <details :open="(depth ?? 0) < 2">
-    <summary class="small">
-      <span class="fw-bold me-2">{{ node.value }}</span>
-      <span>{{ node.description }}</span>
+  <details class="k-explain" :open="(depth ?? 0) < 2">
+    <summary>
+      <span class="k-metric" style="margin-right: 8px">{{ node.value }}</span>
+      <span class="k-muted">{{ node.description }}</span>
     </summary>
-    <div v-if="node.details?.length" class="ms-3 border-start ps-2">
+    <div v-if="node.details?.length" class="k-explain-children">
       <ExplanationTree
         v-for="(child, i) in node.details"
         :key="i"
@@ -20,3 +20,17 @@ defineProps<{node: Explanation; depth?: number}>();
     </div>
   </details>
 </template>
+
+<style scoped>
+.k-explain > summary {
+  cursor: pointer;
+  padding: 2px 0;
+  font-size: 12px;
+}
+
+.k-explain-children {
+  margin-left: 8px;
+  padding-left: 10px;
+  border-left: 1px solid var(--k-border);
+}
+</style>

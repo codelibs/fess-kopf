@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {computed, onMounted, ref} from 'vue';
 import {useRoute} from 'vue-router';
+import {NAutoComplete, NButton, NCard, NSelect, NTag} from 'naive-ui';
 import {RequestError, restRoot} from '@/api/client';
 import {BODYLESS_METHODS, restRequest} from '@/api/opensearch';
 import ExplanationTree from '@/components/ExplanationTree.vue';
@@ -33,8 +34,24 @@ const editor = ref<InstanceType<typeof JsonEditor> | null>(null);
 
 const indices = computed(() => (cluster.value?.indices ?? []).map((index) => index.name));
 const suggestions = computed(() => suggestPaths(path.value, indices.value));
+const methodOptions = computed(() => HTTP_METHODS.map((m) => ({label: m, value: m})));
 
 const canExport = computed(() => response.value !== null && typeof response.value === 'object');
+
+const responseText = computed(() =>
+  typeof response.value === 'string'
+    ? response.value
+    : JSON.stringify(response.value, undefined, 2),
+);
+
+/** Colours the history entries the way a REST client does. */
+const METHOD_TYPE: Record<string, 'default' | 'info' | 'success' | 'warning' | 'error'> = {
+  GET: 'info',
+  POST: 'success',
+  PUT: 'warning',
+  DELETE: 'error',
+  HEAD: 'default',
+};
 
 onMounted(() => {
   // The cluster overview links here with a request already filled in.
@@ -129,108 +146,128 @@ function exportCsv(): void {
 </script>
 
 <template>
-  <div class="row g-3">
-    <div class="col-lg-9">
-      <div class="card">
-        <div class="card-body">
-          <form class="row g-2 align-items-end" @submit.prevent="send(false)">
-            <div class="col-sm-2">
-              <label class="form-label small mb-0" for="rest-method">method</label>
-              <select id="rest-method" v-model="method" class="form-select form-select-sm">
-                <option v-for="m in HTTP_METHODS" :key="m" :value="m">{{ m }}</option>
-              </select>
-            </div>
-            <div class="col-sm-10">
-              <label class="form-label small mb-0" for="rest-path">path</label>
-              <input
-                id="rest-path"
-                v-model="path"
-                class="form-control form-control-sm"
-                list="rest-path-options"
-                placeholder="_search"
-                autocomplete="off"
-              >
-              <datalist id="rest-path-options">
-                <option v-for="option in suggestions" :key="option" :value="option" />
-              </datalist>
-            </div>
-            <div class="col-12">
-              <label class="form-label small mb-0" for="rest-body">body</label>
-              <JsonEditor id="rest-body" ref="editor" v-model="body" :rows="12" />
-            </div>
-            <div class="col-12 d-flex flex-wrap gap-2 align-items-center">
-              <button type="submit" class="btn btn-sm btn-primary" :disabled="running">
-                {{ running ? 'sending…' : 'send' }}
-              </button>
-              <button
-                type="button"
-                class="btn btn-sm btn-outline-secondary"
-                :disabled="running"
-                @click="send(true)"
-              >
-                explain
-              </button>
-              <button type="button" class="btn btn-sm btn-outline-secondary" @click="copyAsCurl">
-                copy as cURL
-              </button>
-              <button
-                type="button"
-                class="btn btn-sm btn-outline-secondary"
-                :disabled="!canExport"
-                @click="exportCsv"
-              >
-                export CSV
-              </button>
-              <span class="ms-auto small text-body-secondary">snippets:</span>
-              <button
-                v-for="snippet in QUERY_SNIPPETS"
-                :key="snippet.label"
-                type="button"
-                class="btn btn-sm btn-link p-0"
-                @click="insertSnippet(snippet.body)"
-              >
-                {{ snippet.label }}
-              </button>
-            </div>
-          </form>
-
-          <div v-if="explanations.length" class="mt-3">
-            <h6 class="small">explanations</h6>
-            <div v-for="hit in explanations" :key="hit.documentId" class="mb-2">
-              <div class="small fw-bold">{{ hit.documentId }} — {{ hit._score }}</div>
-              <ExplanationTree v-if="hit._explanation" :node="hit._explanation" />
-            </div>
-          </div>
-
-          <div v-if="response !== null" class="mt-3">
-            <h6 class="small">response</h6>
-            <pre id="rest-response" class="small mb-0">{{
-              typeof response === 'string' ? response : JSON.stringify(response, undefined, 2)
-            }}</pre>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-lg-3">
-      <div class="card">
-        <div class="card-header">history</div>
-        <div class="card-body">
-          <p v-if="history.length === 0" class="text-body-secondary small">no requests yet</p>
-          <ul class="list-unstyled mb-0">
-            <li v-for="(entry, i) in history" :key="i" class="border-bottom py-1">
-              <button
-                type="button"
-                class="btn btn-link btn-sm p-0 text-start"
-                @click="loadFromHistory(entry)"
-              >
-                <span class="badge text-bg-secondary">{{ entry.method }}</span>
-                <span class="ms-1 small">{{ entry.path }}</span>
-              </button>
-            </li>
-          </ul>
-        </div>
-      </div>
+  <div class="k-page-head">
+    <div>
+      <h1 class="k-page-title">REST</h1>
+      <p class="k-page-sub">Send a request straight to the cluster.</p>
     </div>
   </div>
+
+  <div class="k-rest">
+    <div class="k-stack">
+      <NCard>
+        <form class="k-stack" @submit.prevent="send(false)">
+          <div class="k-row k-wrap" style="align-items: flex-end">
+            <div>
+              <span id="rest-method-label" class="k-label">method</span>
+              <NSelect
+                id="rest-method"
+                v-model:value="method"
+                aria-labelledby="rest-method-label"
+                :options="methodOptions"
+                style="width: 8rem"
+              />
+            </div>
+            <div class="k-grow">
+              <label class="k-label" for="rest-path">path</label>
+              <NAutoComplete
+                v-model:value="path"
+                :options="suggestions"
+                placeholder="_search"
+                :input-props="{id: 'rest-path', autocomplete: 'off'}"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="k-label" for="rest-body">body</label>
+            <JsonEditor id="rest-body" ref="editor" v-model="body" :rows="12" />
+          </div>
+
+          <div class="k-row k-wrap">
+            <NButton attr-type="submit" type="primary" :loading="running" :disabled="running">
+              {{ running ? 'sending…' : 'send' }}
+            </NButton>
+            <NButton :disabled="running" @click="send(true)">explain</NButton>
+            <NButton @click="copyAsCurl">copy as cURL</NButton>
+            <NButton :disabled="!canExport" @click="exportCsv">export CSV</NButton>
+            <span class="k-push k-small k-muted">snippets:</span>
+            <NButton
+              v-for="snippet in QUERY_SNIPPETS"
+              :key="snippet.label"
+              text
+              size="tiny"
+              type="primary"
+              @click="insertSnippet(snippet.body)"
+            >
+              {{ snippet.label }}
+            </NButton>
+          </div>
+        </form>
+      </NCard>
+
+      <NCard v-if="explanations.length" title="explanations">
+        <div
+          v-for="hit in explanations" :key="hit.documentId" class="k-stack-tight"
+          style="margin-bottom: 12px"
+        >
+          <div class="k-strong k-small">{{ hit.documentId }} — {{ hit._score }}</div>
+          <ExplanationTree v-if="hit._explanation" :node="hit._explanation" />
+        </div>
+      </NCard>
+
+      <NCard v-if="response !== null" title="response">
+        <pre id="rest-response" class="k-pre" style="max-height: 32rem">{{ responseText }}</pre>
+      </NCard>
+    </div>
+
+    <NCard title="history">
+      <p v-if="history.length === 0" class="k-muted k-small">no requests yet</p>
+      <ul v-else class="k-history">
+        <li v-for="(entry, i) in history" :key="i">
+          <NButton
+            text style="justify-content: flex-start; width: 100%"
+            @click="loadFromHistory(entry)"
+          >
+            <NTag size="tiny" :type="METHOD_TYPE[entry.method] ?? 'default'" :bordered="false">
+              {{ entry.method }}
+            </NTag>
+            <span class="k-small k-mono" style="margin-left: 6px; word-break: break-all">
+              {{ entry.path }}
+            </span>
+          </NButton>
+        </li>
+      </ul>
+    </NCard>
+  </div>
 </template>
+
+<style scoped>
+.k-rest {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+@media (min-width: 1100px) {
+  .k-rest {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 18rem);
+    align-items: start;
+  }
+}
+
+.k-history {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.k-history > li {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--k-border);
+}
+
+.k-history > li:last-child {
+  border-bottom: 0;
+}
+</style>

@@ -1,9 +1,11 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {mount} from '@vue/test-utils';
+import {NAutoComplete} from 'naive-ui';
 import RestView from '@/views/RestView.vue';
 import {resetSettingsForTest} from '@/api/settings';
 import {refresh, resetClusterForTest} from '@/composables/useCluster';
 import {useAlerts} from '@/composables/useAlerts';
+import {chooseInSelect, selectById} from '../support/naive';
 import {router} from '@/router';
 import {okRoutes, stubFetch} from '../api/routes';
 
@@ -78,7 +80,7 @@ describe('RestView', () => {
   it('attaches the body to a POST', async () => {
     const wrapper = await mountAt();
     const fetcher = stubRest();
-    await wrapper.find('#rest-method').setValue('POST');
+    await chooseInSelect(wrapper, 'rest-method', 'POST');
     await wrapper.find('#rest-path').setValue('_search');
     await wrapper.find('#rest-body').setValue('{"query":{"match_all":{}}}');
     await wrapper.vm.$nextTick();
@@ -90,7 +92,7 @@ describe('RestView', () => {
   it('refuses an unparseable body', async () => {
     const wrapper = await mountAt();
     const fetcher = stubRest();
-    await wrapper.find('#rest-method').setValue('POST');
+    await chooseInSelect(wrapper, 'rest-method', 'POST');
     await wrapper.find('#rest-path').setValue('_search');
     await wrapper.find('#rest-body').setValue('{not json');
     await wrapper.vm.$nextTick();
@@ -112,7 +114,7 @@ describe('RestView', () => {
   it('remembers a successful request and can replay it', async () => {
     const wrapper = await mountAt();
     stubRest();
-    await wrapper.find('#rest-method').setValue('POST');
+    await chooseInSelect(wrapper, 'rest-method', 'POST');
     await wrapper.find('#rest-path').setValue('_search');
     await wrapper.find('form').trigger('submit');
     await vi.waitFor(() => expect(wrapper.text()).toContain('_search'));
@@ -121,7 +123,7 @@ describe('RestView', () => {
     const entry = wrapper.findAll('button').find((b) => b.text().includes('POST'));
     await entry!.trigger('click');
     expect((wrapper.find('#rest-path').element as HTMLInputElement).value).toBe('_search');
-    expect((wrapper.find('#rest-method').element as HTMLSelectElement).value).toBe('POST');
+    expect(selectById(wrapper, 'rest-method').props('value')).toBe('POST');
   });
 
   it('does not remember a failed request', async () => {
@@ -184,7 +186,7 @@ describe('RestView', () => {
   it('offers path suggestions built from the cluster indices', async () => {
     const wrapper = await mountAt();
     await wrapper.find('#rest-path').setValue('test-index/');
-    const options = wrapper.findAll('#rest-path-options option').map((o) => o.attributes('value'));
+    const options = wrapper.findComponent(NAutoComplete).props('options') as string[];
     expect(options).toContain('test-index/_search');
   });
 
@@ -192,7 +194,7 @@ describe('RestView', () => {
     const writeText = vi.fn(async () => undefined);
     vi.stubGlobal('navigator', {clipboard: {writeText}});
     const wrapper = await mountAt();
-    await wrapper.find('#rest-method').setValue('POST');
+    await chooseInSelect(wrapper, 'rest-method', 'POST');
     await wrapper.find('#rest-path').setValue('_search');
     await wrapper.find('#rest-body').setValue('{"a":1}');
     await wrapper.vm.$nextTick();

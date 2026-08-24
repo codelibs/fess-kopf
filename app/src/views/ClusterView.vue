@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {computed, onBeforeUnmount, onMounted, reactive, ref, watch} from 'vue';
 import {RouterLink} from 'vue-router';
+import {NButton, NCard, NCheckbox, NInput, NTag} from 'naive-ui';
 import {RequestError} from '@/api/client';
 import {
   clearIndexCache,
@@ -280,352 +281,299 @@ async function promptRelocate(toNode: string): Promise<void> {
 }
 
 function shardClass(shard: Shard): string {
-  const classes = ['shard', `shard-${shard.state.toLowerCase()}`];
-  if (shard.primary) {
-    classes.push('shard-primary');
-  }
+  const classes = ['k-shard', `k-shard-${shard.state.toLowerCase()}`];
+  classes.push(shard.primary ? 'k-shard-primary' : 'k-shard-replica');
   if (relocating.value?.id === shard.id) {
-    classes.push('shard-relocation-source');
+    classes.push('k-shard-selected');
   }
   return classes.join(' ');
 }
 </script>
 
 <template>
-  <div v-if="cluster">
-    <div class="row g-2 mb-2 align-items-center">
-      <div class="col-lg-5">
-        <label class="visually-hidden" for="index-filter">Filter indices by name</label>
-        <input
-          id="index-filter"
-          v-model="indexFilter.name"
-          class="form-control form-control-sm"
+  <template v-if="cluster">
+    <div class="k-page-head">
+      <div>
+        <h1 class="k-page-title">Cluster</h1>
+        <p class="k-page-sub">
+          {{ currentPage.first }}-{{ currentPage.last }} of {{ currentPage.total }} indices across
+          {{ nodes.length }} nodes.
+        </p>
+      </div>
+      <div class="k-row">
+        <NButton size="small" :disabled="!currentPage.previous" @click="page -= 1">
+          previous
+        </NButton>
+        <NButton size="small" :disabled="!currentPage.next" @click="page += 1">next</NButton>
+      </div>
+    </div>
+
+    <NCard>
+      <div class="k-row k-wrap k-gap-lg">
+        <NInput
+          v-model:value="indexFilter.name"
           placeholder="Filter indices by name..."
-        >
-      </div>
-      <div class="col-auto form-check">
-        <input id="f-closed" v-model="indexFilter.closed" class="form-check-input" type="checkbox">
-        <label class="form-check-label small" for="f-closed">
-          Closed <span class="badge text-bg-secondary">{{ cluster.closedIndices }}</span>
-        </label>
-      </div>
-      <div class="col-auto form-check">
-        <input
-          id="f-special"
-          v-model="indexFilter.special"
-          class="form-check-input"
-          type="checkbox"
-        >
-        <label class="form-check-label small" for="f-special">
-          Special <span class="badge text-bg-secondary">{{ cluster.special_indices }}</span>
-        </label>
-      </div>
-      <div class="col-lg-3">
-        <label class="visually-hidden" for="cluster-node-filter">Filter nodes</label>
-        <input
-          id="cluster-node-filter"
-          v-model="nodeFilter.name"
-          class="form-control form-control-sm"
+          clearable
+          aria-label="Filter indices by name"
+          style="max-width: 20rem"
+          :input-props="{id: 'index-filter'}"
+        />
+        <NCheckbox id="f-closed" v-model:checked="indexFilter.closed">
+          Closed
+          <NTag size="tiny" :bordered="false">{{ cluster.closedIndices }}</NTag>
+        </NCheckbox>
+        <NCheckbox id="f-special" v-model:checked="indexFilter.special">
+          Special
+          <NTag size="tiny" :bordered="false">{{ cluster.special_indices }}</NTag>
+        </NCheckbox>
+        <NInput
+          v-model:value="nodeFilter.name"
           placeholder="Filter nodes..."
-        >
+          clearable
+          aria-label="Filter nodes"
+          style="max-width: 14rem"
+          :input-props="{id: 'cluster-node-filter'}"
+        />
       </div>
-    </div>
+    </NCard>
 
-    <div class="d-flex align-items-center gap-2 mb-2 small">
-      <button
-        type="button"
-        class="btn btn-sm btn-outline-secondary"
-        :disabled="!currentPage.previous"
-        @click="page -= 1"
-      >
-        previous
-      </button>
-      <span>{{ currentPage.first }}-{{ currentPage.last }} of {{ currentPage.total }}
-        selected indices</span>
-      <button
-        type="button"
-        class="btn btn-sm btn-outline-secondary"
-        :disabled="!currentPage.next"
-        @click="page += 1"
-      >
-        next
-      </button>
-    </div>
-
-    <div class="table-responsive">
-      <table class="table table-sm table-bordered align-top">
-        <thead>
-          <tr>
-            <th scope="col" style="min-width: 14rem">
-              <div class="d-flex gap-2 align-items-center">
-                <button
-                  type="button"
-                  class="btn btn-sm btn-outline-secondary"
-                  :title="
-                    cluster.disableAllocation === 'true'
-                      ? 'enable shard allocation'
-                      : 'disable shard allocation'
-                  "
-                  @click="toggleAllocation(cluster.disableAllocation === 'true')"
-                >
-                  {{ cluster.disableAllocation === 'true' ? '🔒' : '🔓' }}
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-sm btn-outline-secondary"
-                  :title="indexFilter.asc ? 'sort descending' : 'sort ascending'"
-                  @click="indexFilter.asc = !indexFilter.asc"
-                >
-                  {{ indexFilter.asc ? 'A→Z' : 'Z→A' }}
-                </button>
-                <details class="dropdown">
-                  <summary class="btn btn-sm btn-outline-secondary">bulk</summary>
-                  <ul
-                    class="list-unstyled border rounded bg-body position-absolute p-2 shadow-sm"
-                    style="z-index: 5"
+    <NCard :content-style="{padding: 0}">
+      <div class="k-scroll-x">
+        <table class="k-matrix">
+          <thead>
+            <tr>
+              <th scope="col">
+                <div class="k-row">
+                  <NButton
+                    size="tiny"
+                    :title="
+                      cluster.disableAllocation === 'true'
+                        ? 'enable shard allocation'
+                        : 'disable shard allocation'
+                    "
+                    @click="toggleAllocation(cluster.disableAllocation === 'true')"
                   >
-                    <li>
-                      <button
-                        class="btn btn-link btn-sm p-0"
-                        @click="promptClose(selected.join(','), true)"
-                      >
-                        close selected
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        class="btn btn-link btn-sm p-0"
-                        @click="promptOpen(selected.join(','), true)"
-                      >
-                        open selected
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        class="btn btn-link btn-sm p-0"
-                        @click="promptOptimize(selected.join(','), true)"
-                      >
-                        optimize selected
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        class="btn btn-link btn-sm p-0"
-                        @click="promptRefresh(selected.join(','), true)"
-                      >
-                        refresh selected
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        class="btn btn-link btn-sm p-0"
-                        @click="promptClearCache(selected.join(','), true)"
-                      >
-                        clear selected caches
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        class="btn btn-link btn-sm p-0 text-danger"
-                        @click="promptDelete(selected.join(','), true)"
-                      >
-                        delete selected
-                      </button>
-                    </li>
-                  </ul>
-                </details>
-              </div>
-            </th>
-            <th v-for="(index, i) in currentPage.elements" :key="i" scope="col">
-              <template v-if="index">
-                <details class="dropdown">
-                  <summary :class="{'text-body-secondary': index.closed}">{{ index.name }}</summary>
-                  <ul
-                    class="list-unstyled border rounded bg-body position-absolute p-2 shadow-sm"
-                    style="z-index: 5"
+                    {{ cluster.disableAllocation === 'true' ? '🔒' : '🔓' }}
+                  </NButton>
+                  <NButton
+                    size="tiny"
+                    :title="indexFilter.asc ? 'sort descending' : 'sort ascending'"
+                    @click="indexFilter.asc = !indexFilter.asc"
                   >
-                    <li>
-                      <button
-                        class="btn btn-link btn-sm p-0"
-                        @click="showIndexInfo(index.name, 'settings')"
-                      >
-                        show settings
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        class="btn btn-link btn-sm p-0"
-                        @click="showIndexInfo(index.name, 'mappings')"
-                      >
-                        show mappings
-                      </button>
-                    </li>
-                    <li v-if="index.open">
-                      <button class="btn btn-link btn-sm p-0" @click="promptClose(index.name)">
-                        close index
-                      </button>
-                    </li>
-                    <li v-else>
-                      <button class="btn btn-link btn-sm p-0" @click="promptOpen(index.name)">
-                        open index
-                      </button>
-                    </li>
-                    <li>
-                      <button class="btn btn-link btn-sm p-0" @click="promptOptimize(index.name)">
-                        optimize index
-                      </button>
-                    </li>
-                    <li>
-                      <button class="btn btn-link btn-sm p-0" @click="promptRefresh(index.name)">
-                        refresh index
-                      </button>
-                    </li>
-                    <li>
-                      <button class="btn btn-link btn-sm p-0" @click="promptClearCache(index.name)">
-                        clear cache
-                      </button>
-                    </li>
-                    <li>
-                      <RouterLink
-                        class="btn btn-link btn-sm p-0"
-                        :to="{name: 'indexSettings', query: {index: index.name}}"
-                      >
-                        edit settings
-                      </RouterLink>
-                    </li>
-                    <li>
-                      <button
-                        class="btn btn-link btn-sm p-0 text-danger"
-                        @click="promptDelete(index.name)"
-                      >
-                        delete index
-                      </button>
-                    </li>
-                  </ul>
-                </details>
-                <div class="small text-body-secondary">
-                  shards: {{ index.num_of_shards }} * {{ index.num_of_replicas + 1 }} |
-                  docs: {{ index.num_docs }} | size: {{ bytes(index.size_in_bytes) }}
+                    {{ indexFilter.asc ? 'A→Z' : 'Z→A' }}
+                  </NButton>
+                  <details class="k-menu k-menu-button">
+                    <summary>bulk</summary>
+                    <ul class="k-menu-items">
+                      <li>
+                        <NButton text size="tiny" @click="promptClose(selected.join(','), true)">
+                          close selected
+                        </NButton>
+                      </li>
+                      <li>
+                        <NButton text size="tiny" @click="promptOpen(selected.join(','), true)">
+                          open selected
+                        </NButton>
+                      </li>
+                      <li>
+                        <NButton text size="tiny" @click="promptOptimize(selected.join(','), true)">
+                          optimize selected
+                        </NButton>
+                      </li>
+                      <li>
+                        <NButton text size="tiny" @click="promptRefresh(selected.join(','), true)">
+                          refresh selected
+                        </NButton>
+                      </li>
+                      <li>
+                        <NButton
+                          text
+                          size="tiny"
+                          @click="promptClearCache(selected.join(','), true)"
+                        >
+                          clear selected caches
+                        </NButton>
+                      </li>
+                      <li>
+                        <NButton
+                          text
+                          size="tiny"
+                          type="error"
+                          @click="promptDelete(selected.join(','), true)"
+                        >
+                          delete selected
+                        </NButton>
+                      </li>
+                    </ul>
+                  </details>
                 </div>
-                <div v-if="index.aliases.length" class="small" :title="index.aliases.join('\n')">
-                  🏷 {{ index.aliases[0] }}
-                  <span v-if="index.aliases.length > 1">(+{{ index.aliases.length - 1 }})</span>
+              </th>
+              <th v-for="(index, i) in currentPage.elements" :key="i" scope="col">
+                <template v-if="index">
+                  <details class="k-menu k-index-name" :class="{'k-index-closed': index.closed}">
+                    <summary>{{ index.name }}</summary>
+                    <ul class="k-menu-items">
+                      <li>
+                        <NButton text size="tiny" @click="showIndexInfo(index.name, 'settings')">
+                          show settings
+                        </NButton>
+                      </li>
+                      <li>
+                        <NButton text size="tiny" @click="showIndexInfo(index.name, 'mappings')">
+                          show mappings
+                        </NButton>
+                      </li>
+                      <li v-if="index.open">
+                        <NButton text size="tiny" @click="promptClose(index.name)">
+                          close index
+                        </NButton>
+                      </li>
+                      <li v-else>
+                        <NButton text size="tiny" @click="promptOpen(index.name)">
+                          open index
+                        </NButton>
+                      </li>
+                      <li>
+                        <NButton text size="tiny" @click="promptOptimize(index.name)">
+                          optimize index
+                        </NButton>
+                      </li>
+                      <li>
+                        <NButton text size="tiny" @click="promptRefresh(index.name)">
+                          refresh index
+                        </NButton>
+                      </li>
+                      <li>
+                        <NButton text size="tiny" @click="promptClearCache(index.name)">
+                          clear cache
+                        </NButton>
+                      </li>
+                      <li>
+                        <RouterLink
+                          class="k-menu-link"
+                          :to="{name: 'indexSettings', query: {index: index.name}}"
+                        >
+                          edit settings
+                        </RouterLink>
+                      </li>
+                      <li>
+                        <NButton text size="tiny" type="error" @click="promptDelete(index.name)">
+                          delete index
+                        </NButton>
+                      </li>
+                    </ul>
+                  </details>
+                  <div class="k-small k-muted" style="margin-top: 4px; font-weight: 400">
+                    {{ index.num_of_shards }} × {{ index.num_of_replicas + 1 }} ·
+                    {{ index.num_docs }} docs · {{ bytes(index.size_in_bytes) }}
+                  </div>
+                  <div
+                    v-if="index.aliases.length"
+                    class="k-small"
+                    style="font-weight: 400"
+                    :title="index.aliases.join('\n')"
+                  >
+                    🏷 {{ index.aliases[0] }}
+                    <span v-if="index.aliases.length > 1">(+{{ index.aliases.length - 1 }})</span>
+                  </div>
+                </template>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-if="moving">
+              <th scope="row">
+                <div v-if="cluster.unassigned_shards" style="color: var(--k-error)">
+                  ⚠ {{ cluster.unassigned_shards }} unassigned shards
                 </div>
-              </template>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-if="moving">
-            <td>
-              <div v-if="cluster.unassigned_shards">
-                ⚠ {{ cluster.unassigned_shards }} unassigned shards
-              </div>
-              <div v-if="cluster.relocating_shards">
-                ↻ {{ cluster.relocating_shards }} relocating shards
-              </div>
-              <div v-if="cluster.initializing_shards">
-                ◌ {{ cluster.initializing_shards }} initializing shards
-              </div>
-              <button
-                type="button"
-                class="btn btn-link btn-sm p-0"
-                @click="indexFilter.healthy = !indexFilter.healthy"
-              >
-                <small><em>
+                <div v-if="cluster.relocating_shards" style="color: var(--k-info)">
+                  ↻ {{ cluster.relocating_shards }} relocating shards
+                </div>
+                <div v-if="cluster.initializing_shards" style="color: var(--k-warning)">
+                  ◌ {{ cluster.initializing_shards }} initializing shards
+                </div>
+                <NButton
+                  text size="tiny" type="primary"
+                  @click="indexFilter.healthy = !indexFilter.healthy"
+                >
                   {{ indexFilter.healthy ? 'show only unhealthy indices' : 'show all indices' }}
-                </em></small>
-              </button>
-            </td>
-            <td v-for="(index, i) in currentPage.elements" :key="i">
-              <span
-                v-for="shard in index ? cluster.getUnassignedShards(index.name) : []"
-                :key="shard.id"
-                class="shard shard-unallocated"
-              >{{ shard.shard }}</span>
-            </td>
-          </tr>
-          <tr v-for="node in nodes" :key="node.id">
-            <td>
-              <div>
-                <span v-if="node.master">{{ node.current_master ? '★' : '☆' }}</span>
-                <span v-if="node.data">🗄</span>
-                <span v-if="node.client">🔍</span>
-                <strong class="ms-1">{{ node.name }}</strong>
-              </div>
-              <div class="small text-body-secondary">{{ node.transportAddress }}</div>
-            </td>
-            <td v-for="(index, i) in currentPage.elements" :key="i">
-              <button
-                v-if="canReceiveShard(index, node.id)"
-                type="button"
-                class="shard shard-relocation-target btn btn-sm btn-outline-success p-0 px-1"
-                @click="promptRelocate(node.id)"
-              >
-                ✓
-              </button>
-              <details
-                v-for="shard in index ? cluster.getShards(node.id, index.name) : []"
-                :key="shard.id"
-                class="d-inline-block dropdown"
-              >
-                <summary :class="shardClass(shard)">{{ shard.shard }}</summary>
-                <ul
-                  class="list-unstyled border rounded bg-body position-absolute p-2 shadow-sm"
-                  style="z-index: 5"
-                >
-                  <li>
-                    <button class="btn btn-link btn-sm p-0" @click="showShardStats(shard)">
-                      show shard stats
-                    </button>
-                  </li>
-                  <li v-if="relocating?.id !== shard.id">
-                    <button class="btn btn-link btn-sm p-0" @click="relocating = shard">
-                      select for relocation
-                    </button>
-                  </li>
-                  <li v-else>
-                    <button class="btn btn-link btn-sm p-0" @click="relocating = null">
-                      unselect for relocation
-                    </button>
-                  </li>
-                </ul>
-              </details>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+                </NButton>
+              </th>
+              <td v-for="(index, i) in currentPage.elements" :key="i">
+                <div class="k-shards">
+                  <span
+                    v-for="shard in index ? cluster.getUnassignedShards(index.name) : []"
+                    :key="shard.id"
+                    class="k-shard k-shard-unassigned"
+                  >{{ shard.shard }}</span>
+                </div>
+              </td>
+            </tr>
+            <tr v-for="node in nodes" :key="node.id">
+              <th scope="row">
+                <div class="k-row">
+                  <span v-if="node.master">{{ node.current_master ? '★' : '☆' }}</span>
+                  <span v-if="node.data">🗄</span>
+                  <span v-if="node.client">🔍</span>
+                  <span class="k-strong">{{ node.name }}</span>
+                </div>
+                <div class="k-small k-muted k-mono">{{ node.transportAddress }}</div>
+              </th>
+              <td v-for="(index, i) in currentPage.elements" :key="i">
+                <div class="k-shards">
+                  <button
+                    v-if="canReceiveShard(index, node.id)"
+                    type="button"
+                    class="k-shard k-shard-target"
+                    title="move the selected shard here"
+                    @click="promptRelocate(node.id)"
+                  >
+                    ✓
+                  </button>
+                  <details
+                    v-for="shard in index ? cluster.getShards(node.id, index.name) : []"
+                    :key="shard.id"
+                    class="k-menu"
+                  >
+                    <summary :class="shardClass(shard)">{{ shard.shard }}</summary>
+                    <ul class="k-menu-items">
+                      <li>
+                        <NButton text size="tiny" @click="showShardStats(shard)">
+                          show shard stats
+                        </NButton>
+                      </li>
+                      <li v-if="relocating?.id !== shard.id">
+                        <NButton text size="tiny" @click="relocating = shard">
+                          select for relocation
+                        </NButton>
+                      </li>
+                      <li v-else>
+                        <NButton text size="tiny" @click="relocating = null">
+                          unselect for relocation
+                        </NButton>
+                      </li>
+                    </ul>
+                  </details>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </NCard>
+  </template>
 </template>
 
 <style scoped>
-.shard {
-  display: inline-block;
-  min-width: 1.5rem;
-  margin: 1px;
-  padding: 0 0.25rem;
-  text-align: center;
-  border-radius: 3px;
-  background: var(--bs-secondary-bg);
-  cursor: pointer;
+.k-menu-link {
+  display: block;
+  padding: 2px 0;
+  font-size: 12px;
+  color: var(--k-primary);
+  text-decoration: none;
 }
-.shard-primary {
-  font-weight: 700;
-  border: 1px solid var(--bs-secondary-color);
-}
-.shard-unallocated {
-  background: var(--bs-danger-bg-subtle);
-}
-.shard-initializing,
-.shard-relocating {
-  background: var(--bs-warning-bg-subtle);
-}
-.shard-relocation-source {
-  outline: 2px solid var(--bs-primary);
-}
-details.dropdown > summary {
-  list-style: none;
-  cursor: pointer;
+
+.k-menu-link:hover {
+  text-decoration: underline;
 }
 </style>
