@@ -476,3 +476,27 @@ export function restoreSnapshot(
     {method: 'POST', body},
   );
 }
+
+/** Methods the Fetch API refuses to give a body to. */
+export const BODYLESS_METHODS = ['GET', 'HEAD'];
+
+/**
+ * Issues an arbitrary request from the REST client.
+ *
+ * GET and HEAD go out without a body whatever is in the editor: fetch()
+ * rejects one outright ("Request with GET/HEAD method cannot have body"),
+ * where the XHR the AngularJS client used would send it. The screen says so
+ * rather than letting the request fail.
+ */
+export function restRequest(
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'HEAD',
+  path: string,
+  body: string,
+): Promise<unknown> {
+  const normalized = path.startsWith('/') ? path : `/${path}`;
+  const options: {method: typeof method; body?: string} = {method};
+  if (!BODYLESS_METHODS.includes(method) && body.trim() !== '') {
+    options.body = body;
+  }
+  return request(encodeURI(normalized), options);
+}
