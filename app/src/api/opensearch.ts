@@ -2,6 +2,11 @@ import {RequestError, request, requestAll} from './client';
 import {CatResult} from '@/model/cat-result';
 import {HotThreads, type NodeHotThreads} from '@/model/hot-threads';
 import {NodeStats} from '@/model/cluster-node';
+import {
+  IndexMetadata,
+  Token,
+  type IndexMetadataResponse,
+} from '@/model/index-metadata';
 import {BrokenCluster} from '@/model/broken-cluster';
 import {
   Cluster,
@@ -192,4 +197,49 @@ export async function fetchNodeStats(
     {signal},
   );
   return new NodeStats(nodeId, response.nodes[nodeId]);
+}
+
+/** Mappings and settings for one index, for the analysis screen. */
+export async function fetchIndexMetadata(
+  index: string,
+  signal?: AbortSignal,
+): Promise<IndexMetadata> {
+  const response = await request<{
+    metadata: {indices: Record<string, IndexMetadataResponse>};
+  }>(`/_cluster/state/metadata/${encodeURIComponent(index)}?human`, {signal});
+  return new IndexMetadata(index, response.metadata.indices[index]);
+}
+
+async function analyze(
+  index: string,
+  body: Record<string, string>,
+  signal?: AbortSignal,
+): Promise<Token[]> {
+  const response = await request<{tokens: Token[]}>(
+    `/${encodeURIComponent(index)}/_analyze`,
+    {method: 'POST', body, signal},
+  );
+  return response.tokens.map(
+    (t) => new Token(t.token, t.start_offset, t.end_offset, t.position),
+  );
+}
+
+/** Tokenises text with the analyzer configured for one field. */
+export function analyzeByField(
+  index: string,
+  field: string,
+  text: string,
+  signal?: AbortSignal,
+): Promise<Token[]> {
+  return analyze(index, {text, field}, signal);
+}
+
+/** Tokenises text with a named analyzer. */
+export function analyzeByAnalyzer(
+  index: string,
+  analyzer: string,
+  text: string,
+  signal?: AbortSignal,
+): Promise<Token[]> {
+  return analyze(index, {text, analyzer}, signal);
 }
