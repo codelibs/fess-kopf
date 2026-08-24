@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Start replacing the AngularJS front end with a Vue 3 application built by
+  Vite, under `app/`, shipped to `_site/app/`. Both applications ship while
+  screens are ported one at a time; `_site/index.html` remains the entry
+  point Fess serves until the port is complete. This change adds only the
+  foundation: routing, the alert stack, the cluster poll, the settings
+  loader and the HTTP client
+
 ### Fixed
 - Recognize the `cluster_manager` node role, so the current-master marker,
   the node-type classification and the master filter work against

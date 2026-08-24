@@ -53,6 +53,11 @@ jobs:
     - name: Run linter
       run: npm run lint
 
+    # vue-tsc, not tsc: type errors inside .vue single-file components are
+    # invisible to the bundler, which strips types without checking them.
+    - name: Type-check the Vue app
+      run: npm run typecheck
+
   build:
     name: Build
     runs-on: ubuntu-latest
