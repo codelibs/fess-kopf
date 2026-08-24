@@ -12,7 +12,8 @@ export interface ClusterState {
   blocks: {indices?: Record<string, Record<string, unknown>>};
 }
 
-export interface IndexAliases {
+/** The per-index shape /_aliases returns; not the editable model. */
+export interface IndexAliasesResponse {
   aliases?: Record<string, unknown>;
 }
 
@@ -37,7 +38,7 @@ export class Index {
     indexName: string,
     clusterState: ClusterState | undefined,
     indexStats: unknown,
-    aliases: IndexAliases | undefined,
+    aliases: IndexAliasesResponse | undefined,
   ) {
     this.name = indexName;
     this.aliases = isDefined(aliases?.aliases) ? Object.keys(aliases!.aliases!) : [];

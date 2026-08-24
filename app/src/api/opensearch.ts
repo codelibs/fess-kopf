@@ -3,6 +3,7 @@ import {CatResult} from '@/model/cat-result';
 import {HotThreads, type NodeHotThreads} from '@/model/hot-threads';
 import {NodeStats} from '@/model/cluster-node';
 import {ShardStats} from '@/model/shard';
+import {Alias, IndexAliases} from '@/model/alias';
 import {
   IndexMetadata,
   Token,
@@ -17,7 +18,7 @@ import {
   type NodesResponse,
   type NodesStatsResponse,
 } from '@/model/cluster';
-import type {ClusterState, IndexAliases} from '@/model/opensearch-index';
+import type {ClusterState, IndexAliasesResponse} from '@/model/opensearch-index';
 
 /**
  * The eight calls one cluster poll makes. Kept as named constants so the
@@ -74,7 +75,7 @@ export async function fetchCluster(signal?: AbortSignal): Promise<Cluster> {
     indexStats: request<IndicesStats>(CLUSTER_PATHS.indexStats, {signal}),
     nodesStats: request<NodesStatsResponse>(CLUSTER_PATHS.nodesStats, {signal}),
     settings: request<ClusterSettingsResponse>(CLUSTER_PATHS.settings, {signal}),
-    aliases: request<Record<string, IndexAliases>>(CLUSTER_PATHS.aliases, {signal}),
+    aliases: request<Record<string, IndexAliasesResponse>>(CLUSTER_PATHS.aliases, {signal}),
     health: request<ClusterHealth>(CLUSTER_PATHS.health, {signal}),
     nodes: request<NodesResponse>(CLUSTER_PATHS.nodes, {signal}),
     main: request<{name: string; version?: {number?: string}}>(CLUSTER_PATHS.main, {signal}),
@@ -356,4 +357,44 @@ export function updateIndexSettings(
   settings: Record<string, string>,
 ): Promise<unknown> {
   return request(`/${encodeURIComponent(index)}/_settings`, {method: 'PUT', body: settings});
+}
+
+interface AliasesResponse {
+  [index: string]: {
+    aliases?: Record<
+      string,
+      {filter?: Record<string, unknown>; index_routing?: string; search_routing?: string}
+    >;
+  };
+}
+
+/** Every index that has at least one alias. */
+export async function fetchAliases(signal?: AbortSignal): Promise<IndexAliases[]> {
+  const response = await request<AliasesResponse>('/_aliases', {signal});
+  return Object.keys(response)
+    .filter((index) => Object.keys(response[index].aliases ?? {}).length > 0)
+    .map((index) => {
+      const aliases = Object.entries(response[index].aliases!).map(
+        ([name, info]) =>
+          new Alias(name, index, info.filter, info.index_routing, info.search_routing),
+      );
+      return new IndexAliases(index, aliases);
+    });
+}
+
+/**
+ * Applies alias changes in one atomic call.
+ *
+ * A removal carries no filter: OpenSearch matches the binding by index and
+ * alias name, and sending a filter it does not have makes the action fail.
+ */
+export function updateAliases(add: Alias[], remove: Alias[]): Promise<unknown> {
+  const actions: Record<string, unknown>[] = [];
+  add.forEach((alias) => actions.push({add: alias.info()}));
+  remove.forEach((alias) => {
+    const info = alias.info();
+    delete info.filter;
+    actions.push({remove: info});
+  });
+  return request('/_aliases', {method: 'POST', body: {actions}});
 }
