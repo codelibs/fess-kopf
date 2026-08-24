@@ -4,6 +4,7 @@ import NodesView from '@/views/NodesView.vue';
 import {resetSettingsForTest} from '@/api/settings';
 import {refresh, resetClusterForTest} from '@/composables/useCluster';
 import {useAlerts} from '@/composables/useAlerts';
+import {setCheckbox} from '../support/naive';
 import {okRoutes, stubFetch} from '../api/routes';
 import type {NodeInfo} from '@/model/cluster-node';
 
@@ -73,8 +74,8 @@ describe('NodesView', () => {
 
   it('filters by node type', async () => {
     const wrapper = await mountWithNodes();
-    await wrapper.find('#f-data').setValue(false);
-    await wrapper.find('#f-client').setValue(false);
+    await setCheckbox(wrapper, 'f-data', false);
+    await setCheckbox(wrapper, 'f-client', false);
     // Only the cluster_manager node is left.
     expect(wrapper.findAll('tbody tr')).toHaveLength(1);
     expect(wrapper.find('tbody tr').text()).toContain('alpha');

@@ -4,6 +4,7 @@ import HotThreadsView from '@/views/HotThreadsView.vue';
 import {resetSettingsForTest} from '@/api/settings';
 import {refresh, resetClusterForTest} from '@/composables/useCluster';
 import {useAlerts} from '@/composables/useAlerts';
+import {chooseInSelect, isChecked, optionLabels, selectById, setCheckbox} from '../support/naive';
 import {stubFetch} from '../api/routes';
 
 const alerts = useAlerts();
@@ -38,19 +39,18 @@ afterEach(() => vi.unstubAllGlobals());
 describe('HotThreadsView', () => {
   it('starts on the shipped defaults', () => {
     const wrapper = mount(HotThreadsView);
-    expect((wrapper.find('#ht-threads').element as HTMLSelectElement).value).toBe('3');
-    expect((wrapper.find('#ht-type').element as HTMLSelectElement).value).toBe('cpu');
+    expect(selectById(wrapper, 'ht-threads').props('value')).toBe(3);
+    expect(selectById(wrapper, 'ht-type').props('value')).toBe('cpu');
     expect((wrapper.find('#ht-interval').element as HTMLInputElement).value).toBe('500ms');
-    expect((wrapper.find('#ht-idle').element as HTMLInputElement).checked).toBe(true);
-    expect((wrapper.find('#ht-node').element as HTMLSelectElement).value).toBe('');
+    expect(isChecked(wrapper, 'ht-idle')).toBe(true);
+    expect(selectById(wrapper, 'ht-node').props('value')).toBe('');
   });
 
   it('offers the cluster nodes once a poll has run', async () => {
     stubFetch();
     await refresh();
     const wrapper = mount(HotThreadsView);
-    const options = wrapper.findAll('#ht-node option').map((o) => o.text());
-    expect(options).toEqual(['all nodes', 'search01']);
+    expect(optionLabels(wrapper, 'ht-node')).toEqual(['all nodes', 'search01']);
   });
 
   it('samples every node when none is chosen', async () => {
@@ -71,7 +71,7 @@ describe('HotThreadsView', () => {
     await refresh();
     const fetcher = stubHotThreads();
     const wrapper = mount(HotThreadsView);
-    await wrapper.find('#ht-node').setValue('n1');
+    await chooseInSelect(wrapper, 'ht-node', 'n1');
     await wrapper.find('form').trigger('submit');
     await vi.waitFor(() => expect(fetcher).toHaveBeenCalled());
     expect(fetcher.mock.calls[0][0]).toContain('/_nodes/n1/hot_threads?');
@@ -80,10 +80,10 @@ describe('HotThreadsView', () => {
   it('carries the chosen options into the request', async () => {
     const fetcher = stubHotThreads();
     const wrapper = mount(HotThreadsView);
-    await wrapper.find('#ht-type').setValue('block');
-    await wrapper.find('#ht-threads').setValue('7');
+    await chooseInSelect(wrapper, 'ht-type', 'block');
+    await chooseInSelect(wrapper, 'ht-threads', 7);
     await wrapper.find('#ht-interval').setValue('1s');
-    await wrapper.find('#ht-idle').setValue(false);
+    await setCheckbox(wrapper, 'ht-idle', false);
     await wrapper.find('form').trigger('submit');
     await vi.waitFor(() => expect(fetcher).toHaveBeenCalled());
     const url = fetcher.mock.calls[0][0] as string;

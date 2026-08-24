@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {onMounted, ref} from 'vue';
 import {RouterLink, useRoute} from 'vue-router';
+import {NButton, NCard, NInput, NTag} from 'naive-ui';
 import {RequestError} from '@/api/client';
 import {fetchIndexMetadata, updateIndexSettings} from '@/api/opensearch';
 import {useAlerts} from '@/composables/useAlerts';
@@ -52,53 +53,63 @@ async function save(): Promise<void> {
 </script>
 
 <template>
-  <div class="card">
-    <div class="card-header">settings for {{ index }}</div>
-    <div v-if="settings" class="card-body">
-      <div class="row">
-        <div class="col-sm-3">
-          <ul class="nav nav-pills flex-column">
-            <li v-for="group in SETTING_GROUPS" :key="group.label" class="nav-item">
-              <button
-                type="button"
-                class="nav-link w-100 text-start"
-                :class="{active: activeGroup === group.label}"
-                @click="activeGroup = group.label"
-              >
-                {{ group.label }}
-              </button>
-            </li>
-          </ul>
-        </div>
-        <div class="col-sm-9">
-          <div v-for="group in SETTING_GROUPS" :key="group.label">
-            <template v-if="activeGroup === group.label">
-              <div v-for="setting in group.settings" :key="setting" class="mb-2">
-                <label class="form-label small mb-0" :for="setting">
-                  {{ setting }}
-                  <span
-                    v-if="EditableIndexSettings.isStatic(setting)"
-                    class="badge text-bg-secondary"
-                    title="Set when the index is created; shown but never sent back"
-                  >read-only</span>
-                </label>
-                <input
-                  :id="setting"
-                  v-model="settings.values[setting]"
-                  class="form-control form-control-sm"
-                  :readonly="EditableIndexSettings.isStatic(setting)"
-                >
-              </div>
-            </template>
-          </div>
-        </div>
-      </div>
-      <div class="d-flex justify-content-end gap-2 mt-3">
-        <RouterLink class="btn btn-sm btn-secondary" :to="{name: 'cluster'}">back</RouterLink>
-        <button type="button" class="btn btn-sm btn-primary" :disabled="saving" @click="save">
-          {{ saving ? 'saving…' : 'save' }}
-        </button>
-      </div>
+  <div class="k-page-head">
+    <div>
+      <h1 class="k-page-title">Index settings</h1>
+      <p class="k-page-sub">settings for {{ index }}</p>
+    </div>
+    <div class="k-row">
+      <RouterLink :to="{name: 'cluster'}" style="text-decoration: none">
+        <NButton size="small">back</NButton>
+      </RouterLink>
+      <NButton size="small" type="primary" :loading="saving" :disabled="saving" @click="save">
+        {{ saving ? 'saving…' : 'save' }}
+      </NButton>
     </div>
   </div>
+
+  <NCard v-if="settings">
+    <div class="k-split">
+      <nav class="k-stack-tight" aria-label="Setting groups">
+        <NButton
+          v-for="group in SETTING_GROUPS"
+          :key="group.label"
+          :type="activeGroup === group.label ? 'primary' : 'default'"
+          :secondary="activeGroup === group.label"
+          :quaternary="activeGroup !== group.label"
+          style="justify-content: flex-start"
+          block
+          @click="activeGroup = group.label"
+        >
+          {{ group.label }}
+        </NButton>
+      </nav>
+
+      <div>
+        <template v-for="group in SETTING_GROUPS" :key="group.label">
+          <div v-if="activeGroup === group.label" class="k-stack">
+            <div v-for="setting in group.settings" :key="setting" class="k-field">
+              <label class="k-label" :for="setting">
+                {{ setting }}
+                <NTag
+                  v-if="EditableIndexSettings.isStatic(setting)"
+                  size="tiny"
+                  :bordered="false"
+                  title="Set when the index is created; shown but never sent back"
+                >
+                  read-only
+                </NTag>
+              </label>
+              <NInput
+                v-model:value="settings.values[setting]"
+                size="small"
+                :readonly="EditableIndexSettings.isStatic(setting)"
+                :input-props="{id: setting}"
+              />
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+  </NCard>
 </template>

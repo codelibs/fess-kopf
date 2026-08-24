@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import {watch, useTemplateRef} from 'vue';
+import {NButton} from 'naive-ui';
 import {useDialogs} from '@/composables/useDialogs';
 
+// Native <dialog> for the same reason as ConfirmDialog: no teleport.
 const {infoRequest, closeInfo} = useDialogs();
 const dialog = useTemplateRef<HTMLDialogElement>('dialog');
 
@@ -15,20 +17,15 @@ watch(infoRequest, (request) => {
 </script>
 
 <template>
-  <dialog
-    ref="dialog"
-    class="p-0 border-0 rounded"
-    style="max-width: 90vw; width: 60rem"
-    @cancel.prevent="closeInfo()"
-  >
-    <div v-if="infoRequest" class="card">
-      <div class="card-header d-flex justify-content-between align-items-center">
-        <span>{{ infoRequest.title }}</span>
-        <button type="button" class="btn-close" aria-label="Close" @click="closeInfo()" />
+  <dialog ref="dialog" class="k-dialog" @cancel.prevent="closeInfo()">
+    <div v-if="infoRequest" class="k-dialog-body" style="width: 58rem">
+      <div class="k-row">
+        <h2 class="k-dialog-title k-grow">{{ infoRequest.title }}</h2>
+        <NButton size="tiny" quaternary aria-label="Close" @click="closeInfo()">✕</NButton>
       </div>
-      <div class="card-body">
-        <pre class="small mb-0">{{ JSON.stringify(infoRequest.content, undefined, 2) }}</pre>
-      </div>
+      <pre class="k-pre" style="max-height: 60vh">{{
+        JSON.stringify(infoRequest.content, undefined, 2)
+      }}</pre>
     </div>
   </dialog>
 </template>

@@ -1,14 +1,16 @@
 <script setup lang="ts">
+import {NAlert, NButton} from 'naive-ui';
 import {useAlerts} from '@/composables/useAlerts';
 
 const {alerts, remove, toggle} = useAlerts();
 
-const CLASSES: Record<string, string> = {
-  error: 'alert-danger',
-  warn: 'alert-warning',
-  info: 'alert-info',
-  success: 'alert-success',
-};
+/** Alert levels are ours; these are Naive UI's names for the same four. */
+const TYPES = {
+  error: 'error',
+  warn: 'warning',
+  info: 'info',
+  success: 'success',
+} as const;
 
 function bodyOf(response: unknown): string {
   return typeof response === 'string' ? response : JSON.stringify(response, undefined, 2);
@@ -16,30 +18,32 @@ function bodyOf(response: unknown): string {
 </script>
 
 <template>
-  <div v-if="alerts.length" class="container-fluid mt-2" aria-live="polite">
-    <div
+  <div v-if="alerts.length" class="k-stack-tight" style="padding: 12px 16px 0" aria-live="polite">
+    <NAlert
       v-for="alert in alerts"
       :key="alert.id"
-      class="alert alert-dismissible"
-      :class="CLASSES[alert.level]"
-      role="alert"
+      :type="TYPES[alert.level]"
+      closable
+      @close="remove(alert.id)"
     >
-      <div class="d-flex align-items-start gap-2">
-        <span class="text-body-secondary small">{{ alert.timestamp }}</span>
-        <span class="flex-grow-1">{{ alert.message }}</span>
-        <button
+      <div class="k-row k-row-top k-wrap">
+        <span class="k-small k-muted k-mono">{{ alert.timestamp }}</span>
+        <span class="k-grow">{{ alert.message }}</span>
+        <NButton
           v-if="alert.response !== undefined"
-          type="button"
-          class="btn btn-sm btn-link p-0"
+          text
+          size="tiny"
+          type="primary"
           @click="toggle(alert.id)"
         >
           {{ alert.expanded ? 'hide details' : 'show details' }}
-        </button>
+        </NButton>
       </div>
-      <pre v-if="alert.expanded && alert.response !== undefined" class="mt-2 mb-0 small">{{
-        bodyOf(alert.response)
-      }}</pre>
-      <button type="button" class="btn-close" aria-label="Close" @click="remove(alert.id)" />
-    </div>
+      <pre
+        v-if="alert.expanded && alert.response !== undefined"
+        class="k-pre"
+        style="margin-top: 8px"
+      >{{ bodyOf(alert.response) }}</pre>
+    </NAlert>
   </div>
 </template>

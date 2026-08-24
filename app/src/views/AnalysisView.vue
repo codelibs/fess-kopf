@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {computed, ref, watch} from 'vue';
+import {NButton, NCard, NInput, NSelect, NTag} from 'naive-ui';
 import {RequestError} from '@/api/client';
 import {analyzeByAnalyzer, analyzeByField, fetchIndexMetadata} from '@/api/opensearch';
 import {useAlerts} from '@/composables/useAlerts';
@@ -29,6 +30,16 @@ const analyzerTokens = ref<Token[] | null>(null);
 const fields = computed(() =>
   fieldType.value === '' ? [] : (fieldMetadata.value?.getFields(fieldType.value) ?? []),
 );
+
+/** Naive UI takes {label, value} pairs; these lists are all plain strings. */
+function asOptions(values: readonly string[]): {label: string; value: string}[] {
+  return values.map((value) => ({label: value, value}));
+}
+
+const indexOptions = computed(() => asOptions(indices.value.map((index) => index.name)));
+const typeOptions = computed(() => asOptions(fieldMetadata.value?.getTypes() ?? []));
+const fieldOptions = computed(() => asOptions(fields.value));
+const analyzerOptions = computed(() => asOptions(analyzerMetadata.value?.getAnalyzers() ?? []));
 
 watch(fieldIndex, async (index) => {
   fieldType.value = '';
@@ -95,110 +106,112 @@ async function runAnalyzerAnalysis(): Promise<void> {
 </script>
 
 <template>
-  <div class="row g-3">
-    <div class="col-lg-6">
-      <div class="card h-100">
-        <div class="card-header">analysis by field type</div>
-        <div class="card-body">
-          <form @submit.prevent="runFieldAnalysis">
-            <div class="mb-2">
-              <label class="form-label small mb-0" for="an-field-index">index</label>
-              <select id="an-field-index" v-model="fieldIndex" class="form-select form-select-sm">
-                <option value="">select index</option>
-                <option v-for="index in indices" :key="index.name" :value="index.name">
-                  {{ index.name }}
-                </option>
-              </select>
-            </div>
-            <div class="mb-2">
-              <label class="form-label small mb-0" for="an-field-type">type</label>
-              <select id="an-field-type" v-model="fieldType" class="form-select form-select-sm">
-                <option value="">select type</option>
-                <option v-for="type in fieldMetadata?.getTypes() ?? []" :key="type" :value="type">
-                  {{ type }}
-                </option>
-              </select>
-            </div>
-            <div class="mb-2">
-              <label class="form-label small mb-0" for="an-field-field">field</label>
-              <select id="an-field-field" v-model="fieldField" class="form-select form-select-sm">
-                <option value="">select field</option>
-                <option v-for="field in fields" :key="field" :value="field">{{ field }}</option>
-              </select>
-            </div>
-            <div class="mb-2">
-              <label class="form-label small mb-0" for="an-field-text">text</label>
-              <textarea
-                id="an-field-text"
-                v-model="fieldText"
-                class="form-control form-control-sm"
-                rows="2"
-              />
-            </div>
-            <button type="submit" class="btn btn-sm btn-primary">analyze</button>
-          </form>
-          <div v-if="fieldTokens" class="mt-3 d-flex flex-wrap gap-1">
-            <span v-for="(token, i) in fieldTokens" :key="i" class="badge text-bg-secondary">
-              {{ token.token }}
-            </span>
-            <span v-if="fieldTokens.length === 0" class="text-body-secondary small">no tokens</span>
-          </div>
-        </div>
-      </div>
+  <div class="k-page-head">
+    <div>
+      <h1 class="k-page-title">Analysis</h1>
+      <p class="k-page-sub">See how text is tokenised before it reaches the index.</p>
     </div>
+  </div>
 
-    <div class="col-lg-6">
-      <div class="card h-100">
-        <div class="card-header">analysis by analyzer</div>
-        <div class="card-body">
-          <form @submit.prevent="runAnalyzerAnalysis">
-            <div class="mb-2">
-              <label class="form-label small mb-0" for="an-an-index">index</label>
-              <select id="an-an-index" v-model="analyzerIndex" class="form-select form-select-sm">
-                <option value="">select index</option>
-                <option v-for="index in indices" :key="index.name" :value="index.name">
-                  {{ index.name }}
-                </option>
-              </select>
-            </div>
-            <div class="mb-2">
-              <label class="form-label small mb-0" for="an-an-analyzer">analyzer</label>
-              <select
-                id="an-an-analyzer"
-                v-model="analyzerName"
-                class="form-select form-select-sm"
-              >
-                <option value="">select analyzer</option>
-                <option
-                  v-for="name in analyzerMetadata?.getAnalyzers() ?? []"
-                  :key="name"
-                  :value="name"
-                >
-                  {{ name }}
-                </option>
-              </select>
-            </div>
-            <div class="mb-2">
-              <label class="form-label small mb-0" for="an-an-text">text</label>
-              <textarea
-                id="an-an-text"
-                v-model="analyzerText"
-                class="form-control form-control-sm"
-                rows="2"
-              />
-            </div>
-            <button type="submit" class="btn btn-sm btn-primary">analyze</button>
-          </form>
-          <div v-if="analyzerTokens" class="mt-3 d-flex flex-wrap gap-1">
-            <span v-for="(token, i) in analyzerTokens" :key="i" class="badge text-bg-secondary">
-              {{ token.token }}
-            </span>
-            <span v-if="analyzerTokens.length === 0" class="text-body-secondary small">
-              no tokens
-            </span>
-          </div>
+  <div class="k-split k-split-even">
+    <NCard title="analysis by field type">
+      <form class="k-stack" @submit.prevent="runFieldAnalysis">
+        <div>
+          <span id="an-field-index-label" class="k-label">index</span>
+          <NSelect
+            id="an-field-index"
+            v-model:value="fieldIndex"
+            aria-labelledby="an-field-index-label"
+            :options="indexOptions"
+            placeholder="select index"
+            filterable
+          />
         </div>
+        <div>
+          <span id="an-field-type-label" class="k-label">type</span>
+          <NSelect
+            id="an-field-type"
+            v-model:value="fieldType"
+            aria-labelledby="an-field-type-label"
+            :options="typeOptions"
+            placeholder="select type"
+          />
+        </div>
+        <div>
+          <span id="an-field-field-label" class="k-label">field</span>
+          <NSelect
+            id="an-field-field"
+            v-model:value="fieldField"
+            aria-labelledby="an-field-field-label"
+            :options="fieldOptions"
+            placeholder="select field"
+            filterable
+          />
+        </div>
+        <div>
+          <label class="k-label" for="an-field-text">text</label>
+          <NInput
+            v-model:value="fieldText"
+            type="textarea"
+            :rows="2"
+            :input-props="{id: 'an-field-text'}"
+          />
+        </div>
+        <div>
+          <NButton attr-type="submit" type="primary">analyze</NButton>
+        </div>
+      </form>
+      <div v-if="fieldTokens" class="k-row k-wrap" style="margin-top: 14px">
+        <NTag v-for="(token, i) in fieldTokens" :key="i" size="small" :bordered="false">
+          {{ token.token }}
+        </NTag>
+        <span v-if="fieldTokens.length === 0" class="k-muted k-small">no tokens</span>
       </div>
-    </div>
+    </NCard>
+
+    <NCard title="analysis by analyzer">
+      <form class="k-stack" @submit.prevent="runAnalyzerAnalysis">
+        <div>
+          <span id="an-an-index-label" class="k-label">index</span>
+          <NSelect
+            id="an-an-index"
+            v-model:value="analyzerIndex"
+            aria-labelledby="an-an-index-label"
+            :options="indexOptions"
+            placeholder="select index"
+            filterable
+          />
+        </div>
+        <div>
+          <span id="an-an-analyzer-label" class="k-label">analyzer</span>
+          <NSelect
+            id="an-an-analyzer"
+            v-model:value="analyzerName"
+            aria-labelledby="an-an-analyzer-label"
+            :options="analyzerOptions"
+            placeholder="select analyzer"
+            filterable
+          />
+        </div>
+        <div>
+          <label class="k-label" for="an-an-text">text</label>
+          <NInput
+            v-model:value="analyzerText"
+            type="textarea"
+            :rows="2"
+            :input-props="{id: 'an-an-text'}"
+          />
+        </div>
+        <div>
+          <NButton attr-type="submit" type="primary">analyze</NButton>
+        </div>
+      </form>
+      <div v-if="analyzerTokens" class="k-row k-wrap" style="margin-top: 14px">
+        <NTag v-for="(token, i) in analyzerTokens" :key="i" size="small" :bordered="false">
+          {{ token.token }}
+        </NTag>
+        <span v-if="analyzerTokens.length === 0" class="k-muted k-small">no tokens</span>
+      </div>
+    </NCard>
   </div>
 </template>

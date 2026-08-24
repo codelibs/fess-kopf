@@ -1,9 +1,9 @@
 import {createApp} from 'vue';
-import 'bootstrap/dist/css/bootstrap.min.css';
 import App from './App.vue';
 import {router} from './router';
 import {getSettings, loadSettings} from './api/settings';
 import {useAlerts} from './composables/useAlerts';
+import {applyPalette, DARK, LIGHT} from './theme';
 import './styles.css';
 
 /**
@@ -12,10 +12,11 @@ import './styles.css';
  */
 async function bootstrap(): Promise<void> {
   const {ok, error} = await loadSettings();
-  // Bootstrap 5.3 reads data-bs-theme; 'fess' and 'light' are both light.
+  // 'fess' and 'light' are both the light palette; only 'dark' is not.
   const theme = getSettings().theme;
+  const dark = theme === 'dark';
   document.documentElement.dataset.kopfTheme = theme;
-  document.documentElement.dataset.bsTheme = theme === 'dark' ? 'dark' : 'light';
+  applyPalette(dark ? DARK : LIGHT, document.documentElement);
   createApp(App).use(router).mount('#app');
   if (!ok) {
     // Raised after mount so there is something on screen to raise it on. The

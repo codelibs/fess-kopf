@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {computed, onMounted, ref} from 'vue';
+import {NButton, NCard, NInput, NSelect, NTag} from 'naive-ui';
 import {RequestError} from '@/api/client';
 import {fetchAliases, updateAliases} from '@/api/opensearch';
 import JsonEditor from '@/components/JsonEditor.vue';
@@ -24,6 +25,7 @@ const draftFilter = ref('');
 const editor = ref<InstanceType<typeof JsonEditor> | null>(null);
 
 const indices = computed(() => (cluster.value?.indices ?? []).map((index) => index.name));
+const indexOptions = computed(() => indices.value.map((name) => ({label: name, value: name})));
 
 const paginator = computed(() => {
   const p = new Paginator<IndexAliases>(page.value, 10, [], filter.value);
@@ -133,142 +135,156 @@ async function save(): Promise<void> {
 </script>
 
 <template>
-  <div class="row g-3">
-    <div class="col-lg-5">
-      <div class="card">
-        <div class="card-header">new alias</div>
-        <div class="card-body">
-          <form @submit.prevent="addAlias">
-            <div class="mb-2">
-              <label class="form-label small mb-0" for="al-index">index</label>
-              <select id="al-index" v-model="draft.index" class="form-select form-select-sm">
-                <option value="">select index</option>
-                <option v-for="name in indices" :key="name" :value="name">{{ name }}</option>
-              </select>
-            </div>
-            <div class="mb-2">
-              <label class="form-label small mb-0" for="al-alias">alias</label>
-              <input id="al-alias" v-model="draft.alias" class="form-control form-control-sm">
-            </div>
-            <div class="mb-2">
-              <label class="form-label small mb-0" for="al-filter">filter</label>
-              <JsonEditor id="al-filter" ref="editor" v-model="draftFilter" :rows="4" />
-            </div>
-            <div class="mb-2">
-              <label class="form-label small mb-0" for="al-irouting">index routing</label>
-              <input
-                id="al-irouting"
-                v-model="draft.indexRouting"
-                class="form-control form-control-sm"
-              >
-            </div>
-            <div class="mb-2">
-              <label class="form-label small mb-0" for="al-srouting">search routing</label>
-              <input
-                id="al-srouting"
-                v-model="draft.searchRouting"
-                class="form-control form-control-sm"
-              >
-            </div>
-            <button type="submit" class="btn btn-sm btn-primary">add</button>
-          </form>
-        </div>
-      </div>
+  <div class="k-page-head">
+    <div>
+      <h1 class="k-page-title">Aliases</h1>
+      <p class="k-page-sub">
+        Edits are staged locally; nothing reaches the cluster until you save.
+      </p>
     </div>
-
-    <div class="col-lg-7">
-      <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <span>aliases</span>
-          <span>
-            <span v-if="dirty" class="badge text-bg-warning me-2">unsaved changes</span>
-            <button type="button" class="btn btn-sm btn-primary" @click="save">save changes</button>
-          </span>
-        </div>
-        <div class="card-body">
-          <div class="row g-2 mb-2">
-            <div class="col">
-              <label class="visually-hidden" for="al-f-index">filter by index</label>
-              <input
-                id="al-f-index"
-                v-model="filter.index"
-                class="form-control form-control-sm"
-                placeholder="filter by index"
-              >
-            </div>
-            <div class="col">
-              <label class="visually-hidden" for="al-f-alias">filter by alias</label>
-              <input
-                id="al-f-alias"
-                v-model="filter.alias"
-                class="form-control form-control-sm"
-                placeholder="filter by alias"
-              >
-            </div>
-          </div>
-
-          <p v-if="loading" class="text-body-secondary small">loading…</p>
-          <p v-else-if="currentPage.total === 0" class="text-body-secondary small">
-            no aliases defined
-          </p>
-
-          <div
-            v-for="entry in currentPage.elements.filter(Boolean)"
-            :key="entry!.index"
-            class="mb-2"
-          >
-            <div class="d-flex justify-content-between align-items-center">
-              <strong class="small">{{ entry!.index }}</strong>
-              <button
-                type="button"
-                class="btn btn-link btn-sm p-0 text-danger"
-                @click="removeIndexAliases(entry!.index)"
-              >
-                remove all
-              </button>
-            </div>
-            <ul class="list-unstyled ms-3 mb-0">
-              <li
-                v-for="alias in entry!.aliases"
-                :key="alias.alias"
-                class="d-flex justify-content-between align-items-center small"
-              >
-                <span>
-                  🏷 {{ alias.alias }}
-                  <code v-if="alias.filter" class="ms-1">{{ alias.filter }}</code>
-                </span>
-                <button
-                  type="button"
-                  class="btn btn-link btn-sm p-0 text-danger"
-                  @click="removeIndexAlias(entry!.index, alias.alias)"
-                >
-                  remove
-                </button>
-              </li>
-            </ul>
-          </div>
-
-          <div v-if="currentPage.total > 0" class="d-flex gap-2 align-items-center small mt-2">
-            <button
-              type="button"
-              class="btn btn-sm btn-outline-secondary"
-              :disabled="!currentPage.previous"
-              @click="page -= 1"
-            >
-              previous
-            </button>
-            <span>{{ currentPage.first }}-{{ currentPage.last }} of {{ currentPage.total }}</span>
-            <button
-              type="button"
-              class="btn btn-sm btn-outline-secondary"
-              :disabled="!currentPage.next"
-              @click="page += 1"
-            >
-              next
-            </button>
-          </div>
-        </div>
-      </div>
+    <div class="k-row">
+      <NTag v-if="dirty" size="small" type="warning" :bordered="false">unsaved changes</NTag>
+      <NButton size="small" type="primary" @click="save">save changes</NButton>
     </div>
   </div>
+
+  <div class="k-aliases">
+    <NCard title="new alias">
+      <form class="k-stack" @submit.prevent="addAlias">
+        <div>
+          <span id="al-index-label" class="k-label">index</span>
+          <NSelect
+            id="al-index"
+            v-model:value="draft.index"
+            aria-labelledby="al-index-label"
+            :options="indexOptions"
+            placeholder="select index"
+            filterable
+          />
+        </div>
+        <div>
+          <label class="k-label" for="al-alias">alias</label>
+          <NInput v-model:value="draft.alias" :input-props="{id: 'al-alias'}" />
+        </div>
+        <div>
+          <label class="k-label" for="al-filter">filter</label>
+          <JsonEditor id="al-filter" ref="editor" v-model="draftFilter" :rows="4" />
+        </div>
+        <div>
+          <label class="k-label" for="al-irouting">index routing</label>
+          <NInput v-model:value="draft.indexRouting" :input-props="{id: 'al-irouting'}" />
+        </div>
+        <div>
+          <label class="k-label" for="al-srouting">search routing</label>
+          <NInput v-model:value="draft.searchRouting" :input-props="{id: 'al-srouting'}" />
+        </div>
+        <div>
+          <NButton attr-type="submit" type="primary">add</NButton>
+        </div>
+      </form>
+    </NCard>
+
+    <NCard title="aliases">
+      <div class="k-row k-wrap" style="margin-bottom: 12px">
+        <NInput
+          v-model:value="filter.index"
+          class="k-grow"
+          placeholder="filter by index"
+          clearable
+          aria-label="filter by index"
+          :input-props="{id: 'al-f-index'}"
+        />
+        <NInput
+          v-model:value="filter.alias"
+          class="k-grow"
+          placeholder="filter by alias"
+          clearable
+          aria-label="filter by alias"
+          :input-props="{id: 'al-f-alias'}"
+        />
+      </div>
+
+      <!-- data-test, not a positional card lookup: index names also appear in
+           the picker's options on the other card. -->
+      <div data-test="alias-table">
+        <p v-if="loading" class="k-muted k-small">loading…</p>
+        <p v-else-if="currentPage.total === 0" class="k-empty">no aliases defined</p>
+
+        <div
+          v-for="entry in currentPage.elements.filter(Boolean)"
+          :key="entry!.index"
+          class="k-alias-group"
+        >
+          <div class="k-row">
+            <span class="k-strong k-grow">{{ entry!.index }}</span>
+            <NButton text size="tiny" type="error" @click="removeIndexAliases(entry!.index)">
+              remove all
+            </NButton>
+          </div>
+          <ul class="k-alias-list">
+            <li v-for="alias in entry!.aliases" :key="alias.alias">
+              <span class="k-grow">
+                <NTag size="tiny" :bordered="false">{{ alias.alias }}</NTag>
+                <code v-if="alias.filter" class="k-mono" style="margin-left: 6px">
+                  {{ alias.filter }}
+                </code>
+              </span>
+              <NButton
+                text
+                size="tiny"
+                type="error"
+                @click="removeIndexAlias(entry!.index, alias.alias)"
+              >
+                remove
+              </NButton>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div v-if="currentPage.total > 0" class="k-row k-small" style="margin-top: 12px">
+        <NButton size="tiny" :disabled="!currentPage.previous" @click="page -= 1">
+          previous
+        </NButton>
+        <span class="k-muted">
+          {{ currentPage.first }}-{{ currentPage.last }} of {{ currentPage.total }}
+        </span>
+        <NButton size="tiny" :disabled="!currentPage.next" @click="page += 1">next</NButton>
+      </div>
+    </NCard>
+  </div>
 </template>
+
+<style scoped>
+.k-aliases {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+@media (min-width: 1000px) {
+  .k-aliases {
+    grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.k-alias-group + .k-alias-group {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--k-border);
+}
+
+.k-alias-list {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0 0 0 10px;
+}
+
+.k-alias-list > li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+}
+</style>

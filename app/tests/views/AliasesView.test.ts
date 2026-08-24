@@ -4,6 +4,7 @@ import AliasesView from '@/views/AliasesView.vue';
 import {resetSettingsForTest} from '@/api/settings';
 import {refresh, resetClusterForTest} from '@/composables/useCluster';
 import {useAlerts} from '@/composables/useAlerts';
+import {chooseInSelect} from '../support/naive';
 import {okRoutes, stubFetch} from '../api/routes';
 import {shardRouting} from '../model/fixtures';
 
@@ -63,7 +64,7 @@ afterEach(() => vi.unstubAllGlobals());
 describe('AliasesView', () => {
   /** The alias table only; index names also appear in the picker's options. */
   const table = (wrapper: ReturnType<typeof mount>) =>
-    wrapper.findAll('.card')[1].find('.card-body').text();
+    wrapper.get('[data-test="alias-table"]').text();
 
   it('lists only indices that actually have aliases', async () => {
     const {wrapper} = await mountLoaded();
@@ -85,7 +86,7 @@ describe('AliasesView', () => {
   it('adds an alias locally and says it is not saved yet', async () => {
     const {wrapper, fetcher} = await mountLoaded();
     const before = fetcher.mock.calls.length;
-    await wrapper.find('#al-index').setValue('idx-b');
+    await chooseInSelect(wrapper, 'al-index', 'idx-b');
     await wrapper.find('#al-alias').setValue('new-alias');
     await wrapper.find('form').trigger('submit');
     expect(wrapper.text()).toContain('new-alias');
@@ -97,14 +98,14 @@ describe('AliasesView', () => {
 
   it('refuses an alias with no name', async () => {
     const {wrapper} = await mountLoaded();
-    await wrapper.find('#al-index').setValue('idx-b');
+    await chooseInSelect(wrapper, 'al-index', 'idx-b');
     await wrapper.find('form').trigger('submit');
     expect(alerts.alerts.value[0].message).toBe('Alias must have a non empty name');
   });
 
   it('refuses an alias already bound to that index', async () => {
     const {wrapper} = await mountLoaded();
-    await wrapper.find('#al-index').setValue('idx-a');
+    await chooseInSelect(wrapper, 'al-index', 'idx-a');
     await wrapper.find('#al-alias').setValue('alias-one');
     await wrapper.find('form').trigger('submit');
     expect(alerts.alerts.value[0].message).toBe('Alias is already associated with this index');
@@ -113,7 +114,7 @@ describe('AliasesView', () => {
   it('refuses an invalid filter without touching the cluster', async () => {
     const {wrapper, fetcher} = await mountLoaded();
     const before = fetcher.mock.calls.length;
-    await wrapper.find('#al-index').setValue('idx-b');
+    await chooseInSelect(wrapper, 'al-index', 'idx-b');
     await wrapper.find('#al-alias').setValue('with-filter');
     await wrapper.find('#al-filter').setValue('{not json');
     await wrapper.vm.$nextTick();
@@ -124,7 +125,7 @@ describe('AliasesView', () => {
 
   it('sends adds and removes in one _aliases call', async () => {
     const {wrapper, fetcher} = await mountLoaded();
-    await wrapper.find('#al-index').setValue('idx-b');
+    await chooseInSelect(wrapper, 'al-index', 'idx-b');
     await wrapper.find('#al-alias').setValue('added');
     await wrapper.find('form').trigger('submit');
     const remove = wrapper.findAll('button').find((b) => b.text() === 'remove');

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {computed, onMounted, ref, watch} from 'vue';
+import {NButton, NCard, NCheckbox, NInput, NSelect, NTag} from 'naive-ui';
 import {RequestError} from '@/api/client';
 import {
   createRepository,
@@ -48,6 +49,24 @@ const indices = computed(() =>
 );
 
 const repositorySettings = computed(() => REPOSITORY_SETTINGS[repositoryForm.value.type] ?? []);
+
+/** Naive UI takes {label, value} pairs; these lists are all plain strings. */
+function asOptions(values: readonly string[]): {label: string; value: string}[] {
+  return values.map((value) => ({label: value, value}));
+}
+
+const typeOptions = computed(() => asOptions(REPOSITORY_TYPES));
+const repositoryOptions = computed(() => asOptions(repositories.value.map((r) => r.name)));
+const indexOptions = computed(() => asOptions(indices.value));
+const restorableOptions = computed(() => asOptions(selected.value?.indices ?? []));
+
+/** Snapshot states are worth reading at a glance. */
+const STATE_TYPE: Record<string, 'success' | 'warning' | 'error' | 'default'> = {
+  SUCCESS: 'success',
+  IN_PROGRESS: 'warning',
+  PARTIAL: 'warning',
+  FAILED: 'error',
+};
 
 const paginator = computed(() => {
   const p = new Paginator<Snapshot>(page.value, 10, [], filter.value);
@@ -216,275 +235,250 @@ async function submitRestore(): Promise<void> {
 </script>
 
 <template>
-  <div class="row g-3">
-    <div class="col-lg-4">
-      <div class="card mb-3">
-        <div class="card-header">repositories</div>
-        <div class="card-body">
-          <p v-if="repositories.length === 0" class="text-body-secondary small">
-            no repositories registered
-          </p>
-          <ul class="list-unstyled mb-0">
-            <li
-              v-for="repository in repositories"
-              :key="repository.name"
-              class="d-flex justify-content-between align-items-center border-bottom py-1 small"
-            >
-              <button
-                type="button"
-                class="btn btn-link btn-sm p-0"
-                :class="{'fw-bold': selectedRepository === repository.name}"
-                @click="selectedRepository = repository.name"
-              >
-                {{ repository.name }}
-                <span class="text-body-secondary">({{ repository.type }})</span>
-              </button>
-              <button
-                type="button"
-                class="btn btn-link btn-sm p-0 text-danger"
-                @click="removeRepository(repository)"
-              >
-                delete
-              </button>
-            </li>
-          </ul>
-        </div>
-      </div>
+  <div class="k-page-head">
+    <div>
+      <h1 class="k-page-title">Snapshots</h1>
+      <p class="k-page-sub">Register a repository, then take and restore snapshots from it.</p>
+    </div>
+  </div>
 
-      <div class="card">
-        <div class="card-header">new repository</div>
-        <div class="card-body">
-          <form @submit.prevent="submitRepository">
-            <div class="mb-2">
-              <label class="form-label small mb-0" for="sn-repo-name">name</label>
-              <input
-                id="sn-repo-name"
-                v-model="repositoryForm.name"
-                class="form-control form-control-sm"
-              >
-            </div>
-            <div class="mb-2">
-              <label class="form-label small mb-0" for="sn-repo-type">type</label>
-              <select
-                id="sn-repo-type"
-                v-model="repositoryForm.type"
-                class="form-select form-select-sm"
-              >
-                <option value="">select type</option>
-                <option v-for="type in REPOSITORY_TYPES" :key="type" :value="type">
-                  {{ type }}
-                </option>
-              </select>
-            </div>
-            <div v-for="setting in repositorySettings" :key="setting" class="mb-2">
-              <label class="form-label small mb-0" :for="`sn-set-${setting}`">{{ setting }}</label>
-              <input
-                :id="`sn-set-${setting}`"
-                v-model="repositoryForm.settings[setting]"
-                class="form-control form-control-sm"
-              >
-            </div>
-            <button type="submit" class="btn btn-sm btn-primary">create</button>
-          </form>
-        </div>
-      </div>
+  <div class="k-snap">
+    <div class="k-stack">
+      <NCard title="repositories">
+        <p v-if="repositories.length === 0" class="k-empty">no repositories registered</p>
+        <ul v-else class="k-rows">
+          <li v-for="repository in repositories" :key="repository.name">
+            <NButton
+              text
+              size="small"
+              :type="selectedRepository === repository.name ? 'primary' : 'default'"
+              class="k-grow"
+              style="justify-content: flex-start"
+              @click="selectedRepository = repository.name"
+            >
+              <span :class="{'k-strong': selectedRepository === repository.name}">
+                {{ repository.name }}
+              </span>
+              <span class="k-muted k-small" style="margin-left: 6px">
+                ({{ repository.type }})
+              </span>
+            </NButton>
+            <NButton text size="tiny" type="error" @click="removeRepository(repository)">
+              delete
+            </NButton>
+          </li>
+        </ul>
+      </NCard>
+
+      <NCard title="new repository">
+        <form class="k-stack" @submit.prevent="submitRepository">
+          <div>
+            <label class="k-label" for="sn-repo-name">name</label>
+            <NInput v-model:value="repositoryForm.name" :input-props="{id: 'sn-repo-name'}" />
+          </div>
+          <div>
+            <span id="sn-repo-type-label" class="k-label">type</span>
+            <NSelect
+              id="sn-repo-type"
+              v-model:value="repositoryForm.type"
+              aria-labelledby="sn-repo-type-label"
+              :options="typeOptions"
+              placeholder="select type"
+            />
+          </div>
+          <div v-for="setting in repositorySettings" :key="setting">
+            <label class="k-label" :for="`sn-set-${setting}`">{{ setting }}</label>
+            <NInput
+              v-model:value="repositoryForm.settings[setting]"
+              :input-props="{id: `sn-set-${setting}`}"
+            />
+          </div>
+          <div>
+            <NButton attr-type="submit" type="primary">create</NButton>
+          </div>
+        </form>
+      </NCard>
     </div>
 
-    <div class="col-lg-8">
-      <div class="card mb-3">
-        <div class="card-header d-flex justify-content-between align-items-center">
+    <div class="k-stack">
+      <NCard>
+        <template #header>
           <span>snapshots{{ selectedRepository ? ` in ${selectedRepository}` : '' }}</span>
-          <input
-            id="sn-filter"
-            v-model="filter.name"
-            class="form-control form-control-sm w-auto"
+        </template>
+        <template #header-extra>
+          <NInput
+            v-model:value="filter.name"
+            size="small"
             placeholder="filter by name"
-          >
-        </div>
-        <div class="card-body">
-          <p v-if="selectedRepository === ''" class="text-body-secondary small">
-            select a repository
-          </p>
-          <p v-else-if="loadingSnapshots" class="text-body-secondary small">loading…</p>
-          <p v-else-if="currentPage.total === 0" class="text-body-secondary small">
-            no snapshots
-          </p>
-          <ul class="list-unstyled mb-0">
-            <li
-              v-for="snapshot in currentPage.elements.filter(Boolean)"
-              :key="snapshot!.name"
-              class="d-flex justify-content-between align-items-center border-bottom py-1 small"
-            >
-              <span>
-                <button
-                  type="button"
-                  class="btn btn-link btn-sm p-0"
-                  @click="selected = snapshot"
-                >
-                  {{ snapshot!.name }}
-                </button>
-                <span class="badge text-bg-secondary ms-2">{{ snapshot!.state }}</span>
-                <span class="text-body-secondary ms-2">{{ snapshot!.indices.length }} indices</span>
-              </span>
-              <button
-                type="button"
-                class="btn btn-link btn-sm p-0 text-danger"
-                @click="removeSnapshot(snapshot!)"
+            clearable
+            aria-label="filter snapshots by name"
+            :input-props="{id: 'sn-filter'}"
+          />
+        </template>
+        <p v-if="selectedRepository === ''" class="k-empty">select a repository</p>
+        <p v-else-if="loadingSnapshots" class="k-muted k-small">loading…</p>
+        <p v-else-if="currentPage.total === 0" class="k-empty">no snapshots</p>
+        <ul v-else class="k-rows">
+          <li v-for="snapshot in currentPage.elements.filter(Boolean)" :key="snapshot!.name">
+            <span class="k-row k-grow">
+              <NButton text size="small" type="primary" @click="selected = snapshot">
+                {{ snapshot!.name }}
+              </NButton>
+              <NTag
+                size="tiny"
+                :bordered="false"
+                :type="STATE_TYPE[snapshot!.state ?? ''] ?? 'default'"
               >
-                delete
-              </button>
-            </li>
-          </ul>
-        </div>
-      </div>
+                {{ snapshot!.state }}
+              </NTag>
+              <span class="k-muted k-small">{{ snapshot!.indices.length }} indices</span>
+            </span>
+            <NButton text size="tiny" type="error" @click="removeSnapshot(snapshot!)">
+              delete
+            </NButton>
+          </li>
+        </ul>
+      </NCard>
 
-      <div class="card mb-3">
-        <div class="card-header">new snapshot</div>
-        <div class="card-body">
-          <form @submit.prevent="submitSnapshot">
-            <div class="row g-2">
-              <div class="col-sm-6">
-                <label class="form-label small mb-0" for="sn-new-repo">repository</label>
-                <select
-                  id="sn-new-repo"
-                  v-model="newSnapshot.repository"
-                  class="form-select form-select-sm"
-                >
-                  <option value="">select repository</option>
-                  <option v-for="r in repositories" :key="r.name" :value="r.name">
-                    {{ r.name }}
-                  </option>
-                </select>
-              </div>
-              <div class="col-sm-6">
-                <label class="form-label small mb-0" for="sn-new-name">name</label>
-                <input
-                  id="sn-new-name"
-                  v-model="newSnapshot.name"
-                  class="form-control form-control-sm"
-                >
-              </div>
+      <NCard title="new snapshot">
+        <form class="k-stack" @submit.prevent="submitSnapshot">
+          <div class="k-two">
+            <div>
+              <span id="sn-new-repo-label" class="k-label">repository</span>
+              <NSelect
+                id="sn-new-repo"
+                v-model:value="newSnapshot.repository"
+                aria-labelledby="sn-new-repo-label"
+                :options="repositoryOptions"
+                placeholder="select repository"
+              />
             </div>
-            <div class="mt-2">
-              <label class="form-label small mb-0" for="sn-new-indices">
-                indices (none selected means all)
-              </label>
-              <select
-                id="sn-new-indices"
-                v-model="newSnapshot.indices"
-                class="form-select form-select-sm"
-                multiple
-                size="5"
-              >
-                <option v-for="index in indices" :key="index" :value="index">{{ index }}</option>
-              </select>
+            <div>
+              <label class="k-label" for="sn-new-name">name</label>
+              <NInput v-model:value="newSnapshot.name" :input-props="{id: 'sn-new-name'}" />
             </div>
-            <div class="form-check mt-2">
-              <input
-                id="sn-special"
-                v-model="showSpecialIndices"
-                class="form-check-input"
-                type="checkbox"
-              >
-              <label class="form-check-label small" for="sn-special">show special indices</label>
-            </div>
-            <div class="form-check">
-              <input
-                id="sn-global"
-                v-model="newSnapshot.include_global_state"
-                class="form-check-input"
-                type="checkbox"
-              >
-              <label class="form-check-label small" for="sn-global">include global state</label>
-            </div>
-            <div class="form-check mb-2">
-              <input
-                id="sn-ignore"
-                v-model="newSnapshot.ignore_unavailable"
-                class="form-check-input"
-                type="checkbox"
-              >
-              <label class="form-check-label small" for="sn-ignore">ignore unavailable</label>
-            </div>
-            <button type="submit" class="btn btn-sm btn-primary">create snapshot</button>
-          </form>
-        </div>
-      </div>
+          </div>
+          <div>
+            <span id="sn-new-indices-label" class="k-label">
+              indices (none selected means all)
+            </span>
+            <NSelect
+              id="sn-new-indices"
+              v-model:value="newSnapshot.indices"
+              aria-labelledby="sn-new-indices-label"
+              :options="indexOptions"
+              multiple
+              filterable
+              :max-tag-count="6"
+              placeholder="all indices"
+            />
+          </div>
+          <div class="k-row k-wrap">
+            <NCheckbox id="sn-special" v-model:checked="showSpecialIndices">
+              show special indices
+            </NCheckbox>
+            <NCheckbox id="sn-global" v-model:checked="newSnapshot.include_global_state">
+              include global state
+            </NCheckbox>
+            <NCheckbox id="sn-ignore" v-model:checked="newSnapshot.ignore_unavailable">
+              ignore unavailable
+            </NCheckbox>
+          </div>
+          <div>
+            <NButton attr-type="submit" type="primary">create snapshot</NButton>
+          </div>
+        </form>
+      </NCard>
 
-      <div v-if="selected" class="card">
-        <div class="card-header">restore {{ selected.name }}</div>
-        <div class="card-body">
-          <form @submit.prevent="submitRestore">
-            <div class="mb-2">
-              <label class="form-label small mb-0" for="sn-r-indices">
-                indices (none selected means all)
-              </label>
-              <select
-                id="sn-r-indices"
-                v-model="restore.indices"
-                class="form-select form-select-sm"
-                multiple
-                size="5"
-              >
-                <option v-for="index in selected.indices" :key="index" :value="index">
-                  {{ index }}
-                </option>
-              </select>
+      <NCard v-if="selected" :title="`restore ${selected.name}`">
+        <form class="k-stack" @submit.prevent="submitRestore">
+          <div>
+            <span id="sn-r-indices-label" class="k-label">
+              indices (none selected means all)
+            </span>
+            <NSelect
+              id="sn-r-indices"
+              v-model:value="restore.indices"
+              aria-labelledby="sn-r-indices-label"
+              :options="restorableOptions"
+              multiple
+              filterable
+              :max-tag-count="6"
+              placeholder="all indices in the snapshot"
+            />
+          </div>
+          <div class="k-two">
+            <div>
+              <label class="k-label" for="sn-r-pattern">rename pattern</label>
+              <NInput
+                v-model:value="restore.rename_pattern"
+                :input-props="{id: 'sn-r-pattern'}"
+              />
             </div>
-            <div class="row g-2 mb-2">
-              <div class="col-sm-6">
-                <label class="form-label small mb-0" for="sn-r-pattern">rename pattern</label>
-                <input
-                  id="sn-r-pattern"
-                  v-model="restore.rename_pattern"
-                  class="form-control form-control-sm"
-                >
-              </div>
-              <div class="col-sm-6">
-                <label class="form-label small mb-0" for="sn-r-replacement">
-                  rename replacement
-                </label>
-                <input
-                  id="sn-r-replacement"
-                  v-model="restore.rename_replacement"
-                  class="form-control form-control-sm"
-                >
-              </div>
+            <div>
+              <label class="k-label" for="sn-r-replacement">rename replacement</label>
+              <NInput
+                v-model:value="restore.rename_replacement"
+                :input-props="{id: 'sn-r-replacement'}"
+              />
             </div>
-            <div class="form-check">
-              <input
-                id="sn-r-global"
-                v-model="restore.include_global_state"
-                class="form-check-input"
-                type="checkbox"
-              >
-              <label class="form-check-label small" for="sn-r-global">include global state</label>
-            </div>
-            <div class="form-check">
-              <input
-                id="sn-r-aliases"
-                v-model="restore.include_aliases"
-                class="form-check-input"
-                type="checkbox"
-              >
-              <label class="form-check-label small" for="sn-r-aliases">include aliases</label>
-            </div>
-            <div class="form-check mb-2">
-              <input
-                id="sn-r-ignore"
-                v-model="restore.ignore_unavailable"
-                class="form-check-input"
-                type="checkbox"
-              >
-              <label class="form-check-label small" for="sn-r-ignore">ignore unavailable</label>
-            </div>
-            <button type="submit" class="btn btn-sm btn-warning">restore</button>
-            <button type="button" class="btn btn-sm btn-link" @click="selected = null">
-              cancel
-            </button>
-          </form>
-        </div>
-      </div>
+          </div>
+          <div class="k-row k-wrap">
+            <NCheckbox id="sn-r-global" v-model:checked="restore.include_global_state">
+              include global state
+            </NCheckbox>
+            <NCheckbox id="sn-r-aliases" v-model:checked="restore.include_aliases">
+              include aliases
+            </NCheckbox>
+            <NCheckbox id="sn-r-ignore" v-model:checked="restore.ignore_unavailable">
+              ignore unavailable
+            </NCheckbox>
+          </div>
+          <div class="k-row">
+            <NButton attr-type="submit" type="warning">restore</NButton>
+            <NButton text size="small" @click="selected = null">cancel</NButton>
+          </div>
+        </form>
+      </NCard>
     </div>
   </div>
 </template>
+
+<style scoped>
+.k-snap {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+@media (min-width: 1000px) {
+  .k-snap {
+    grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.k-two {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 12px;
+}
+
+.k-rows {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.k-rows > li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--k-border);
+}
+
+.k-rows > li:last-child {
+  border-bottom: 0;
+}
+</style>

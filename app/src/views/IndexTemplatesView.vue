@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {computed, onMounted, ref} from 'vue';
+import {NButton, NCard, NInput, NTag} from 'naive-ui';
 import {RequestError} from '@/api/client';
 import {createIndexTemplate, deleteIndexTemplate, fetchIndexTemplates} from '@/api/opensearch';
 import JsonEditor from '@/components/JsonEditor.vue';
@@ -95,100 +96,97 @@ function edit(template: IndexTemplate): void {
 </script>
 
 <template>
-  <div class="row g-3">
-    <div class="col-lg-6">
-      <div class="card">
-        <div class="card-header">create template</div>
-        <div class="card-body">
-          <form @submit.prevent="create">
-            <div class="mb-2">
-              <label class="form-label small mb-0" for="it-name">name</label>
-              <input id="it-name" v-model="name" class="form-control form-control-sm">
-            </div>
-            <div class="mb-2">
-              <label class="form-label small mb-0" for="it-body">body</label>
-              <JsonEditor id="it-body" ref="editor" v-model="body" :rows="14" />
-            </div>
-            <button type="submit" class="btn btn-sm btn-primary">create</button>
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-lg-6">
-      <div class="card">
-        <div class="card-header">templates</div>
-        <div class="card-body">
-          <div class="row g-2 mb-2">
-            <div class="col">
-              <label class="visually-hidden" for="it-f-name">filter by name</label>
-              <input
-                id="it-f-name"
-                v-model="filter.name"
-                class="form-control form-control-sm"
-                placeholder="filter by name"
-              >
-            </div>
-            <div class="col">
-              <label class="visually-hidden" for="it-f-pattern">filter by index pattern</label>
-              <input
-                id="it-f-pattern"
-                v-model="filter.template"
-                class="form-control form-control-sm"
-                placeholder="filter by index pattern"
-              >
-            </div>
-          </div>
-
-          <p v-if="currentPage.total === 0" class="text-body-secondary small">
-            no templates match
-          </p>
-          <ul class="list-unstyled mb-0">
-            <li
-              v-for="template in currentPage.elements.filter(Boolean)"
-              :key="template!.name"
-              class="d-flex justify-content-between align-items-center border-bottom py-1"
-            >
-              <span class="small">
-                <strong>{{ template!.name }}</strong>
-                <span class="text-body-secondary ms-2">{{ template!.patterns.join(', ') }}</span>
-              </span>
-              <span>
-                <button type="button" class="btn btn-link btn-sm p-0" @click="edit(template!)">
-                  edit
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-link btn-sm p-0 text-danger ms-2"
-                  @click="remove(template!)"
-                >
-                  delete
-                </button>
-              </span>
-            </li>
-          </ul>
-
-          <div v-if="currentPage.total > 0" class="d-flex gap-2 align-items-center small mt-2">
-            <button
-              type="button"
-              class="btn btn-sm btn-outline-secondary"
-              :disabled="!currentPage.previous"
-              @click="page -= 1"
-            >
-              previous
-            </button>
-            <span>{{ currentPage.first }}-{{ currentPage.last }} of {{ currentPage.total }}</span>
-            <button
-              type="button"
-              class="btn btn-sm btn-outline-secondary"
-              :disabled="!currentPage.next"
-              @click="page += 1"
-            >
-              next
-            </button>
-          </div>
-        </div>
-      </div>
+  <div class="k-page-head">
+    <div>
+      <h1 class="k-page-title">Index templates</h1>
+      <p class="k-page-sub">Settings and mappings applied to indices as they are created.</p>
     </div>
   </div>
+
+  <div class="k-split k-split-even">
+    <NCard title="create template">
+      <form class="k-stack" @submit.prevent="create">
+        <div>
+          <label class="k-label" for="it-name">name</label>
+          <NInput v-model:value="name" :input-props="{id: 'it-name'}" />
+        </div>
+        <div>
+          <label class="k-label" for="it-body">body</label>
+          <JsonEditor id="it-body" ref="editor" v-model="body" :rows="14" />
+        </div>
+        <div>
+          <NButton attr-type="submit" type="primary">create</NButton>
+        </div>
+      </form>
+    </NCard>
+
+    <NCard title="templates">
+      <div class="k-row k-wrap" style="margin-bottom: 12px">
+        <NInput
+          v-model:value="filter.name"
+          class="k-grow"
+          placeholder="filter by name"
+          clearable
+          aria-label="filter by name"
+          :input-props="{id: 'it-f-name'}"
+        />
+        <NInput
+          v-model:value="filter.template"
+          class="k-grow"
+          placeholder="filter by index pattern"
+          clearable
+          aria-label="filter by index pattern"
+          :input-props="{id: 'it-f-pattern'}"
+        />
+      </div>
+
+      <p v-if="currentPage.total === 0" class="k-empty">no templates match</p>
+      <ul v-else class="k-list">
+        <li v-for="template in currentPage.elements.filter(Boolean)" :key="template!.name">
+          <div class="k-grow k-stack-tight">
+            <span class="k-strong">{{ template!.name }}</span>
+            <div class="k-row k-wrap">
+              <NTag v-for="p in template!.patterns" :key="p" size="tiny" :bordered="false">
+                {{ p }}
+              </NTag>
+            </div>
+          </div>
+          <div class="k-row">
+            <NButton text size="tiny" type="primary" @click="edit(template!)">edit</NButton>
+            <NButton text size="tiny" type="error" @click="remove(template!)">delete</NButton>
+          </div>
+        </li>
+      </ul>
+
+      <div v-if="currentPage.total > 0" class="k-row k-small" style="margin-top: 12px">
+        <NButton size="tiny" :disabled="!currentPage.previous" @click="page -= 1">
+          previous
+        </NButton>
+        <span class="k-muted">
+          {{ currentPage.first }}-{{ currentPage.last }} of {{ currentPage.total }}
+        </span>
+        <NButton size="tiny" :disabled="!currentPage.next" @click="page += 1">next</NButton>
+      </div>
+    </NCard>
+  </div>
 </template>
+
+<style scoped>
+.k-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.k-list > li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--k-border);
+}
+
+.k-list > li:last-child {
+  border-bottom: 0;
+}
+</style>
