@@ -2,6 +2,8 @@
 import {onBeforeUnmount, onMounted} from 'vue';
 import {RouterView} from 'vue-router';
 import AlertList from '@/components/AlertList.vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
+import InfoDialog from '@/components/InfoDialog.vue';
 import ClusterStats from '@/components/ClusterStats.vue';
 import NavBar from '@/components/NavBar.vue';
 import {startPolling, stopPolling} from '@/composables/useCluster';
@@ -17,4 +19,6 @@ onBeforeUnmount(stopPolling);
   <main class="container-fluid py-3">
     <RouterView />
   </main>
+  <ConfirmDialog />
+  <InfoDialog />
 </template>

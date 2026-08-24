@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import {computed, ref, useTemplateRef} from 'vue';
+import {computed, ref} from 'vue';
 import {RequestError} from '@/api/client';
 import {fetchNodeStats} from '@/api/opensearch';
 import {useAlerts} from '@/composables/useAlerts';
 import {useCluster} from '@/composables/useCluster';
-import type {ClusterNode, NodeStats} from '@/model/cluster-node';
+import {showInfo} from '@/composables/useDialogs';
+import type {ClusterNode} from '@/model/cluster-node';
 import {bytes, decimal, timeInterval} from '@/model/format';
 import {NodeFilter} from '@/model/node-filter';
 
@@ -14,8 +15,6 @@ const {cluster} = useCluster();
 const filter = ref(new NodeFilter('', true, true, true));
 const sortBy = ref<keyof ClusterNode>('name');
 const reverse = ref(false);
-const stats = ref<NodeStats | null>(null);
-const dialog = useTemplateRef<HTMLDialogElement>('statsDialog');
 
 const COLUMNS: {property: keyof ClusterNode; label: string}[] = [
   {property: 'name', label: 'name'},
@@ -48,8 +47,8 @@ function setSortBy(property: keyof ClusterNode): void {
 
 async function showNodeStats(nodeId: string): Promise<void> {
   try {
-    stats.value = await fetchNodeStats(nodeId);
-    dialog.value?.showModal();
+    const stats = await fetchNodeStats(nodeId);
+    showInfo(`stats for ${stats.name}`, stats.stats);
   } catch (error) {
     alerts.error(
       'Error while loading node stats',
@@ -162,17 +161,5 @@ async function showNodeStats(nodeId: string): Promise<void> {
     <p v-if="nodes.length === 0" class="text-center text-body-secondary py-3">
       No nodes found matching the current filter
     </p>
-
-    <dialog ref="statsDialog" class="p-0 border-0 rounded" style="max-width: 90vw; width: 60rem">
-      <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <span>stats for {{ stats?.name }}</span>
-          <button type="button" class="btn-close" aria-label="Close" @click="dialog?.close()" />
-        </div>
-        <div class="card-body">
-          <pre class="small mb-0">{{ JSON.stringify(stats?.stats, undefined, 2) }}</pre>
-        </div>
-      </div>
-    </dialog>
   </div>
 </template>
