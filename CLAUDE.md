@@ -4,24 +4,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Fess KOPF is a web administration tool for OpenSearch, integrated with Fess. It's a fork of elasticsearch-kopf, customized for OpenSearch 2.x and 3.x support.
+Fess KOPF is a web administration tool for OpenSearch, integrated with Fess.
+It's a fork of elasticsearch-kopf, customized for OpenSearch 2.x and 3.x.
 
-**A migration is in progress.** Two applications live in this repository at once:
-
-- `src/` - the original AngularJS 1.4.7 / jQuery / Bootstrap 3 app. Still the
-  one Fess serves. Built by Grunt into `_site/dist/`.
-- `app/` - its replacement in Vue 3 / Vite / TypeScript, built into
-  `_site/app/`. Screens are ported into it one at a time.
-
-Both ship. `_site/index.html` stays the entry point until every screen has been
-ported; at that point the Vue build's outDir moves to `_site/`, and `src/`,
-`Gruntfile.js` and `_site/dist/` are deleted in a single change. Nothing on the
-Fess side changes at any point.
+The application is Vue 3 + Vite + TypeScript, in `app/`, built into `_site/`.
+It replaced an AngularJS 1.4.7 application screen by screen; nothing on the
+Fess side changed in the process, because the serving contract in
+"Serving constraints" below was treated as fixed throughout.
 
 ## Build System
 
-Two build systems run side by side during the migration: Grunt for `src/` and
-Vite for `app/`. npm scripts are the interface to both.
+Vite builds the application; npm scripts are the interface.
 
 ### Essential Commands
 
@@ -29,96 +22,69 @@ Vite for `app/`. npm scripts are the interface to both.
 # Install dependencies
 npm install
 
-# Build both apps for production (Grunt for src/, Vite for app/)
+# Production build, into _site/
 npm run build
 
-# Build only the Vue app
-npm run build:app
-
-# Vite dev server for the Vue app
-npm run dev:app
+# Vite dev server
+npm run dev
 
 # Run linting only
 npm run lint
 
-# Build and serve on http://localhost:9000. This does not watch for
-# changes - re-run it, or run `grunt watch`, after editing a source file
-grunt server
-
-# Run both suites (Jest for src/, Vitest for app/)
+# Run the test suite
 npm test
 
-# Run only the Vue app's suite
-npm run test:app
-
-# Type-check the Vue app. The bundler strips types without checking them,
-# so this is the only thing that reads types inside .vue files
+# Type-check. The bundler strips types without checking them, so this is the
+# only thing that reads types inside .vue files
 npm run typecheck
 
-# Coverage. Note this covers src/ only; use `npm run test:app -- --coverage`
-# for app/
+# Coverage
 npm run test:coverage
 ```
 
 ### Build Output
 
-- Build artifacts are generated in `_site/dist/`
-- The build process concatenates source files into:
-  - `_site/dist/kopf.js` - Application JavaScript
-  - `_site/dist/kopf.css` - Application CSS
-  - `_site/dist/lib.js` - Vendor JavaScript libraries
-  - `_site/dist/lib.css` - Vendor CSS
-- Theme files are copied separately: `dark_style.css`, `light_style.css`, `fess_style.css`
-
-The Vue app builds to `_site/app/` (`index.html` plus hashed files under
-`assets/`). Source maps are deliberately off - see the serving constraints
-below.
+- `npm run build` writes the whole of `_site/`: `index.html`, hashed files
+  under `_site/assets/`, and everything in `app/public/` copied verbatim
+  (`favicon.ico`, `kopf_external_settings.json`)
+- Source maps are deliberately off - see the serving constraints below
 
 **`_site` is the shipped artifact.** Fess never builds kopf: `deps.xml` in the
 fess repository downloads this repository's tag zip and extracts `_site/**`.
-CI fails the build if `_site` does not match a fresh build of both trees.
+CI fails the build if `_site` does not match a fresh build.
 
 ## Architecture
 
 ### Source Structure
 
 ```
-app/                     # Vue 3 app (the migration target)
+app/
 ├── index.html
 ├── vite.config.mts      # .mts because package.json is CommonJS
+├── public/              # copied verbatim into _site/
+├── tests/
 └── src/
     ├── main.ts
     ├── router/          # hash routing; 11 routes
-    ├── api/             # location resolution, settings, HTTP client
-    ├── model/           # data models ported from src/kopf/opensearch/
-    ├── composables/     # shared state (cluster poll, alerts)
+    ├── api/             # location resolution, settings, HTTP client, endpoints
+    ├── model/           # data models and formatters
+    ├── composables/     # shared state (cluster poll, alerts, dialogs)
     ├── components/
     └── views/           # one per route
-
-src/kopf/                # AngularJS app (being replaced)
-├── kopf.js              # Main AngularJS app initialization and routing
-├── util.js              # Utility functions
-├── opensearch/          # OpenSearch client and API models
-├── models/              # Data models (cluster, indices, nodes, etc.)
-├── services/            # AngularJS services (business logic layer)
-├── controllers/         # AngularJS controllers (view layer)
-├── filters/             # AngularJS filters for data transformation
-├── directives/          # AngularJS directives (custom UI components)
-└── css/                 # Component-specific stylesheets
 ```
 
 ### Key Architecture Patterns
 
-1. **AngularJS MVC Pattern**: Controllers handle view logic, services contain business logic, models represent data structures
+1. **Composition API throughout.** Views own their own state; anything shared
+   between screens is a composable in `app/src/composables/` with
+   module-scoped refs (the cluster poll, the alert stack, the dialogs). There
+   is no store library.
 
-2. **Build Concatenation Order** (defined in Gruntfile.js):
-   - kopf.js first (app initialization)
-   - opensearch/*.js (OpenSearch API layer)
-   - models/*.js (data models)
-   - services/*.js (business logic)
-   - filters/*.js and directives/*.js (view helpers)
-   - controllers/*.js (view logic)
-   - util.js last (utilities)
+2. **The cluster poll is the spine.** `useCluster` issues eight calls every
+   `refresh_rate` ms and builds a `Cluster`; nine of the eleven screens read
+   from it rather than fetching their own copy. A poll that cannot be
+   assembled falls back to the reduced `local=true` view instead of blanking
+   every screen.
 
 3. **OpenSearch Integration**: This tool is designed exclusively for OpenSearch 2.x and 3.x (not Elasticsearch). It connects to OpenSearch clusters via REST API and provides a web UI for cluster management.
 
@@ -161,43 +127,35 @@ behaviours constrain any build in this repository:
 
 ### Making Changes
 
-For the Vue app (`app/`):
-
 1. Edit sources under `app/src/`
-2. `npm run dev:app` for the Vite dev server, or `npm run build:app`
-3. `npm run typecheck` and `npm run test:app`
+2. `npm run dev` for the Vite dev server, or `npm run build`
+3. `npm run typecheck` and `npm test`
 4. `npm run build` and commit the resulting `_site/` before pushing
-
-For the AngularJS app (`src/kopf/`):
-
-1. Edit source files in `src/kopf/`
-2. Run `npm run build` to rebuild (or use `grunt server` for live reload)
-3. Test changes at `http://localhost:9000/_site`
-4. Run `npm test` before committing
 
 ### Code Quality
 
 - ESLint is the only linter, configured in `eslint.config.js` and run via
-  `npm run lint`. It is not part of the Grunt build; CI runs it separately.
-  `src/kopf/theme-kopf.js` is excluded - it is a minified vendored ace theme.
-  ESLint also covers `app/`, using eslint-plugin-vue and typescript-eslint.
-  Those plugin configs are scoped to `app/` in `eslint.config.js`: several of
-  their entries carry no `files` key, and left unscoped they impose
-  `sourceType: 'module'` on `src/kopf`, which is ecmaVersion 5 script.
-- Jest runs the `src/` suite from `tests/`; Vitest runs the `app/` suite from
-  `app/tests/`. They do not overlap - Jest matches `*.test.js`, Vitest
-  `*.test.ts`.
+  `npm run lint`. It uses eslint-plugin-vue and typescript-eslint, both scoped
+  with `files` because several of their config entries carry no `files` key of
+  their own.
+- Vitest runs the suite from `app/tests/`, in jsdom. Views are mounted with
+  `@vue/test-utils`; `fetch` is stubbed rather than the API layer, so the
+  request each screen actually issues is what gets asserted.
 - Coverage reports are generated in `coverage/` directory
 
 ## OpenSearch Compatibility
 
 - **Supported**: OpenSearch 2.x and 3.x
 - **Not Supported**: Elasticsearch (any version)
-- **Removed Features**: Percolator queries, index warmers, benchmark API (all deprecated/removed in modern OpenSearch)
+- **Removed Features**: Percolator queries, index warmers, benchmark API (all
+  deprecated/removed in modern OpenSearch); public Gist sharing; the cluster
+  health and cluster settings screens, which nothing linked to and which both
+  failed against a default OpenSearch install
 
 ## Important Files
 
-- `Gruntfile.js`: Build configuration and task definitions
-- `jest.config.js`: Test configuration
+- `app/vite.config.mts`: Build configuration
+- `vitest.config.mts`: Test configuration
 - `package.json`: Dependencies and npm scripts
-- `kopf_external_settings.json`: Runtime configuration (in _site/)
+- `app/public/kopf_external_settings.json`: Runtime configuration, copied
+  into `_site/` by the build

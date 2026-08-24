@@ -78,8 +78,8 @@ describe('resolveSiteFile', () => {
     );
   });
 
-  it('climbs out of app/ when there is no mount to anchor to', () => {
+  it('resolves beside index.html when there is no mount to anchor to', () => {
     at('/');
-    expect(resolveSiteFile('kopf_external_settings.json')).toBe('../kopf_external_settings.json');
+    expect(resolveSiteFile('kopf_external_settings.json')).toBe('./kopf_external_settings.json');
   });
 });

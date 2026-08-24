@@ -3,7 +3,7 @@
 [![Test](https://github.com/codelibs/fess-kopf/actions/workflows/test.yml/badge.svg)](https://github.com/codelibs/fess-kopf/actions/workflows/test.yml)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-Fess KOPF is a simple web administration tool for OpenSearch, integrated with [Fess](https://fess.codelibs.org/). Built with JavaScript + AngularJS + jQuery + Bootstrap.
+Fess KOPF is a simple web administration tool for OpenSearch, integrated with [Fess](https://fess.codelibs.org/). Built with Vue 3, Vite, TypeScript and Bootstrap 5.
 
 ## Overview
 
@@ -38,6 +38,8 @@ The following features have been removed as they are not supported in OpenSearch
 - Index warmers (deprecated in Elasticsearch 5.x)
 - Benchmark API (removed in Elasticsearch 5.x)
 - Public GitHub Gist sharing of cluster state (removed for security)
+- Cluster health and cluster settings screens: nothing in the interface ever
+  linked to them, and both failed against a default OpenSearch install
 
 ## Installation
 
@@ -59,10 +61,13 @@ npm run build
 
 ```bash
 npm install
-grunt server
+npm run dev
 ```
 
-Open your browser and navigate to <http://localhost:9000/_site>.
+Open the address Vite prints. Set `location` in
+`app/public/kopf_external_settings.json` to your cluster, for example
+`http://localhost:9200`, since there is no Fess in front of it to proxy the
+requests.
 
 ## Integration with Fess
 
@@ -92,7 +97,7 @@ Configure Fess KOPF using the `kopf_external_settings.json` file:
 
 - **location**: OpenSearch host URL. Leave empty when kopf is served by
   Fess; set it only for local development, for example
-  `http://localhost:9200` when running `grunt server`.
+  `http://localhost:9200` when running `npm run dev`.
 - **opensearch_root_path**: OpenSearch root path (default: "")
 - **with_credentials**: Include credentials in cross-origin requests (default: false)
 - **theme**: UI theme (`fess`, `light`, `dark`)
@@ -100,21 +105,27 @@ Configure Fess KOPF using the `kopf_external_settings.json` file:
 
 ### Themes
 
-- `fess` (default) - Fess-themed interface
-- `light` - Light theme
-- `dark` - Dark theme
+- `fess` (default) - light interface
+- `light` - light interface
+- `dark` - dark interface
+
+`dark` switches Bootstrap's colour mode; `fess` and `light` are both light.
 
 ## Development
 
 ### Build
 
 ```bash
-# Production build
+# Production build, into _site/
 npm run build
 
 # Development server with hot reload
-grunt server
+npm run dev
 ```
+
+`_site/` is the shipped artifact: Fess never builds this project, it downloads
+a tag's zip and extracts `_site/**`. Commit `_site/` with every change; CI
+fails the build if it does not match a fresh build.
 
 ### Testing
 
@@ -127,25 +138,28 @@ npm run test:coverage
 
 # Run linter
 npm run lint
+
+# Type-check (the bundler strips types without checking them)
+npm run typecheck
 ```
 
 ### Project Structure
 
 ```
 fess-kopf/
-├── src/
-│   ├── kopf/
-│   │   ├── opensearch/      # OpenSearch-related models
-│   │   ├── controllers/     # AngularJS controllers
-│   │   ├── services/        # AngularJS services
-│   │   ├── models/          # Data models
-│   │   ├── filters/         # AngularJS filters
-│   │   ├── directives/      # AngularJS directives
-│   │   └── css/             # Stylesheets
-│   └── lib/                 # Third-party libraries
-├── _site/                   # Build output
-├── tests/                   # Test files
-└── Gruntfile.js             # Build configuration
+├── app/
+│   ├── index.html
+│   ├── vite.config.mts
+│   ├── public/           # copied verbatim into _site/
+│   ├── src/
+│   │   ├── api/          # location resolution, settings, HTTP, endpoints
+│   │   ├── model/        # data models and formatters
+│   │   ├── composables/  # shared state (cluster poll, alerts, dialogs)
+│   │   ├── components/
+│   │   ├── views/        # one per route
+│   │   └── router/
+│   └── tests/
+└── _site/                # build output; this is what ships
 ```
 
 ## Usage
@@ -169,7 +183,7 @@ fess-kopf/
 
 ### Creating an Index
 
-1. Select "more" → "create index"
+1. Select "create index"
 2. Enter index name
 3. Set number of shards and replicas
 4. Optionally add mappings and settings
@@ -177,7 +191,7 @@ fess-kopf/
 
 ### Creating a Snapshot
 
-1. Select "more" → "snapshot"
+1. Select "snapshot"
 2. Create a repository (first time only)
 3. Click "Create Snapshot"
 4. Select snapshot name and target indices

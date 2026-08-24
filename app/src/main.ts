@@ -12,7 +12,10 @@ import './styles.css';
  */
 async function bootstrap(): Promise<void> {
   const {ok, error} = await loadSettings();
-  document.documentElement.dataset.kopfTheme = getSettings().theme;
+  // Bootstrap 5.3 reads data-bs-theme; 'fess' and 'light' are both light.
+  const theme = getSettings().theme;
+  document.documentElement.dataset.kopfTheme = theme;
+  document.documentElement.dataset.bsTheme = theme === 'dark' ? 'dark' : 'light';
   createApp(App).use(router).mount('#app');
   if (!ok) {
     // Raised after mount so there is something on screen to raise it on. The

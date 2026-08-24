@@ -16,8 +16,12 @@ export default defineConfig({
   resolve: {
     alias: {'@': fileURLToPath(new URL('./src', import.meta.url))},
   },
+  // favicon.ico and kopf_external_settings.json are copied verbatim from here,
+  // so _site is entirely build output and emptyOutDir cannot delete something
+  // that is not regenerated.
+  publicDir: 'public',
   build: {
-    outDir: '../_site/app',
+    outDir: '../_site',
     emptyOutDir: true,
     // Fess sets no Content-Type for extensions outside its own map, and .map
     // is not in it. Shipping source maps would also re-add the ~478 kB the
