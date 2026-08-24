@@ -4,6 +4,7 @@ import {HotThreads, type NodeHotThreads} from '@/model/hot-threads';
 import {NodeStats} from '@/model/cluster-node';
 import {ShardStats} from '@/model/shard';
 import {Alias, IndexAliases} from '@/model/alias';
+import {IndexTemplate, type IndexTemplateBody} from '@/model/index-template';
 import {
   IndexMetadata,
   Token,
@@ -402,4 +403,19 @@ export function updateAliases(add: Alias[], remove: Alias[]): Promise<unknown> {
 /** Creates an index. The body is the settings/mappings document, as text. */
 export function createIndex(name: string, body: string): Promise<unknown> {
   return request(`/${encodeURIComponent(name)}`, {method: 'PUT', body});
+}
+
+/** Every legacy index template. */
+export async function fetchIndexTemplates(signal?: AbortSignal): Promise<IndexTemplate[]> {
+  const response = await request<Record<string, IndexTemplateBody>>('/_template', {signal});
+  return Object.keys(response).map((name) => new IndexTemplate(name, response[name]));
+}
+
+/** Creates or replaces a template. The body is sent as the text that was typed. */
+export function createIndexTemplate(name: string, body: string): Promise<unknown> {
+  return request(`/_template/${encodeURIComponent(name)}`, {method: 'PUT', body});
+}
+
+export function deleteIndexTemplate(name: string): Promise<unknown> {
+  return request(`/_template/${encodeURIComponent(name)}`, {method: 'DELETE'});
 }
