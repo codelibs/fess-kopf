@@ -398,3 +398,8 @@ export function updateAliases(add: Alias[], remove: Alias[]): Promise<unknown> {
   });
   return request('/_aliases', {method: 'POST', body: {actions}});
 }
+
+/** Creates an index. The body is the settings/mappings document, as text. */
+export function createIndex(name: string, body: string): Promise<unknown> {
+  return request(`/${encodeURIComponent(name)}`, {method: 'PUT', body});
+}
