@@ -1,92 +1,101 @@
-import {computed, readonly, ref} from 'vue';
-import {RequestError, request, requestAll} from '@/api/client';
+import {computed, readonly, ref, shallowRef} from 'vue';
+import {RequestError} from '@/api/client';
+import {ClusterUnavailableError, fetchBrokenCluster, fetchCluster} from '@/api/opensearch';
 import {getSettings} from '@/api/settings';
+import type {BrokenCluster} from '@/model/broken-cluster';
+import type {Cluster} from '@/model/cluster';
 import {Version} from '@/model/version';
 import {useAlerts} from './useAlerts';
 
-/** kopf targets OpenSearch. Anything older is not supported. */
+/** kopf targets OpenSearch. Anything older than 2.x is not supported. */
 const MIN_MAJOR = 2;
 
-export interface ClusterHealth {
-  cluster_name: string;
-  status: 'green' | 'yellow' | 'red';
-  number_of_nodes: number;
-  number_of_data_nodes: number;
-  active_shards: number;
-  relocating_shards: number;
-  initializing_shards: number;
-  unassigned_shards: number;
-}
-
-interface RootResponse {
-  cluster_name?: string;
-  version?: {number?: string};
-}
-
+const cluster = shallowRef<Cluster | null>(null);
+const brokenCluster = shallowRef<BrokenCluster | null>(null);
 const version = ref<Version | null>(null);
-const clusterName = ref<string | null>(null);
-const health = ref<ClusterHealth | null>(null);
 const connected = ref(false);
-const lastError = ref<RequestError | null>(null);
-let poller: ReturnType<typeof setInterval> | null = null;
-let versionWarned = false;
+const lastError = ref<Error | null>(null);
 
 const alerts = useAlerts();
 
-/**
- * One poll. Both calls are issued together and reported separately: a failing
- * health check must not also blank the version banner, and vice versa.
- */
-async function refresh(): Promise<void> {
-  const results = await requestAll({
-    root: request<RootResponse>('/'),
-    health: request<ClusterHealth>('/_cluster/health'),
-  });
-
-  if (results.root.value !== undefined) {
-    const number = results.root.value.version?.number;
-    clusterName.value = results.root.value.cluster_name ?? null;
-    if (number !== undefined) {
-      const parsed = new Version(number);
-      version.value = parsed;
-      // Warn once per page view, not once per poll.
-      if (!versionWarned && parsed.valid && parsed.major < MIN_MAJOR) {
-        versionWarned = true;
-        alerts.warn('This version of kopf supports OpenSearch 2.x and later', `Detected ${number}`);
-      }
-    }
-  }
-
-  if (results.health.value !== undefined) {
-    health.value = results.health.value;
-  }
-
-  const failure = results.root.error ?? results.health.error;
-  connected.value = failure === undefined;
-  lastError.value = failure ?? null;
-  if (failure !== undefined) {
-    reportOnce(failure);
-  }
-}
-
-/**
- * The poll repeats every few seconds; without this an unreachable cluster
- * would push a fresh alert onto the stack forever.
- */
+let poller: ReturnType<typeof setInterval> | null = null;
+let inFlight: AbortController | null = null;
+let versionWarned = false;
+/** Signature of the last error reported, so a repeating poll reports it once. */
 let reportedSignature: string | null = null;
 
-function reportOnce(error: RequestError): void {
-  const signature = `${error.status}:${error.message}`;
+function report(error: Error): void {
+  const status = error instanceof RequestError ? error.status : '';
+  const signature = `${error.name}:${status}:${error.message}`;
   if (signature === reportedSignature) {
     return;
   }
   reportedSignature = signature;
+  const isAuth =
+    (error instanceof RequestError || error instanceof ClusterUnavailableError) &&
+    error.isAuthFailure;
   alerts.error(
-    error.isAuthFailure
-      ? 'Not authorised to reach the search engine. Sign in to Fess again.'
-      : error.message,
-    error.body,
+    isAuth ? 'Not authorised to reach the search engine. Sign in to Fess again.' : error.message,
+    error instanceof RequestError ? error.body : undefined,
   );
+}
+
+function recordVersion(next: Cluster): void {
+  if (next.version === undefined) {
+    return;
+  }
+  const parsed = new Version(next.version);
+  version.value = parsed;
+  // Warn once per page view, not once per poll.
+  if (!versionWarned && parsed.valid && parsed.major < MIN_MAJOR) {
+    versionWarned = true;
+    alerts.warn(
+      'This version of kopf supports OpenSearch 2.x and later',
+      `Detected ${parsed.value} on ${next.name}`,
+    );
+  }
+}
+
+export async function refresh(): Promise<void> {
+  inFlight?.abort();
+  const controller = new AbortController();
+  inFlight = controller;
+
+  try {
+    const next = await fetchCluster(controller.signal);
+    next.computeChanges(cluster.value ?? undefined);
+    cluster.value = next;
+    brokenCluster.value = null;
+    connected.value = true;
+    lastError.value = null;
+    reportedSignature = null;
+    recordVersion(next);
+    return;
+  } catch (error) {
+    if (controller.signal.aborted) {
+      return;
+    }
+    // The full poll needs an elected master and readable indices. When it
+    // cannot be assembled, fall back to what can still be answered rather
+    // than blanking every screen.
+    try {
+      brokenCluster.value = await fetchBrokenCluster(controller.signal);
+      cluster.value = null;
+      connected.value = true;
+      lastError.value = error as Error;
+      report(error as Error);
+      return;
+    } catch (fallbackError) {
+      if (controller.signal.aborted) {
+        return;
+      }
+      cluster.value = null;
+      brokenCluster.value = null;
+      connected.value = false;
+      lastError.value = fallbackError as Error;
+      report(fallbackError as Error);
+    }
+  }
 }
 
 export function startPolling(): void {
@@ -102,16 +111,36 @@ export function stopPolling(): void {
     clearInterval(poller);
     poller = null;
   }
+  inFlight?.abort();
+  inFlight = null;
+}
+
+/** Test seam: clears module state between cases. */
+export function resetClusterForTest(): void {
+  stopPolling();
+  cluster.value = null;
+  brokenCluster.value = null;
+  version.value = null;
+  connected.value = false;
+  lastError.value = null;
+  versionWarned = false;
+  reportedSignature = null;
 }
 
 export function useCluster() {
   return {
+    cluster: readonly(cluster),
+    brokenCluster: readonly(brokenCluster),
     version: readonly(version),
-    clusterName: readonly(clusterName),
-    health: readonly(health),
     connected: readonly(connected),
     lastError: readonly(lastError),
-    hasConnection: computed(() => connected.value && health.value !== null),
+    /** Whichever view is current; screens that only need health use this. */
+    current: computed(() => cluster.value ?? brokenCluster.value),
+    clusterName: computed(() => cluster.value?.name ?? brokenCluster.value?.name ?? null),
+    /** True once there is something to render. */
+    hasConnection: computed(() => cluster.value !== null || brokenCluster.value !== null),
+    /** True when only the reduced view is available. */
+    degraded: computed(() => cluster.value === null && brokenCluster.value !== null),
     refresh,
   };
 }
