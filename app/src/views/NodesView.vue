@@ -6,6 +6,7 @@ import {fetchNodeStats} from '@/api/opensearch';
 import {useAlerts} from '@/composables/useAlerts';
 import {useCluster} from '@/composables/useCluster';
 import {showInfo} from '@/composables/useDialogs';
+import {t} from '@/i18n';
 import type {ClusterNode} from '@/model/cluster-node';
 import {bytes, decimal, timeInterval} from '@/model/format';
 import {NodeFilter} from '@/model/node-filter';
@@ -49,10 +50,10 @@ function setSortBy(property: keyof ClusterNode): void {
 async function showNodeStats(nodeId: string): Promise<void> {
   try {
     const stats = await fetchNodeStats(nodeId);
-    showInfo(`stats for ${stats.name}`, stats.stats);
+    showInfo(t('nodes.statsTitle', {node: stats.name}), stats.stats);
   } catch (error) {
     alerts.error(
-      'Error while loading node stats',
+      t('nodes.statsFailed'),
       error instanceof RequestError ? error.body : String(error),
     );
   }
@@ -70,8 +71,10 @@ function gaugeColour(percent: number | undefined): string {
 <template>
   <div class="k-page-head">
     <div>
-      <h1 class="k-page-title">Nodes</h1>
-      <p class="k-page-sub">{{ nodes.length }} of {{ cluster?.nodes.length ?? 0 }} shown.</p>
+      <h1 class="k-page-title">{{ t('nodes.title') }}</h1>
+      <p class="k-page-sub">
+        {{ t('nodes.sub', {shown: nodes.length, total: cluster?.nodes.length ?? 0}) }}
+      </p>
     </div>
   </div>
 
@@ -80,7 +83,7 @@ function gaugeColour(percent: number | undefined): string {
       <label class="k-label" for="node-name-filter" style="margin: 0">filter</label>
       <NInput
         v-model:value="filter.name"
-        placeholder="filter nodes by name"
+        :placeholder="t('nodes.filterPlaceholder')"
         clearable
         style="max-width: 22rem"
         :input-props="{id: 'node-name-filter'}"
@@ -115,12 +118,16 @@ function gaugeColour(percent: number | undefined): string {
                 <div class="k-small k-muted">
                   <span
                     v-if="node.master"
-                    :title="node.current_master ? 'current master' : 'master eligible'"
+                    :title="
+                      node.current_master
+                        ? t('nodes.currentMaster')
+                        : t('nodes.masterEligible')
+                    "
                   >
                     {{ node.current_master ? '★' : '☆' }}
                   </span>
-                  <span v-if="node.data" title="data node">🗄</span>
-                  <span v-if="node.client" title="client node">🔍</span>
+                  <span v-if="node.data" :title="t('nodes.dataNode')">🗄</span>
+                  <span v-if="node.client" :title="t('nodes.clientNode')">🔍</span>
                 </div>
                 <div class="k-stack-tight">
                   <NButton text type="primary" size="small" @click="showNodeStats(node.id)">
@@ -171,7 +178,9 @@ function gaugeColour(percent: number | undefined): string {
                 <div class="k-small k-muted">free: {{ bytes(node.disk_free_in_bytes) }}</div>
                 <div class="k-small k-muted">total: {{ bytes(node.disk_total_in_bytes) }}</div>
               </template>
-              <em v-else class="k-small k-muted">no disk info for client nodes</em>
+              <em v-else class="k-small k-muted">
+                {{ t('nodes.noDiskInfo') }}
+              </em>
             </td>
             <td class="k-metric">{{ timeInterval(node.uptime) }}</td>
           </tr>
@@ -180,7 +189,7 @@ function gaugeColour(percent: number | undefined): string {
     </div>
 
     <p v-if="nodes.length === 0" class="k-empty">
-      No nodes found matching the current filter
+      {{ t('nodes.empty') }}
     </p>
   </NCard>
 </template>

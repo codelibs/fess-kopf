@@ -2,6 +2,7 @@
 import {watch, useTemplateRef} from 'vue';
 import {NButton} from 'naive-ui';
 import {useDialogs} from '@/composables/useDialogs';
+import {t} from '@/i18n';
 
 /**
  * A native <dialog> rather than Naive UI's NModal, deliberately: NModal
@@ -27,7 +28,7 @@ watch(confirmRequest, (request) => {
       <h2 class="k-dialog-title">{{ confirmRequest.header }}</h2>
       <p class="k-dialog-text">{{ confirmRequest.body }}</p>
       <div class="k-row k-push" style="justify-content: flex-end">
-        <NButton size="small" @click="resolveConfirm(false)">cancel</NButton>
+        <NButton size="small" @click="resolveConfirm(false)">{{ t('common.cancel') }}</NButton>
         <NButton size="small" type="error" @click="resolveConfirm(true)">
           {{ confirmRequest.confirmText }}
         </NButton>

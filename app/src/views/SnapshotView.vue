@@ -14,6 +14,7 @@ import {
 import {useAlerts} from '@/composables/useAlerts';
 import {useCluster} from '@/composables/useCluster';
 import {confirm} from '@/composables/useDialogs';
+import {t} from '@/i18n';
 import {Paginator} from '@/model/paginator';
 import {
   REPOSITORY_SETTINGS,
@@ -84,7 +85,7 @@ async function loadRepositories(): Promise<void> {
     repositories.value = await fetchRepositories();
   } catch (error) {
     repositories.value = [];
-    alerts.error('Error while reading snapshot', describe(error));
+    alerts.error(t('snapshot.repositoriesFailed'), describe(error));
   }
 }
 
@@ -98,7 +99,7 @@ async function loadSnapshots(): Promise<void> {
     snapshots.value = await fetchSnapshots(selectedRepository.value);
   } catch (error) {
     snapshots.value = [];
-    alerts.error('Error while fetching snapshots', describe(error));
+    alerts.error(t('snapshot.snapshotsFailed'), describe(error));
   } finally {
     loadingSnapshots.value = false;
   }
@@ -125,31 +126,31 @@ async function submitRepository(): Promise<void> {
   }
   try {
     await createRepository(repositoryForm.value.name, repositoryForm.value.asJson());
-    alerts.success('Repository created');
+    alerts.success(t('snapshot.repositoryCreated'));
     await loadRepositories();
   } catch (error) {
-    alerts.error('Error while creating repository', describe(error));
+    alerts.error(t('snapshot.repositoryCreateFailed'), describe(error));
   }
 }
 
 async function removeRepository(repository: Repository): Promise<void> {
   const ok = await confirm(
-    `are you sure you want to delete repository ${repository.name}?`,
+    t('snapshot.confirmDeleteRepository', {repository: repository.name}),
     JSON.stringify(repository.settings, undefined, 2),
-    'Delete',
+    t('cluster.confirm.deleteAction'),
   );
   if (!ok) {
     return;
   }
   try {
     const response = await deleteRepository(repository.name);
-    alerts.success('Repository successfully deleted', response);
+    alerts.success(t('snapshot.repositoryDeleted'), response);
     if (selectedRepository.value === repository.name) {
       selectedRepository.value = '';
     }
     await reload();
   } catch (error) {
-    alerts.error('Error while deleting repository', describe(error));
+    alerts.error(t('snapshot.repositoryDeleteFailed'), describe(error));
   }
 }
 
@@ -167,11 +168,11 @@ function optionalBody(source: Record<string, unknown>, keys: string[]): Record<s
 
 async function submitSnapshot(): Promise<void> {
   if (newSnapshot.value.repository === '') {
-    alerts.warn('Repository is required');
+    alerts.warn(t('snapshot.repositoryRequired'));
     return;
   }
   if (newSnapshot.value.name.trim() === '') {
-    alerts.warn('Snapshot name is required');
+    alerts.warn(t('snapshot.snapshotNameRequired'));
     return;
   }
   const body: Record<string, unknown> = optionalBody(
@@ -187,28 +188,28 @@ async function submitSnapshot(): Promise<void> {
       newSnapshot.value.name,
       JSON.stringify(body),
     );
-    alerts.success('Snapshot created');
+    alerts.success(t('snapshot.created'));
     await reload();
   } catch (error) {
-    alerts.error('Error while creating snapshot', describe(error));
+    alerts.error(t('snapshot.createFailed'), describe(error));
   }
 }
 
 async function removeSnapshot(snapshot: Snapshot): Promise<void> {
   const ok = await confirm(
-    `are you sure you want to delete snapshot ${snapshot.name}?`,
+    t('snapshot.confirmDelete', {snapshot: snapshot.name}),
     JSON.stringify(snapshot, undefined, 2),
-    'Delete',
+    t('cluster.confirm.deleteAction'),
   );
   if (!ok) {
     return;
   }
   try {
     const response = await deleteSnapshot(selectedRepository.value, snapshot.name);
-    alerts.success('Snapshot successfully deleted', response);
+    alerts.success(t('snapshot.deleted'), response);
     await reload();
   } catch (error) {
-    alerts.error('Error while deleting snapshot', describe(error));
+    alerts.error(t('snapshot.deleteFailed'), describe(error));
   }
 }
 
@@ -226,10 +227,10 @@ async function submitRestore(): Promise<void> {
   }
   try {
     await restoreSnapshot(selectedRepository.value, selected.value.name, JSON.stringify(body));
-    alerts.success('Snapshot Restored Started');
+    alerts.success(t('snapshot.restoreStarted'));
     await reload();
   } catch (error) {
-    alerts.error('Error while starting restore of snapshot', describe(error));
+    alerts.error(t('snapshot.restoreFailed'), describe(error));
   }
 }
 </script>
@@ -237,15 +238,15 @@ async function submitRestore(): Promise<void> {
 <template>
   <div class="k-page-head">
     <div>
-      <h1 class="k-page-title">Snapshots</h1>
-      <p class="k-page-sub">Register a repository, then take and restore snapshots from it.</p>
+      <h1 class="k-page-title">{{ t('snapshot.title') }}</h1>
+      <p class="k-page-sub">{{ t('snapshot.sub') }}</p>
     </div>
   </div>
 
   <div class="k-snap">
     <div class="k-stack">
-      <NCard title="repositories">
-        <p v-if="repositories.length === 0" class="k-empty">no repositories registered</p>
+      <NCard :title="t('snapshot.repositories')">
+        <p v-if="repositories.length === 0" class="k-empty">{{ t('snapshot.noRepositories') }}</p>
         <ul v-else class="k-rows">
           <li v-for="repository in repositories" :key="repository.name">
             <NButton
@@ -264,13 +265,13 @@ async function submitRestore(): Promise<void> {
               </span>
             </NButton>
             <NButton text size="tiny" type="error" @click="removeRepository(repository)">
-              delete
+              {{ t('common.delete') }}
             </NButton>
           </li>
         </ul>
       </NCard>
 
-      <NCard title="new repository">
+      <NCard :title="t('snapshot.newRepository')">
         <form class="k-stack" @submit.prevent="submitRepository">
           <div>
             <label class="k-label" for="sn-repo-name">name</label>
@@ -283,7 +284,7 @@ async function submitRestore(): Promise<void> {
               v-model:value="repositoryForm.type"
               aria-labelledby="sn-repo-type-label"
               :options="typeOptions"
-              placeholder="select type"
+              :placeholder="t('snapshot.selectType')"
             />
           </div>
           <div v-for="setting in repositorySettings" :key="setting">
@@ -294,7 +295,7 @@ async function submitRestore(): Promise<void> {
             />
           </div>
           <div>
-            <NButton attr-type="submit" type="primary">create</NButton>
+            <NButton attr-type="submit" type="primary">{{ t('common.create') }}</NButton>
           </div>
         </form>
       </NCard>
@@ -303,21 +304,27 @@ async function submitRestore(): Promise<void> {
     <div class="k-stack">
       <NCard>
         <template #header>
-          <span>snapshots{{ selectedRepository ? ` in ${selectedRepository}` : '' }}</span>
+          <span>
+            {{ selectedRepository
+              ? t('snapshot.listIn', {repository: selectedRepository})
+              : t('snapshot.list') }}
+          </span>
         </template>
         <template #header-extra>
           <NInput
             v-model:value="filter.name"
             size="small"
-            placeholder="filter by name"
+            :placeholder="t('snapshot.filterByName')"
             clearable
-            aria-label="filter snapshots by name"
+            :aria-label="t('snapshot.filterByName')"
             :input-props="{id: 'sn-filter'}"
           />
         </template>
-        <p v-if="selectedRepository === ''" class="k-empty">select a repository</p>
-        <p v-else-if="loadingSnapshots" class="k-muted k-small">loading…</p>
-        <p v-else-if="currentPage.total === 0" class="k-empty">no snapshots</p>
+        <p v-if="selectedRepository === ''" class="k-empty">
+          {{ t('snapshot.selectRepositoryFirst') }}
+        </p>
+        <p v-else-if="loadingSnapshots" class="k-muted k-small">{{ t('common.loading') }}</p>
+        <p v-else-if="currentPage.total === 0" class="k-empty">{{ t('snapshot.empty') }}</p>
         <ul v-else class="k-rows">
           <li v-for="snapshot in currentPage.elements.filter(Boolean)" :key="snapshot!.name">
             <span class="k-row k-grow">
@@ -331,16 +338,18 @@ async function submitRestore(): Promise<void> {
               >
                 {{ snapshot!.state }}
               </NTag>
-              <span class="k-muted k-small">{{ snapshot!.indices.length }} indices</span>
+              <span class="k-muted k-small">
+                {{ t('snapshot.indexCount', {count: snapshot!.indices.length}) }}
+              </span>
             </span>
             <NButton text size="tiny" type="error" @click="removeSnapshot(snapshot!)">
-              delete
+              {{ t('common.delete') }}
             </NButton>
           </li>
         </ul>
       </NCard>
 
-      <NCard title="new snapshot">
+      <NCard :title="t('snapshot.newSnapshot')">
         <form class="k-stack" @submit.prevent="submitSnapshot">
           <div class="k-two">
             <div>
@@ -350,7 +359,7 @@ async function submitRestore(): Promise<void> {
                 v-model:value="newSnapshot.repository"
                 aria-labelledby="sn-new-repo-label"
                 :options="repositoryOptions"
-                placeholder="select repository"
+                :placeholder="t('snapshot.selectRepository')"
               />
             </div>
             <div>
@@ -360,7 +369,7 @@ async function submitRestore(): Promise<void> {
           </div>
           <div>
             <span id="sn-new-indices-label" class="k-label">
-              indices (none selected means all)
+              {{ t('snapshot.indicesLabel') }}
             </span>
             <NSelect
               id="sn-new-indices"
@@ -370,7 +379,7 @@ async function submitRestore(): Promise<void> {
               multiple
               filterable
               :max-tag-count="6"
-              placeholder="all indices"
+              :placeholder="t('snapshot.allIndices')"
             />
           </div>
           <div class="k-row k-wrap">
@@ -385,16 +394,16 @@ async function submitRestore(): Promise<void> {
             </NCheckbox>
           </div>
           <div>
-            <NButton attr-type="submit" type="primary">create snapshot</NButton>
+            <NButton attr-type="submit" type="primary">{{ t('snapshot.create') }}</NButton>
           </div>
         </form>
       </NCard>
 
-      <NCard v-if="selected" :title="`restore ${selected.name}`">
+      <NCard v-if="selected" :title="t('snapshot.restoreTitle', {snapshot: selected.name})">
         <form class="k-stack" @submit.prevent="submitRestore">
           <div>
             <span id="sn-r-indices-label" class="k-label">
-              indices (none selected means all)
+              {{ t('snapshot.indicesLabel') }}
             </span>
             <NSelect
               id="sn-r-indices"
@@ -404,7 +413,7 @@ async function submitRestore(): Promise<void> {
               multiple
               filterable
               :max-tag-count="6"
-              placeholder="all indices in the snapshot"
+              :placeholder="t('snapshot.allIndicesInSnapshot')"
             />
           </div>
           <div class="k-two">
@@ -435,8 +444,8 @@ async function submitRestore(): Promise<void> {
             </NCheckbox>
           </div>
           <div class="k-row">
-            <NButton attr-type="submit" type="warning">restore</NButton>
-            <NButton text size="small" @click="selected = null">cancel</NButton>
+            <NButton attr-type="submit" type="warning">{{ t('snapshot.restore') }}</NButton>
+            <NButton text size="small" @click="selected = null">{{ t('common.cancel') }}</NButton>
           </div>
         </form>
       </NCard>

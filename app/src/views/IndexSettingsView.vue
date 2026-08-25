@@ -6,6 +6,7 @@ import {RequestError} from '@/api/client';
 import {fetchIndexMetadata, updateIndexSettings} from '@/api/opensearch';
 import {useAlerts} from '@/composables/useAlerts';
 import {refresh as refreshCluster} from '@/composables/useCluster';
+import {t} from '@/i18n';
 import {EditableIndexSettings, SETTING_GROUPS} from '@/model/editable-index-settings';
 
 const alerts = useAlerts();
@@ -23,7 +24,7 @@ function describe(error: unknown): unknown {
 onMounted(async () => {
   const name = String(route.query.index ?? '');
   if (name === '') {
-    alerts.error('No index was given');
+    alerts.error(t('indexSettings.noIndex'));
     return;
   }
   try {
@@ -31,7 +32,7 @@ onMounted(async () => {
     index.value = name;
     settings.value = new EditableIndexSettings(metadata.settings);
   } catch (error) {
-    alerts.error(`Error while loading index settings for [${name}]`, describe(error));
+    alerts.error(t('indexSettings.loadFailed', {index: name}), describe(error));
   }
 });
 
@@ -42,10 +43,10 @@ async function save(): Promise<void> {
   saving.value = true;
   try {
     const response = await updateIndexSettings(index.value, settings.value.getUpdatable());
-    alerts.success('Index settings were successfully updated', response);
+    alerts.success(t('indexSettings.updated'), response);
     await refreshCluster();
   } catch (error) {
-    alerts.error('Error while updating index settings', describe(error));
+    alerts.error(t('indexSettings.updateFailed'), describe(error));
   } finally {
     saving.value = false;
   }
@@ -55,22 +56,22 @@ async function save(): Promise<void> {
 <template>
   <div class="k-page-head">
     <div>
-      <h1 class="k-page-title">Index settings</h1>
-      <p class="k-page-sub">settings for {{ index }}</p>
+      <h1 class="k-page-title">{{ t('indexSettings.title') }}</h1>
+      <p class="k-page-sub">{{ t('indexSettings.sub', {index}) }}</p>
     </div>
     <div class="k-row">
       <RouterLink :to="{name: 'cluster'}" style="text-decoration: none">
-        <NButton size="small">back</NButton>
+        <NButton size="small">{{ t('common.back') }}</NButton>
       </RouterLink>
       <NButton size="small" type="primary" :loading="saving" :disabled="saving" @click="save">
-        {{ saving ? 'saving…' : 'save' }}
+        {{ saving ? t('common.saving') : t('common.save') }}
       </NButton>
     </div>
   </div>
 
   <NCard v-if="settings">
     <div class="k-split">
-      <nav class="k-stack-tight" aria-label="Setting groups">
+      <nav class="k-stack-tight" :aria-label="t('indexSettings.groups')">
         <NButton
           v-for="group in SETTING_GROUPS"
           :key="group.label"
@@ -95,9 +96,9 @@ async function save(): Promise<void> {
                   v-if="EditableIndexSettings.isStatic(setting)"
                   size="tiny"
                   :bordered="false"
-                  title="Set when the index is created; shown but never sent back"
+                  :title="t('indexSettings.readOnlyHint')"
                 >
-                  read-only
+                  {{ t('indexSettings.readOnly') }}
                 </NTag>
               </label>
               <NInput

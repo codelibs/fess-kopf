@@ -1,3 +1,4 @@
+import {t} from '@/i18n';
 import {notEmpty} from './util';
 
 /** Repository settings offered per type, in the order the form shows them. */
@@ -38,14 +39,14 @@ export class Repository {
   /** Throws with the message the screen shows. */
   validate(): void {
     if (!notEmpty(this.name)) {
-      throw new Error('Repository name is required');
+      throw new Error(t('snapshot.nameRequired'));
     }
     if (!notEmpty(this.type)) {
-      throw new Error('Repository type is required');
+      throw new Error(t('snapshot.typeRequired'));
     }
     (REQUIRED_SETTINGS[this.type] ?? []).forEach((setting) => {
       if (!notEmpty(this.settings[setting])) {
-        throw new Error(`${setting} is required for snapshot of type ${this.type}`);
+        throw new Error(t('snapshot.settingRequired', {setting, type: this.type}));
       }
     });
   }

@@ -1,3 +1,4 @@
+import {t} from '@/i18n';
 import {isDefined, notEmpty} from './util';
 
 /** One alias binding, as the _aliases API describes it. */
@@ -27,10 +28,10 @@ export class Alias {
   /** Throws with the message the screen shows. */
   validate(): void {
     if (!notEmpty(this.alias)) {
-      throw new Error('Alias must have a non empty name');
+      throw new Error(t('aliases.emptyName'));
     }
     if (!notEmpty(this.index)) {
-      throw new Error('Alias must have a valid index name');
+      throw new Error(t('aliases.emptyIndex'));
     }
   }
 

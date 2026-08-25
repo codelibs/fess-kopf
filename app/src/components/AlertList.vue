@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {NAlert, NButton} from 'naive-ui';
 import {useAlerts} from '@/composables/useAlerts';
+import {t} from '@/i18n';
 
 const {alerts, remove, toggle} = useAlerts();
 
@@ -36,7 +37,7 @@ function bodyOf(response: unknown): string {
           type="primary"
           @click="toggle(alert.id)"
         >
-          {{ alert.expanded ? 'hide details' : 'show details' }}
+          {{ alert.expanded ? t('alert.hideDetails') : t('alert.showDetails') }}
         </NButton>
       </div>
       <pre
