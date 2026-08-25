@@ -29,6 +29,8 @@ This project is a fork of [elasticsearch-kopf](https://github.com/lmenezes/elast
 - **REST Client**: Direct access to OpenSearch API
 - **CAT API**: Browser-based interface for CAT API
 - **Hot Threads Analysis**: Node thread analysis
+- **Localized interface**: follows the language the Fess admin console
+  resolved for the request, in all sixteen locales Fess ships
 
 ## Removed Features
 
@@ -117,6 +119,48 @@ and the semantic colours are the ones AdminLTE paints around it. Both palettes
 live in `app/src/theme.ts`, which feeds Naive UI's theme overrides and the CSS
 custom properties the layout layer reads, so the two cannot drift apart.
 
+## Language
+
+The interface renders in the language the Fess admin console resolved for the
+request. Fess derives that from `Accept-Language`, or from the `browser_lang`
+request parameter when one is given, and passes the result to kopf on the
+iframe URL:
+
+```
+<contextPath>/admin/server_<token>/_plugin/kopf/?lang=ja
+```
+
+Sixteen locales are covered, exactly the set Fess ships a `fess_label` bundle
+for: `de en es fr hi id it ja ko nl pl pt-BR ru tr zh-CN zh-TW`. Resolution
+matches `java.util.ResourceBundle` -- exact tag, then the language alone, then
+English -- so `ja-JP` finds Japanese while `zh` on its own falls back to
+English, as it does in Fess. Without the parameter kopf uses the browser's own
+preference and then English, which is what makes the bundle usable under
+`npm run dev` or a plain static server.
+
+### What is and is not translated
+
+Translated: page headings and their explanatory lines, buttons, menu actions,
+placeholders, empty states, and every alert and confirmation.
+
+Not translated: the navigation, table headers, form field labels, cluster
+status values, node roles, JSON keys and `_cat` API names. kopf is a tool for
+operating OpenSearch, and an operator reads it beside the API's own responses;
+translating the protocol's vocabulary would break that correspondence.
+
+### Editing a translation
+
+Catalogues are flat JSON in `app/src/i18n/messages/`, one file per locale, with
+`en.json` as the source of truth. `en.json` also defines the key type, so a
+mistyped key is a compile error. `npm test` fails if any catalogue's key set
+differs from English, if a `{placeholder}` is dropped or renamed, or if a
+message is left empty -- a forgotten translation is a red test, not a string
+that silently renders in English.
+
+Naive UI's own strings (the input placeholder, a select's empty state, the
+pagination labels) come from its own locale, which is selected from the same
+resolved tag so a form is never half English.
+
 ## Development
 
 ### Build
@@ -164,6 +208,7 @@ fess-kopf/
 │   │   ├── components/
 │   │   ├── views/        # one per route
 │   │   ├── router/
+│   │   ├── i18n/         # locale resolution and the sixteen catalogues
 │   │   ├── theme.ts      # the palette, and Naive UI's theme overrides
 │   │   └── styles.css    # layout primitives; reads theme.ts's custom properties
 │   └── tests/

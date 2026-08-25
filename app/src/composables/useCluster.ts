@@ -4,6 +4,7 @@ import {ClusterUnavailableError, fetchBrokenCluster, fetchCluster} from '@/api/o
 import {getSettings} from '@/api/settings';
 import type {BrokenCluster} from '@/model/broken-cluster';
 import type {Cluster} from '@/model/cluster';
+import {t} from '@/i18n';
 import {Version} from '@/model/version';
 import {useAlerts} from './useAlerts';
 
@@ -35,7 +36,7 @@ function report(error: Error): void {
     (error instanceof RequestError || error instanceof ClusterUnavailableError) &&
     error.isAuthFailure;
   alerts.error(
-    isAuth ? 'Not authorised to reach the search engine. Sign in to Fess again.' : error.message,
+    isAuth ? t('stats.notAuthorised') : error.message,
     error instanceof RequestError ? error.body : undefined,
   );
 }
@@ -50,8 +51,8 @@ function recordVersion(next: Cluster): void {
   if (!versionWarned && parsed.valid && parsed.major < MIN_MAJOR) {
     versionWarned = true;
     alerts.warn(
-      'This version of kopf supports OpenSearch 2.x and later',
-      `Detected ${parsed.value} on ${next.name}`,
+      t('stats.unsupportedVersion'),
+      t('stats.detectedVersion', {version: parsed.value, name: next.name}),
     );
   }
 }

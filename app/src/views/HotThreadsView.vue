@@ -5,6 +5,7 @@ import {RequestError} from '@/api/client';
 import {fetchHotThreads, type HotThreadsOptions} from '@/api/opensearch';
 import {useAlerts} from '@/composables/useAlerts';
 import {useCluster} from '@/composables/useCluster';
+import {t} from '@/i18n';
 import type {NodeHotThreads} from '@/model/hot-threads';
 
 const alerts = useAlerts();
@@ -22,9 +23,9 @@ const results = ref<NodeHotThreads[] | null>(null);
 const running = ref(false);
 
 const threadOptions = computed(() => THREAD_COUNTS.map((n) => ({label: String(n), value: n})));
-const typeOptions = computed(() => TYPES.map((t) => ({label: t, value: t})));
+const typeOptions = computed(() => TYPES.map((name) => ({label: name, value: name})));
 const nodeOptions = computed(() => [
-  {label: 'all nodes', value: ''},
+  {label: t('hotThreads.allNodes'), value: ''},
   ...(cluster.value?.nodes ?? []).map((n) => ({label: n.name, value: n.id})),
 ]);
 
@@ -40,7 +41,7 @@ async function execute(): Promise<void> {
     });
   } catch (error) {
     alerts.error(
-      'Error while fetching hot threads',
+      t('hotThreads.failed'),
       error instanceof RequestError ? error.body : String(error),
     );
     results.value = null;
@@ -53,8 +54,8 @@ async function execute(): Promise<void> {
 <template>
   <div class="k-page-head">
     <div>
-      <h1 class="k-page-title">Hot threads</h1>
-      <p class="k-page-sub">Sample where the nodes are spending their time.</p>
+      <h1 class="k-page-title">{{ t('hotThreads.title') }}</h1>
+      <p class="k-page-sub">{{ t('hotThreads.sub') }}</p>
     </div>
   </div>
 
@@ -95,21 +96,21 @@ async function execute(): Promise<void> {
         <label class="k-label" for="ht-interval">sampling interval</label>
         <NInput
           v-model:value="interval"
-          placeholder="sampling interval"
+          :placeholder="t('hotThreads.intervalPlaceholder')"
           style="width: 10rem"
           :input-props="{id: 'ht-interval'}"
         />
       </div>
       <NCheckbox id="ht-idle" v-model:checked="ignoreIdleThreads">ignore idle threads</NCheckbox>
       <NButton attr-type="submit" type="primary" :loading="running" :disabled="running">
-        {{ running ? 'sampling…' : 'execute' }}
+        {{ running ? t('hotThreads.sampling') : t('common.execute') }}
       </NButton>
     </form>
   </NCard>
 
   <template v-if="results">
     <NCard v-if="results.length === 0">
-      <p class="k-empty">no nodes reported</p>
+      <p class="k-empty">{{ t('hotThreads.noNodes') }}</p>
     </NCard>
     <NCard v-for="(nodeThreads, i) in results" v-else :key="i">
       <details class="k-threads" open>
@@ -118,10 +119,10 @@ async function execute(): Promise<void> {
           nodeThreads.subHeader
         }}</pre>
         <p v-if="nodeThreads.threads.length === 0" class="k-muted k-small" style="margin: 8px 0 0">
-          no busy threads on this node
+          {{ t('hotThreads.noBusyThreads') }}
         </p>
         <div
-          v-for="(thread, t) in nodeThreads.threads" :key="t" class="k-stack-tight"
+          v-for="(thread, index) in nodeThreads.threads" :key="index" class="k-stack-tight"
           style="margin-top: 10px"
         >
           <pre class="k-pre">{{ thread.header }}</pre>

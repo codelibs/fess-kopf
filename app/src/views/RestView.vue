@@ -8,6 +8,7 @@ import ExplanationTree from '@/components/ExplanationTree.vue';
 import JsonEditor from '@/components/JsonEditor.vue';
 import {useAlerts} from '@/composables/useAlerts';
 import {useCluster} from '@/composables/useCluster';
+import {t} from '@/i18n';
 import {toCsv} from '@/model/csv';
 import {isExplainPath, normalizeExplainResponse, type ExplainHit} from '@/model/explain';
 import {
@@ -67,22 +68,19 @@ function describe(error: unknown): unknown {
 
 async function send(explain = false): Promise<void> {
   if (path.value.trim() === '') {
-    alerts.warn('Path is empty');
+    alerts.warn(t('rest.emptyPath'));
     return;
   }
   if (editor.value?.error != null) {
-    alerts.error(`Invalid JSON: ${editor.value.error}`);
+    alerts.error(t('common.invalidJson', {message: editor.value.error}));
     return;
   }
   if (BODYLESS_METHODS.includes(method.value) && body.value.trim() !== '' &&
       body.value.trim() !== '{}') {
-    alerts.info(
-      `A ${method.value} request cannot carry a body, so it was not sent. ` +
-        'Use POST or PUT if the body matters.',
-    );
+    alerts.info(t('rest.bodyIgnored', {method: method.value}));
   }
   if (explain && !isExplainPath(path.value)) {
-    alerts.info('You are executing a request without _explain nor ?explain=true');
+    alerts.info(t('rest.noExplain'));
   }
 
   running.value = true;
@@ -100,9 +98,10 @@ async function send(explain = false): Promise<void> {
     );
   } catch (error) {
     if (error instanceof RequestError && error.isUnreachable) {
-      alerts.error(`${restRoot()}/${path.value.replace(/^\//, '')} is unreachable`);
+      alerts.error(t('rest.unreachable',
+        {url: `${restRoot()}/${path.value.replace(/^\//, '')}`}));
     } else {
-      alerts.error('Request was not successful', describe(error));
+      alerts.error(t('rest.failed'), describe(error));
       response.value = error instanceof RequestError ? error.body : String(error);
     }
   } finally {
@@ -128,9 +127,9 @@ async function copyAsCurl(): Promise<void> {
   }
   try {
     await navigator.clipboard.writeText(curl);
-    alerts.info('cURL request successfully copied to clipboard');
+    alerts.info(t('rest.curlCopied'));
   } catch {
-    alerts.error('Error while copying request to clipboard', curl);
+    alerts.error(t('rest.curlCopyFailed'), curl);
   }
 }
 
@@ -148,8 +147,8 @@ function exportCsv(): void {
 <template>
   <div class="k-page-head">
     <div>
-      <h1 class="k-page-title">REST</h1>
-      <p class="k-page-sub">Send a request straight to the cluster.</p>
+      <h1 class="k-page-title">{{ t('rest.title') }}</h1>
+      <p class="k-page-sub">{{ t('rest.sub') }}</p>
     </div>
   </div>
 
@@ -186,12 +185,12 @@ function exportCsv(): void {
 
           <div class="k-row k-wrap">
             <NButton attr-type="submit" type="primary" :loading="running" :disabled="running">
-              {{ running ? 'sending…' : 'send' }}
+              {{ running ? t('rest.sending') : t('rest.send') }}
             </NButton>
-            <NButton :disabled="running" @click="send(true)">explain</NButton>
-            <NButton @click="copyAsCurl">copy as cURL</NButton>
-            <NButton :disabled="!canExport" @click="exportCsv">export CSV</NButton>
-            <span class="k-push k-small k-muted">snippets:</span>
+            <NButton :disabled="running" @click="send(true)">{{ t('rest.explain') }}</NButton>
+            <NButton @click="copyAsCurl">{{ t('rest.copyAsCurl') }}</NButton>
+            <NButton :disabled="!canExport" @click="exportCsv">{{ t('rest.exportCsv') }}</NButton>
+            <span class="k-push k-small k-muted">{{ t('rest.snippets') }}</span>
             <NButton
               v-for="snippet in QUERY_SNIPPETS"
               :key="snippet.label"
@@ -206,7 +205,7 @@ function exportCsv(): void {
         </form>
       </NCard>
 
-      <NCard v-if="explanations.length" title="explanations">
+      <NCard v-if="explanations.length" :title="t('rest.explanations')">
         <div
           v-for="hit in explanations" :key="hit.documentId" class="k-stack-tight"
           style="margin-bottom: 12px"
@@ -216,13 +215,13 @@ function exportCsv(): void {
         </div>
       </NCard>
 
-      <NCard v-if="response !== null" title="response">
+      <NCard v-if="response !== null" :title="t('rest.response')">
         <pre id="rest-response" class="k-pre" style="max-height: 32rem">{{ responseText }}</pre>
       </NCard>
     </div>
 
-    <NCard title="history">
-      <p v-if="history.length === 0" class="k-muted k-small">no requests yet</p>
+    <NCard :title="t('rest.history')">
+      <p v-if="history.length === 0" class="k-muted k-small">{{ t('rest.noHistory') }}</p>
       <ul v-else class="k-history">
         <li v-for="(entry, i) in history" :key="i">
           <NButton

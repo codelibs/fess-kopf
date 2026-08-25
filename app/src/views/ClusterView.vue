@@ -18,6 +18,7 @@ import {
 import {useAlerts} from '@/composables/useAlerts';
 import {refresh as refreshCluster, useCluster} from '@/composables/useCluster';
 import {confirm, showInfo} from '@/composables/useDialogs';
+import {t} from '@/i18n';
 import {bytes} from '@/model/format';
 import {IndexFilter} from '@/model/index-filter';
 import {NodeFilter} from '@/model/node-filter';
@@ -107,37 +108,40 @@ async function ask(header: string, body: string, confirmText: string): Promise<b
   return confirm(header, body, confirmText);
 }
 
-const NAMES = (indices: string[]): string => `\n\nSelected indices:\n${indices.join('\n')}`;
+const NAMES = (indices: string[]): string =>
+  `\n\n${t('cluster.selectedIndices')}\n${indices.join('\n')}`;
 
 async function promptDelete(index: string, bulk = false): Promise<void> {
   const ok = await ask(
     bulk
-      ? 'are you sure you want to delete all selected indices?'
-      : `are you sure you want to delete index ${index}?`,
-    'Deleting an index cannot be undone and all data for this index will be lost.' +
-      (bulk ? NAMES(selected.value) : ''),
-    'Delete',
+      ? t('cluster.confirm.deleteBulk')
+      : t('cluster.confirm.deleteOne', {index}),
+    t('cluster.confirm.deleteBody') + (bulk ? NAMES(selected.value) : ''),
+    t('cluster.confirm.deleteAction'),
   );
   if (ok) {
-    await run(() => deleteIndex(index), 'Index was deleted', 'Error while deleting index', true);
+    await run(
+      () => deleteIndex(index),
+      t('cluster.deleted'),
+      t('cluster.deleteFailed'),
+      true,
+    );
   }
 }
 
 async function promptOptimize(index: string, bulk = false): Promise<void> {
   const ok = await ask(
     bulk
-      ? 'are you sure you want to optimize all selected indices?'
-      : `are you sure you want to optimize index ${index}?`,
-    'Optimizing an index is a resource intensive operation and should be done with caution. ' +
-      'Usually, you will only want to optimize an index when it will no longer receive updates.' +
-      (bulk ? NAMES(selected.value) : ''),
-    'Optimize',
+      ? t('cluster.confirm.optimizeBulk')
+      : t('cluster.confirm.optimizeOne', {index}),
+    t('cluster.confirm.optimizeBody') + (bulk ? NAMES(selected.value) : ''),
+    t('cluster.confirm.optimizeAction'),
   );
   if (ok) {
     await run(
       () => optimizeIndex(index),
-      'Index was successfully optimized',
-      'Error while optimizing index',
+      t('cluster.optimized'),
+      t('cluster.optimizeFailed'),
     );
   }
 }
@@ -145,18 +149,16 @@ async function promptOptimize(index: string, bulk = false): Promise<void> {
 async function promptRefresh(index: string, bulk = false): Promise<void> {
   const ok = await ask(
     bulk
-      ? 'are you sure you want to refresh all selected indices?'
-      : `are you sure you want to refresh index ${index}?`,
-    'Refreshing an index makes all operations performed since the last refresh available ' +
-      'for search.' +
-      (bulk ? NAMES(selected.value) : ''),
-    'Refresh',
+      ? t('cluster.confirm.refreshBulk')
+      : t('cluster.confirm.refreshOne', {index}),
+    t('cluster.confirm.refreshBody') + (bulk ? NAMES(selected.value) : ''),
+    t('cluster.confirm.refreshAction'),
   );
   if (ok) {
     await run(
       () => refreshIndex(index),
-      'Index was successfully refreshed',
-      'Error while refreshing index',
+      t('cluster.refreshed'),
+      t('cluster.refreshFailed'),
     );
   }
 }
@@ -164,16 +166,16 @@ async function promptRefresh(index: string, bulk = false): Promise<void> {
 async function promptClearCache(index: string, bulk = false): Promise<void> {
   const ok = await ask(
     bulk
-      ? 'are you sure you want to clear the cache for all selected indices?'
-      : `are you sure you want to clear the cache for ${index}?`,
-    'This will clear all caches for this index.' + (bulk ? NAMES(selected.value) : ''),
-    'Clear',
+      ? t('cluster.confirm.clearCacheBulk')
+      : t('cluster.confirm.clearCacheOne', {index}),
+    t('cluster.confirm.clearCacheBody') + (bulk ? NAMES(selected.value) : ''),
+    t('cluster.confirm.clearCacheAction'),
   );
   if (ok) {
     await run(
       () => clearIndexCache(index),
-      'Index cache was cleared',
-      'Error while clearing index cache',
+      t('cluster.cacheCleared'),
+      t('cluster.clearCacheFailed'),
       true,
     );
   }
@@ -182,18 +184,16 @@ async function promptClearCache(index: string, bulk = false): Promise<void> {
 async function promptClose(index: string, bulk = false): Promise<void> {
   const ok = await ask(
     bulk
-      ? 'are you sure you want to close all selected indices?'
-      : `are you sure you want to close index ${index}?`,
-    "Closing an index will remove all it's allocated shards from the cluster. Both searches " +
-      'and updates will no longer be accepted for the index. A closed index can be reopened.' +
-      (bulk ? NAMES(selected.value) : ''),
-    'Close index',
+      ? t('cluster.confirm.closeBulk')
+      : t('cluster.confirm.closeOne', {index}),
+    t('cluster.confirm.closeBody') + (bulk ? NAMES(selected.value) : ''),
+    t('cluster.confirm.closeAction'),
   );
   if (ok) {
     await run(
       () => closeIndex(index),
-      'Index was successfully closed',
-      'Error while closing index',
+      t('cluster.closed'),
+      t('cluster.closeFailed'),
       true,
     );
   }
@@ -202,17 +202,16 @@ async function promptClose(index: string, bulk = false): Promise<void> {
 async function promptOpen(index: string, bulk = false): Promise<void> {
   const ok = await ask(
     bulk
-      ? 'are you sure you want to open all selected indices?'
-      : `are you sure you want to open index ${index}?`,
-    'Opening an index will trigger the recovery process. This process could take sometime ' +
-      'depending on the index size.' + (bulk ? NAMES(selected.value) : ''),
-    'Open index',
+      ? t('cluster.confirm.openBulk')
+      : t('cluster.confirm.openOne', {index}),
+    t('cluster.confirm.openBody') + (bulk ? NAMES(selected.value) : ''),
+    t('cluster.confirm.openAction'),
   );
   if (ok) {
     await run(
       () => openIndex(index),
-      'Index was successfully opened',
-      'Error while opening index',
+      t('cluster.opened'),
+      t('cluster.openFailed'),
       true,
     );
   }
@@ -221,8 +220,8 @@ async function promptOpen(index: string, bulk = false): Promise<void> {
 async function toggleAllocation(enable: boolean): Promise<void> {
   await run(
     () => setShardAllocation(enable),
-    `Shard allocation was ${enable ? 'enabled' : 'disabled'}`,
-    `Error while ${enable ? 'enabling' : 'disabling'} shard allocation`,
+    enable ? t('cluster.allocationEnabled') : t('cluster.allocationDisabled'),
+    enable ? t('cluster.enableAllocationFailed') : t('cluster.disableAllocationFailed'),
     true,
   );
 }
@@ -230,18 +229,26 @@ async function toggleAllocation(enable: boolean): Promise<void> {
 async function showIndexInfo(index: string, what: 'settings' | 'mappings'): Promise<void> {
   try {
     const metadata = await fetchIndexMetadata(index);
-    showInfo(`${what} for ${index}`, what === 'settings' ? metadata.settings : metadata.mappings);
+    showInfo(
+      what === 'settings'
+        ? t('cluster.settingsTitle', {index})
+        : t('cluster.mappingsTitle', {index}),
+      what === 'settings' ? metadata.settings : metadata.mappings,
+    );
   } catch (error) {
-    alerts.error(`Error while loading index ${what}`, describe(error));
+    alerts.error(
+      what === 'settings' ? t('cluster.settingsFailed') : t('cluster.mappingsFailed'),
+      describe(error),
+    );
   }
 }
 
 async function showShardStats(shard: Shard): Promise<void> {
   try {
     const stats = await fetchShardStats(shard.shard, shard.index, shard.node ?? '');
-    showInfo(`stats for shard ${shard.shard}`, stats.stats);
+    showInfo(t('cluster.shardStatsTitle', {shard: shard.shard}), stats.stats);
   } catch (error) {
-    alerts.error('Error while loading shard stats', describe(error));
+    alerts.error(t('cluster.shardStatsFailed'), describe(error));
   }
 }
 
@@ -262,19 +269,19 @@ async function promptRelocate(toNode: string): Promise<void> {
     return;
   }
   const ok = await ask(
-    'are you sure you want relocate the shard?',
-    'Once the relocation finishes, the cluster will try to rebalance itself to an even state',
-    'Relocate',
+    t('cluster.confirm.relocate'),
+    t('cluster.confirm.relocateBody'),
+    t('cluster.confirm.relocateAction'),
   );
   if (!ok) {
     return;
   }
   try {
     const response = await relocateShard(shard.shard, shard.index, shard.node ?? '', toNode);
-    alerts.success('Relocation successfully executed', response);
+    alerts.success(t('cluster.relocated'), response);
     await refreshCluster();
   } catch (error) {
-    alerts.error('Error while moving shard', describe(error));
+    alerts.error(t('cluster.relocateFailed'), describe(error));
   } finally {
     relocating.value = null;
   }
@@ -294,17 +301,19 @@ function shardClass(shard: Shard): string {
   <template v-if="cluster">
     <div class="k-page-head">
       <div>
-        <h1 class="k-page-title">Cluster</h1>
+        <h1 class="k-page-title">{{ t('cluster.title') }}</h1>
         <p class="k-page-sub">
-          {{ currentPage.first }}-{{ currentPage.last }} of {{ currentPage.total }} indices across
-          {{ nodes.length }} nodes.
+          {{ t('cluster.sub', {first: currentPage.first, last: currentPage.last,
+                               total: currentPage.total, nodes: nodes.length}) }}
         </p>
       </div>
       <div class="k-row">
         <NButton size="small" :disabled="!currentPage.previous" @click="page -= 1">
-          previous
+          {{ t('common.previous') }}
         </NButton>
-        <NButton size="small" :disabled="!currentPage.next" @click="page += 1">next</NButton>
+        <NButton size="small" :disabled="!currentPage.next" @click="page += 1">
+          {{ t('common.next') }}
+        </NButton>
       </div>
     </div>
 
@@ -312,9 +321,9 @@ function shardClass(shard: Shard): string {
       <div class="k-row k-wrap k-gap-lg">
         <NInput
           v-model:value="indexFilter.name"
-          placeholder="Filter indices by name..."
+          :placeholder="t('cluster.filterIndices')"
           clearable
-          aria-label="Filter indices by name"
+          :aria-label="t('cluster.filterIndices')"
           style="max-width: 20rem"
           :input-props="{id: 'index-filter'}"
         />
@@ -328,9 +337,9 @@ function shardClass(shard: Shard): string {
         </NCheckbox>
         <NInput
           v-model:value="nodeFilter.name"
-          placeholder="Filter nodes..."
+          :placeholder="t('cluster.filterNodes')"
           clearable
-          aria-label="Filter nodes"
+          :aria-label="t('cluster.filterNodes')"
           style="max-width: 14rem"
           :input-props="{id: 'cluster-node-filter'}"
         />
@@ -348,8 +357,8 @@ function shardClass(shard: Shard): string {
                     size="tiny"
                     :title="
                       cluster.disableAllocation === 'true'
-                        ? 'enable shard allocation'
-                        : 'disable shard allocation'
+                        ? t('cluster.enableAllocation')
+                        : t('cluster.disableAllocation')
                     "
                     @click="toggleAllocation(cluster.disableAllocation === 'true')"
                   >
@@ -357,32 +366,36 @@ function shardClass(shard: Shard): string {
                   </NButton>
                   <NButton
                     size="tiny"
-                    :title="indexFilter.asc ? 'sort descending' : 'sort ascending'"
+                    :title="
+                      indexFilter.asc
+                        ? t('cluster.sortDescending')
+                        : t('cluster.sortAscending')
+                    "
                     @click="indexFilter.asc = !indexFilter.asc"
                   >
                     {{ indexFilter.asc ? 'A→Z' : 'Z→A' }}
                   </NButton>
                   <details class="k-menu k-menu-button">
-                    <summary>bulk</summary>
+                    <summary>{{ t('cluster.bulk') }}</summary>
                     <ul class="k-menu-items">
                       <li>
                         <NButton text size="tiny" @click="promptClose(selected.join(','), true)">
-                          close selected
+                          {{ t('cluster.closeSelected') }}
                         </NButton>
                       </li>
                       <li>
                         <NButton text size="tiny" @click="promptOpen(selected.join(','), true)">
-                          open selected
+                          {{ t('cluster.openSelected') }}
                         </NButton>
                       </li>
                       <li>
                         <NButton text size="tiny" @click="promptOptimize(selected.join(','), true)">
-                          optimize selected
+                          {{ t('cluster.optimizeSelected') }}
                         </NButton>
                       </li>
                       <li>
                         <NButton text size="tiny" @click="promptRefresh(selected.join(','), true)">
-                          refresh selected
+                          {{ t('cluster.refreshSelected') }}
                         </NButton>
                       </li>
                       <li>
@@ -391,7 +404,7 @@ function shardClass(shard: Shard): string {
                           size="tiny"
                           @click="promptClearCache(selected.join(','), true)"
                         >
-                          clear selected caches
+                          {{ t('cluster.clearSelectedCaches') }}
                         </NButton>
                       </li>
                       <li>
@@ -401,7 +414,7 @@ function shardClass(shard: Shard): string {
                           type="error"
                           @click="promptDelete(selected.join(','), true)"
                         >
-                          delete selected
+                          {{ t('cluster.deleteSelected') }}
                         </NButton>
                       </li>
                     </ul>
@@ -415,37 +428,37 @@ function shardClass(shard: Shard): string {
                     <ul class="k-menu-items">
                       <li>
                         <NButton text size="tiny" @click="showIndexInfo(index.name, 'settings')">
-                          show settings
+                          {{ t('cluster.showSettings') }}
                         </NButton>
                       </li>
                       <li>
                         <NButton text size="tiny" @click="showIndexInfo(index.name, 'mappings')">
-                          show mappings
+                          {{ t('cluster.showMappings') }}
                         </NButton>
                       </li>
                       <li v-if="index.open">
                         <NButton text size="tiny" @click="promptClose(index.name)">
-                          close index
+                          {{ t('cluster.closeIndex') }}
                         </NButton>
                       </li>
                       <li v-else>
                         <NButton text size="tiny" @click="promptOpen(index.name)">
-                          open index
+                          {{ t('cluster.openIndex') }}
                         </NButton>
                       </li>
                       <li>
                         <NButton text size="tiny" @click="promptOptimize(index.name)">
-                          optimize index
+                          {{ t('cluster.optimizeIndex') }}
                         </NButton>
                       </li>
                       <li>
                         <NButton text size="tiny" @click="promptRefresh(index.name)">
-                          refresh index
+                          {{ t('cluster.refreshIndex') }}
                         </NButton>
                       </li>
                       <li>
                         <NButton text size="tiny" @click="promptClearCache(index.name)">
-                          clear cache
+                          {{ t('cluster.clearCache') }}
                         </NButton>
                       </li>
                       <li>
@@ -453,12 +466,12 @@ function shardClass(shard: Shard): string {
                           class="k-menu-link"
                           :to="{name: 'indexSettings', query: {index: index.name}}"
                         >
-                          edit settings
+                          {{ t('cluster.editSettings') }}
                         </RouterLink>
                       </li>
                       <li>
                         <NButton text size="tiny" type="error" @click="promptDelete(index.name)">
-                          delete index
+                          {{ t('cluster.deleteIndex') }}
                         </NButton>
                       </li>
                     </ul>
@@ -496,7 +509,9 @@ function shardClass(shard: Shard): string {
                   text size="tiny" type="primary"
                   @click="indexFilter.healthy = !indexFilter.healthy"
                 >
-                  {{ indexFilter.healthy ? 'show only unhealthy indices' : 'show all indices' }}
+                  {{ indexFilter.healthy
+                    ? t('cluster.showOnlyUnhealthy')
+                    : t('cluster.showAll') }}
                 </NButton>
               </th>
               <td v-for="(index, i) in currentPage.elements" :key="i">
@@ -525,7 +540,7 @@ function shardClass(shard: Shard): string {
                     v-if="canReceiveShard(index, node.id)"
                     type="button"
                     class="k-shard k-shard-target"
-                    title="move the selected shard here"
+                    :title="t('cluster.moveShardHere')"
                     @click="promptRelocate(node.id)"
                   >
                     ✓
@@ -539,17 +554,17 @@ function shardClass(shard: Shard): string {
                     <ul class="k-menu-items">
                       <li>
                         <NButton text size="tiny" @click="showShardStats(shard)">
-                          show shard stats
+                          {{ t('cluster.showShardStats') }}
                         </NButton>
                       </li>
                       <li v-if="relocating?.id !== shard.id">
                         <NButton text size="tiny" @click="relocating = shard">
-                          select for relocation
+                          {{ t('cluster.selectForRelocation') }}
                         </NButton>
                       </li>
                       <li v-else>
                         <NButton text size="tiny" @click="relocating = null">
-                          unselect for relocation
+                          {{ t('cluster.unselectForRelocation') }}
                         </NButton>
                       </li>
                     </ul>

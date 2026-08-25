@@ -71,6 +71,7 @@ app/
     ├── composables/     # shared state (cluster poll, alerts, dialogs)
     ├── components/
     ├── views/           # one per route
+    ├── i18n/            # locale resolution and the sixteen catalogues
     ├── theme.ts         # the palette, and Naive UI's theme overrides
     └── styles.css       # layout primitives, reading theme.ts's properties
 ```
@@ -111,9 +112,31 @@ app/
      and sort model, so a data-grid component would mean more render functions,
      not fewer
 
-5. **OpenSearch Integration**: This tool is designed exclusively for OpenSearch 2.x and 3.x (not Elasticsearch). It connects to OpenSearch clusters via REST API and provides a web UI for cluster management.
+5. **The locale comes from Fess, not from the browser.** Fess resolves the
+   admin console's locale itself (`FessUserLocaleProcessProvider`: browser
+   `Accept-Language`, overridable per request with `browser_lang`) and passes
+   it to kopf as `?lang=` on the iframe URL. `app/src/i18n/locale.ts`
+   reproduces `java.util.ResourceBundle`'s fallback over the same sixteen
+   `fess_label` locales -- exact tag, then language, then English -- so the
+   iframe and the page around it cannot disagree. Reading
+   `navigator.language` instead is only the fallback for when kopf is served
+   outside Fess; it is wrong whenever `browser_lang` was used.
 
-6. **Fess Integration**: The built application is served through Fess at
+   `en.json` is both the fallback for a missing key and the type that defines
+   the key set, so a mistyped key is a compile error. The catalogue tests fail
+   on a missing key, a dropped `{placeholder}` or an empty message, which is
+   what keeps fifteen hand-authored catalogues honest. Naive UI's own strings
+   come from its locale export, selected from the same resolved tag.
+
+   What gets translated is a rule, not a judgement call: **if kopf says it,
+   translate it; if OpenSearch says it, leave it.** Prose, buttons, menu
+   actions, placeholders, empty states, alerts and confirmations are
+   translated. The navigation, table headers, form field labels, status
+   values, node roles, JSON keys and `_cat` API names are not.
+
+6. **OpenSearch Integration**: This tool is designed exclusively for OpenSearch 2.x and 3.x (not Elasticsearch). It connects to OpenSearch clusters via REST API and provides a web UI for cluster management.
+
+7. **Fess Integration**: The built application is served through Fess at
    `/_plugin/kopf/`. Configuration is handled via `kopf_external_settings.json`
    which includes:
    - `location`: OpenSearch URL for local development. Empty in the

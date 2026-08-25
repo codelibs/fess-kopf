@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {NTag} from 'naive-ui';
 import {useCluster} from '@/composables/useCluster';
+import {t} from '@/i18n';
 
 const {current, degraded, version} = useCluster();
 
@@ -46,7 +47,7 @@ const DOT_CLASS: Record<string, string> = {
       <span class="k-metric">{{ current.indices.length }}</span>
     </span>
     <NTag v-if="degraded" size="small" type="warning" :bordered="false">
-      limited view: index data unavailable
+      {{ t('stats.limitedView') }}
     </NTag>
     <span class="k-push k-row k-small k-muted">
       <!-- The engine version used to sit in the title bar; it belongs with the

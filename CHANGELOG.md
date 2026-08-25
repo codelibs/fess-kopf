@@ -28,6 +28,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   layer
 
 ### Added
+- **The interface follows the Fess admin console's language.** Fess passes
+  the locale it resolved for the dashboard request on the iframe URL
+  (`?lang=`), and kopf renders in it. All sixteen locales Fess ships a
+  `fess_label` bundle for are covered -- de, en, es, fr, hi, id, it, ja, ko,
+  nl, pl, pt-BR, ru, tr, zh-CN and zh-TW -- resolving exactly as
+  `ResourceBundle` does, so the iframe and the page around it never end up
+  in different languages. Without the parameter kopf falls back to the
+  browser's preference and then to English, so it still works when served
+  outside Fess. Prose, buttons, messages and confirmations are translated;
+  the navigation, table headers, field labels and every OpenSearch
+  identifier stay in the original, because an operator reads them beside the
+  API's own responses
 - Query skeletons on the REST client for the query types a Fess cluster is
   operated with: match, knn, neural, neural_sparse and hybrid
 - A type check (`npm run typecheck`) in CI. The bundler strips types without

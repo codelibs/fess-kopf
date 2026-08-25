@@ -6,6 +6,7 @@ import {createIndexTemplate, deleteIndexTemplate, fetchIndexTemplates} from '@/a
 import JsonEditor from '@/components/JsonEditor.vue';
 import {useAlerts} from '@/composables/useAlerts';
 import {confirm} from '@/composables/useDialogs';
+import {t} from '@/i18n';
 import {IndexTemplate, IndexTemplateFilter} from '@/model/index-template';
 import {Paginator} from '@/model/paginator';
 
@@ -43,7 +44,7 @@ async function load(): Promise<void> {
   try {
     templates.value = await fetchIndexTemplates();
   } catch (error) {
-    alerts.error('Error while loading templates', describe(error));
+    alerts.error(t('templates.loadFailed'), describe(error));
   }
 }
 
@@ -51,41 +52,41 @@ onMounted(load);
 
 async function create(): Promise<void> {
   if (name.value.trim() === '') {
-    alerts.error("Template name can't be empty");
+    alerts.error(t('templates.nameRequired'));
     return;
   }
   if (body.value.trim() === '') {
-    alerts.error("Template body can't be empty");
+    alerts.error(t('templates.bodyRequired'));
     return;
   }
   if (editor.value?.error != null) {
-    alerts.error(`Invalid JSON: ${editor.value.error}`);
+    alerts.error(t('common.invalidJson', {message: editor.value.error}));
     return;
   }
   try {
     const response = await createIndexTemplate(name.value, body.value);
-    alerts.success('Template successfully created', response);
+    alerts.success(t('templates.created'), response);
     await load();
   } catch (error) {
-    alerts.error('Error while creating template', describe(error));
+    alerts.error(t('templates.createFailed'), describe(error));
   }
 }
 
 async function remove(template: IndexTemplate): Promise<void> {
   const ok = await confirm(
-    `are you sure you want to delete template ${template.name}?`,
+    t('templates.confirmDelete', {template: template.name}),
     JSON.stringify(template.body, undefined, 2),
-    'Delete',
+    t('cluster.confirm.deleteAction'),
   );
   if (!ok) {
     return;
   }
   try {
     const response = await deleteIndexTemplate(template.name);
-    alerts.success('Template successfully deleted', response);
+    alerts.success(t('templates.deleted'), response);
     await load();
   } catch (error) {
-    alerts.error('Error while deleting template', describe(error));
+    alerts.error(t('templates.deleteFailed'), describe(error));
   }
 }
 
@@ -98,13 +99,13 @@ function edit(template: IndexTemplate): void {
 <template>
   <div class="k-page-head">
     <div>
-      <h1 class="k-page-title">Index templates</h1>
-      <p class="k-page-sub">Settings and mappings applied to indices as they are created.</p>
+      <h1 class="k-page-title">{{ t('templates.title') }}</h1>
+      <p class="k-page-sub">{{ t('templates.sub') }}</p>
     </div>
   </div>
 
   <div class="k-split k-split-even">
-    <NCard title="create template">
+    <NCard :title="t('templates.create')">
       <form class="k-stack" @submit.prevent="create">
         <div>
           <label class="k-label" for="it-name">name</label>
@@ -115,32 +116,32 @@ function edit(template: IndexTemplate): void {
           <JsonEditor id="it-body" ref="editor" v-model="body" :rows="14" />
         </div>
         <div>
-          <NButton attr-type="submit" type="primary">create</NButton>
+          <NButton attr-type="submit" type="primary">{{ t('common.create') }}</NButton>
         </div>
       </form>
     </NCard>
 
-    <NCard title="templates">
+    <NCard :title="t('templates.list')">
       <div class="k-row k-wrap" style="margin-bottom: 12px">
         <NInput
           v-model:value="filter.name"
           class="k-grow"
-          placeholder="filter by name"
+          :placeholder="t('templates.filterByName')"
           clearable
-          aria-label="filter by name"
+          :aria-label="t('templates.filterByName')"
           :input-props="{id: 'it-f-name'}"
         />
         <NInput
           v-model:value="filter.template"
           class="k-grow"
-          placeholder="filter by index pattern"
+          :placeholder="t('templates.filterByPattern')"
           clearable
-          aria-label="filter by index pattern"
+          :aria-label="t('templates.filterByPattern')"
           :input-props="{id: 'it-f-pattern'}"
         />
       </div>
 
-      <p v-if="currentPage.total === 0" class="k-empty">no templates match</p>
+      <p v-if="currentPage.total === 0" class="k-empty">{{ t('templates.empty') }}</p>
       <ul v-else class="k-list">
         <li v-for="template in currentPage.elements.filter(Boolean)" :key="template!.name">
           <div class="k-grow k-stack-tight">
@@ -152,20 +153,27 @@ function edit(template: IndexTemplate): void {
             </div>
           </div>
           <div class="k-row">
-            <NButton text size="tiny" type="primary" @click="edit(template!)">edit</NButton>
-            <NButton text size="tiny" type="error" @click="remove(template!)">delete</NButton>
+            <NButton text size="tiny" type="primary" @click="edit(template!)">
+              {{ t('common.edit') }}
+            </NButton>
+            <NButton text size="tiny" type="error" @click="remove(template!)">
+              {{ t('common.delete') }}
+            </NButton>
           </div>
         </li>
       </ul>
 
       <div v-if="currentPage.total > 0" class="k-row k-small" style="margin-top: 12px">
         <NButton size="tiny" :disabled="!currentPage.previous" @click="page -= 1">
-          previous
+          {{ t('common.previous') }}
         </NButton>
         <span class="k-muted">
-          {{ currentPage.first }}-{{ currentPage.last }} of {{ currentPage.total }}
+          {{ t('common.range', {first: currentPage.first, last: currentPage.last,
+                                total: currentPage.total}) }}
         </span>
-        <NButton size="tiny" :disabled="!currentPage.next" @click="page += 1">next</NButton>
+        <NButton size="tiny" :disabled="!currentPage.next" @click="page += 1">
+          {{ t('common.next') }}
+        </NButton>
       </div>
     </NCard>
   </div>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {computed, ref, watch} from 'vue';
 import {NButton, NInput} from 'naive-ui';
+import {t} from '@/i18n';
 
 const model = defineModel<string>({required: true});
 const props = defineProps<{id: string; rows?: number}>();
@@ -49,7 +50,7 @@ function format(): void {
     <div class="k-row k-row-top" style="margin-top: 4px">
       <span v-if="error" class="k-small k-grow" style="color: var(--k-error)">{{ error }}</span>
       <span v-else class="k-grow" />
-      <NButton text size="tiny" type="primary" @click="format">format</NButton>
+      <NButton text size="tiny" type="primary" @click="format">{{ t('editor.format') }}</NButton>
     </div>
   </div>
 </template>

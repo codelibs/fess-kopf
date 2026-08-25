@@ -4,6 +4,7 @@ import {NButton, NCard, NSelect} from 'naive-ui';
 import {CAT_APIS, fetchCat} from '@/api/opensearch';
 import {RequestError} from '@/api/client';
 import {useAlerts} from '@/composables/useAlerts';
+import {t} from '@/i18n';
 import type {CatResult} from '@/model/cat-result';
 
 const alerts = useAlerts();
@@ -16,7 +17,7 @@ const apiOptions = computed(() => CAT_APIS.map((name) => ({label: name, value: n
 
 async function execute(): Promise<void> {
   if (api.value === '') {
-    alerts.error('You must select an API');
+    alerts.error(t('cat.noApi'));
     return;
   }
   running.value = true;
@@ -24,7 +25,7 @@ async function execute(): Promise<void> {
     result.value = await fetchCat(api.value);
   } catch (error) {
     alerts.error(
-      'Error while fetching data',
+      t('cat.failed'),
       error instanceof RequestError ? error.body : String(error),
     );
     result.value = null;
@@ -37,8 +38,8 @@ async function execute(): Promise<void> {
 <template>
   <div class="k-page-head">
     <div>
-      <h1 class="k-page-title">Cat APIs</h1>
-      <p class="k-page-sub">Compact, human-readable views of cluster internals.</p>
+      <h1 class="k-page-title">{{ t('cat.title') }}</h1>
+      <p class="k-page-sub">{{ t('cat.sub') }}</p>
     </div>
   </div>
 
@@ -52,11 +53,11 @@ async function execute(): Promise<void> {
         v-model:value="api"
         aria-labelledby="cat-api-label"
         :options="apiOptions"
-        placeholder="select api"
+        :placeholder="t('cat.selectApi')"
         style="width: 14rem"
       />
       <NButton attr-type="submit" type="primary" :loading="running" :disabled="running">
-        {{ running ? 'running…' : 'execute' }}
+        {{ running ? t('common.running') : t('common.execute') }}
       </NButton>
     </form>
 
@@ -73,7 +74,7 @@ async function execute(): Promise<void> {
           </tr>
         </tbody>
       </table>
-      <p v-else class="k-empty">no data available</p>
+      <p v-else class="k-empty">{{ t('cat.empty') }}</p>
     </div>
   </NCard>
 </template>

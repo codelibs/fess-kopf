@@ -3,6 +3,7 @@ import {RouterLink} from 'vue-router';
 import {NTag} from 'naive-ui';
 import {NAV_ROUTES, ROUTE_LABELS} from '@/router';
 import {useCluster} from '@/composables/useCluster';
+import {t} from '@/i18n';
 
 // No product name in the bar: kopf only ever renders inside the Fess admin
 // dashboard, which already says whose page this is. The row is for navigation
@@ -12,7 +13,7 @@ const {clusterName, connected} = useCluster();
 
 <template>
   <header class="k-header">
-    <nav class="k-nav" aria-label="Sections">
+    <nav class="k-nav" :aria-label="t('header.sections')">
       <RouterLink v-for="name in NAV_ROUTES" :key="name" :to="{name}">
         {{ ROUTE_LABELS[name] }}
       </RouterLink>
@@ -22,7 +23,9 @@ const {clusterName, connected} = useCluster();
         {{ clusterName }}
       </span>
       <NTag size="small" :type="connected ? 'success' : 'error'" round :bordered="false">
-        <span role="status">{{ connected ? 'connected' : 'disconnected' }}</span>
+        <span role="status">
+          {{ connected ? t('header.connected') : t('header.disconnected') }}
+        </span>
       </NTag>
     </div>
   </header>

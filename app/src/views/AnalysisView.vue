@@ -5,6 +5,7 @@ import {RequestError} from '@/api/client';
 import {analyzeByAnalyzer, analyzeByField, fetchIndexMetadata} from '@/api/opensearch';
 import {useAlerts} from '@/composables/useAlerts';
 import {useCluster} from '@/composables/useCluster';
+import {t} from '@/i18n';
 import type {IndexMetadata, Token} from '@/model/index-metadata';
 
 const alerts = useAlerts();
@@ -52,7 +53,7 @@ watch(fieldIndex, async (index) => {
     fieldMetadata.value = await fetchIndexMetadata(index);
   } catch (error) {
     fieldIndex.value = '';
-    alerts.error('Error loading index types', describe(error));
+    alerts.error(t('analysis.typesFailed'), describe(error));
   }
 });
 
@@ -66,7 +67,7 @@ watch(analyzerIndex, async (index) => {
     analyzerMetadata.value = await fetchIndexMetadata(index);
   } catch (error) {
     analyzerIndex.value = '';
-    alerts.error('Error loading index analyzers', describe(error));
+    alerts.error(t('analysis.analyzersFailed'), describe(error));
   }
 });
 
@@ -83,7 +84,7 @@ async function runFieldAnalysis(): Promise<void> {
     fieldTokens.value = await analyzeByField(fieldIndex.value, fieldField.value, fieldText.value);
   } catch (error) {
     fieldTokens.value = null;
-    alerts.error('Error analyzing text by field', describe(error));
+    alerts.error(t('analysis.byFieldFailed'), describe(error));
   }
 }
 
@@ -100,7 +101,7 @@ async function runAnalyzerAnalysis(): Promise<void> {
     );
   } catch (error) {
     analyzerTokens.value = null;
-    alerts.error('Error analyzing text by analyzer', describe(error));
+    alerts.error(t('analysis.byAnalyzerFailed'), describe(error));
   }
 }
 </script>
@@ -108,13 +109,13 @@ async function runAnalyzerAnalysis(): Promise<void> {
 <template>
   <div class="k-page-head">
     <div>
-      <h1 class="k-page-title">Analysis</h1>
-      <p class="k-page-sub">See how text is tokenised before it reaches the index.</p>
+      <h1 class="k-page-title">{{ t('analysis.title') }}</h1>
+      <p class="k-page-sub">{{ t('analysis.sub') }}</p>
     </div>
   </div>
 
   <div class="k-split k-split-even">
-    <NCard title="analysis by field type">
+    <NCard :title="t('analysis.byField')">
       <form class="k-stack" @submit.prevent="runFieldAnalysis">
         <div>
           <span id="an-field-index-label" class="k-label">index</span>
@@ -123,7 +124,7 @@ async function runAnalyzerAnalysis(): Promise<void> {
             v-model:value="fieldIndex"
             aria-labelledby="an-field-index-label"
             :options="indexOptions"
-            placeholder="select index"
+            :placeholder="t('analysis.selectIndex')"
             filterable
           />
         </div>
@@ -134,7 +135,7 @@ async function runAnalyzerAnalysis(): Promise<void> {
             v-model:value="fieldType"
             aria-labelledby="an-field-type-label"
             :options="typeOptions"
-            placeholder="select type"
+            :placeholder="t('analysis.selectType')"
           />
         </div>
         <div>
@@ -144,7 +145,7 @@ async function runAnalyzerAnalysis(): Promise<void> {
             v-model:value="fieldField"
             aria-labelledby="an-field-field-label"
             :options="fieldOptions"
-            placeholder="select field"
+            :placeholder="t('analysis.selectField')"
             filterable
           />
         </div>
@@ -158,18 +159,20 @@ async function runAnalyzerAnalysis(): Promise<void> {
           />
         </div>
         <div>
-          <NButton attr-type="submit" type="primary">analyze</NButton>
+          <NButton attr-type="submit" type="primary">{{ t('analysis.analyze') }}</NButton>
         </div>
       </form>
       <div v-if="fieldTokens" class="k-row k-wrap" style="margin-top: 14px">
         <NTag v-for="(token, i) in fieldTokens" :key="i" size="small" :bordered="false">
           {{ token.token }}
         </NTag>
-        <span v-if="fieldTokens.length === 0" class="k-muted k-small">no tokens</span>
+        <span v-if="fieldTokens.length === 0" class="k-muted k-small">
+          {{ t('analysis.noTokens') }}
+        </span>
       </div>
     </NCard>
 
-    <NCard title="analysis by analyzer">
+    <NCard :title="t('analysis.byAnalyzer')">
       <form class="k-stack" @submit.prevent="runAnalyzerAnalysis">
         <div>
           <span id="an-an-index-label" class="k-label">index</span>
@@ -178,7 +181,7 @@ async function runAnalyzerAnalysis(): Promise<void> {
             v-model:value="analyzerIndex"
             aria-labelledby="an-an-index-label"
             :options="indexOptions"
-            placeholder="select index"
+            :placeholder="t('analysis.selectIndex')"
             filterable
           />
         </div>
@@ -189,7 +192,7 @@ async function runAnalyzerAnalysis(): Promise<void> {
             v-model:value="analyzerName"
             aria-labelledby="an-an-analyzer-label"
             :options="analyzerOptions"
-            placeholder="select analyzer"
+            :placeholder="t('analysis.selectAnalyzer')"
             filterable
           />
         </div>
@@ -203,14 +206,16 @@ async function runAnalyzerAnalysis(): Promise<void> {
           />
         </div>
         <div>
-          <NButton attr-type="submit" type="primary">analyze</NButton>
+          <NButton attr-type="submit" type="primary">{{ t('analysis.analyze') }}</NButton>
         </div>
       </form>
       <div v-if="analyzerTokens" class="k-row k-wrap" style="margin-top: 14px">
         <NTag v-for="(token, i) in analyzerTokens" :key="i" size="small" :bordered="false">
           {{ token.token }}
         </NTag>
-        <span v-if="analyzerTokens.length === 0" class="k-muted k-small">no tokens</span>
+        <span v-if="analyzerTokens.length === 0" class="k-muted k-small">
+          {{ t('analysis.noTokens') }}
+        </span>
       </div>
     </NCard>
   </div>

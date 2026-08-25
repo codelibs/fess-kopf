@@ -6,6 +6,7 @@ import {createIndex, fetchIndexMetadata} from '@/api/opensearch';
 import JsonEditor from '@/components/JsonEditor.vue';
 import {useAlerts} from '@/composables/useAlerts';
 import {refresh as refreshCluster, useCluster} from '@/composables/useCluster';
+import {t} from '@/i18n';
 
 const alerts = useAlerts();
 const {cluster} = useCluster();
@@ -19,7 +20,7 @@ const editor = ref<InstanceType<typeof JsonEditor> | null>(null);
 const creating = ref(false);
 
 const sourceOptions = computed(() => [
-  {label: 'none', value: ''},
+  {label: t('createIndex.sourceNone'), value: ''},
   ...(cluster.value?.indices ?? []).map((index) => ({label: index.name, value: index.name})),
 ]);
 
@@ -41,17 +42,17 @@ async function loadSource(): Promise<void> {
       2,
     );
   } catch (error) {
-    alerts.error('Error while loading index settings', describe(error));
+    alerts.error(t('createIndex.sourceFailed'), describe(error));
   }
 }
 
 async function submit(): Promise<void> {
   if (name.value.trim() === '') {
-    alerts.error('You must specify a valid index name');
+    alerts.error(t('createIndex.invalidName'));
     return;
   }
   if (editor.value?.error != null) {
-    alerts.error(`Invalid JSON: ${editor.value.error}`);
+    alerts.error(t('common.invalidJson', {message: editor.value.error}));
     return;
   }
 
@@ -72,7 +73,7 @@ async function submit(): Promise<void> {
   creating.value = true;
   try {
     const response = await createIndex(name.value, payload);
-    alerts.success(`Index ${name.value} was created`, response);
+    alerts.success(t('createIndex.created', {index: name.value}), response);
     name.value = '';
     shards.value = '';
     replicas.value = '';
@@ -80,7 +81,7 @@ async function submit(): Promise<void> {
     body.value = '{}';
     await refreshCluster();
   } catch (error) {
-    alerts.error('Error while creating index', describe(error));
+    alerts.error(t('createIndex.createFailed'), describe(error));
   } finally {
     creating.value = false;
   }
@@ -90,8 +91,8 @@ async function submit(): Promise<void> {
 <template>
   <div class="k-page-head">
     <div>
-      <h1 class="k-page-title">Create index</h1>
-      <p class="k-page-sub">Name it, then either size it below or paste a full definition.</p>
+      <h1 class="k-page-title">{{ t('createIndex.title') }}</h1>
+      <p class="k-page-sub">{{ t('createIndex.sub') }}</p>
     </div>
   </div>
 
@@ -127,13 +128,13 @@ async function submit(): Promise<void> {
         <label class="k-label" for="ci-body">settings and mappings</label>
         <JsonEditor id="ci-body" ref="editor" v-model="body" :rows="14" />
         <p class="k-small k-muted" style="margin: 6px 0 0">
-          Leave this as <code class="k-mono">{}</code> to use the shard and replica boxes above.
+          {{ t('createIndex.bodyHint') }}
         </p>
       </div>
 
       <div>
         <NButton attr-type="submit" type="primary" :loading="creating" :disabled="creating">
-          {{ creating ? 'creating…' : 'create' }}
+          {{ creating ? t('createIndex.creating') : t('common.create') }}
         </NButton>
       </div>
     </form>
