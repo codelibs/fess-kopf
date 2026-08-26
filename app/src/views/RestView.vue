@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import {computed, onMounted, ref} from 'vue';
+import {computed, onMounted, ref, watch} from 'vue';
 import {useRoute} from 'vue-router';
 import {NAutoComplete, NButton, NCard, NSelect, NTag} from 'naive-ui';
 import {RequestError, restRoot} from '@/api/client';
-import {BODYLESS_METHODS, restRequest} from '@/api/opensearch';
+import {BODYLESS_METHODS, fetchIndexMetadata, restRequest} from '@/api/opensearch';
 import ExplanationTree from '@/components/ExplanationTree.vue';
 import JsonEditor from '@/components/JsonEditor.vue';
 import {useAlerts} from '@/composables/useAlerts';
@@ -18,7 +18,8 @@ import {
   rememberRequest,
   type HttpMethod,
 } from '@/model/request';
-import {QUERY_SNIPPETS, suggestPaths} from '@/model/rest-suggestions';
+import {completeQueryDsl, type Completion} from '@/model/query-dsl-completer';
+import {QUERY_SNIPPETS, suggestPaths, targetIndices} from '@/model/rest-suggestions';
 
 const alerts = useAlerts();
 const {cluster} = useCluster();
@@ -35,7 +36,41 @@ const editor = ref<InstanceType<typeof JsonEditor> | null>(null);
 
 const indices = computed(() => (cluster.value?.indices ?? []).map((index) => index.name));
 const suggestions = computed(() => suggestPaths(path.value, indices.value));
+const targets = computed(() => targetIndices(path.value, indices.value));
 const methodOptions = computed(() => HTTP_METHODS.map((m) => ({label: m, value: m})));
+
+/**
+ * Field names for the indices the path addresses, so the body editor can
+ * complete them.
+ *
+ * Fetched once per index and kept for as long as the screen is open. A path
+ * that names no index -- a cluster-wide `_search` -- fetches nothing and
+ * leaves the editor completing the DSL keys alone.
+ */
+const mappedFields = new Map<string, string[]>();
+const fields = ref<string[]>([]);
+
+async function loadFields(): Promise<void> {
+  const wanted = targets.value;
+  await Promise.all(wanted.filter((index) => !mappedFields.has(index)).map(async (index) => {
+    try {
+      mappedFields.set(index, (await fetchIndexMetadata(index)).getAllFields());
+    } catch {
+      // A mapping that cannot be read costs the field completions for that
+      // index and nothing else, so it is remembered as empty rather than
+      // alerted on and retried at every keystroke.
+      mappedFields.set(index, []);
+    }
+  }));
+  const names = wanted.flatMap((index) => mappedFields.get(index) ?? []);
+  fields.value = [...new Set(names)].sort((a, b) => a.localeCompare(b));
+}
+
+watch(() => targets.value.join(','), () => void loadFields(), {immediate: true});
+
+function complete(text: string, cursor: number): Completion[] {
+  return completeQueryDsl(text, cursor, {fields: fields.value});
+}
 
 const canExport = computed(() => response.value !== null && typeof response.value === 'object');
 
@@ -180,7 +215,9 @@ function exportCsv(): void {
 
           <div>
             <label class="k-label" for="rest-body">body</label>
-            <JsonEditor id="rest-body" ref="editor" v-model="body" :rows="12" />
+            <JsonEditor
+              id="rest-body" ref="editor" v-model="body" :rows="12" :complete="complete"
+            />
           </div>
 
           <div class="k-row k-wrap">

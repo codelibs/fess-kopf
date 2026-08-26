@@ -115,3 +115,56 @@ describe('IndexMetadata', () => {
     });
   });
 });
+
+describe('getAllFields', () => {
+  it('lists every mapped field whatever its type', () => {
+    const m = metadata({
+      mappings: {
+        _doc: {
+          properties: {
+            title: {type: 'text'},
+            boost: {type: 'float'},
+            created: {type: 'date'},
+          },
+        },
+      },
+    });
+    expect(m.getAllFields()).toEqual(['boost', 'created', 'title']);
+  });
+
+  it('names a nested field by its full path, and the container too', () => {
+    const m = metadata({
+      mappings: {
+        _doc: {
+          properties: {
+            author: {type: 'object', properties: {name: {type: 'text'}}},
+          },
+        },
+      },
+    });
+    expect(m.getAllFields()).toEqual(['author', 'author.name']);
+  });
+
+  it('names a multi-field by its full path', () => {
+    const m = metadata({
+      mappings: {
+        _doc: {properties: {title: {type: 'text', fields: {keyword: {type: 'keyword'}}}}},
+      },
+    });
+    expect(m.getAllFields()).toEqual(['title', 'title.keyword']);
+  });
+
+  it('merges the types of an index that still has more than one', () => {
+    const m = metadata({
+      mappings: {
+        a: {properties: {shared: {type: 'text'}, only_a: {type: 'text'}}},
+        b: {properties: {shared: {type: 'text'}, only_b: {type: 'text'}}},
+      },
+    });
+    expect(m.getAllFields()).toEqual(['only_a', 'only_b', 'shared']);
+  });
+
+  it('is empty when the index maps nothing', () => {
+    expect(metadata().getAllFields()).toEqual([]);
+  });
+});

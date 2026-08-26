@@ -1,5 +1,5 @@
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import {mount} from '@vue/test-utils';
+import {mount, type VueWrapper} from '@vue/test-utils';
 import {NAutoComplete} from 'naive-ui';
 import RestView from '@/views/RestView.vue';
 import {resetSettingsForTest} from '@/api/settings';
@@ -15,6 +15,24 @@ function stubRest(body = '{"hits":{"hits":[]}}', status = 200): ReturnType<typeo
   const fetcher = vi.fn(async () => new Response(body, {status}));
   vi.stubGlobal('fetch', fetcher);
   return fetcher;
+}
+
+/** What /_cluster/state/metadata answers for the fixture's one index. */
+const METADATA = {
+  metadata: {
+    indices: {
+      'test-index': {
+        mappings: {_doc: {properties: {content: {type: 'text'}, created: {type: 'date'}}}},
+        settings: {},
+      },
+    },
+  },
+};
+
+const METADATA_PATH = '/_cluster/state/metadata/test-index?human';
+
+function completions(wrapper: VueWrapper): string[] {
+  return wrapper.findAll('[role="option"] .k-completion-label').map((li) => li.text());
 }
 
 async function mountAt(query: Record<string, string> = {}) {
@@ -188,6 +206,52 @@ describe('RestView', () => {
     await wrapper.find('#rest-path').setValue('test-index/');
     const options = wrapper.findComponent(NAutoComplete).props('options') as string[];
     expect(options).toContain('test-index/_search');
+  });
+
+  it('completes the query DSL in the body', async () => {
+    const wrapper = await mountAt();
+    await wrapper.find('#rest-body').setValue('{"que');
+    expect(completions(wrapper)).toContain('query');
+  });
+
+  it('completes a field name from the index the path names', async () => {
+    const calls = stubFetch({routes: {...okRoutes(), [METADATA_PATH]: METADATA}});
+    const wrapper = await mountAt();
+    await wrapper.find('#rest-path').setValue('test-index/_search');
+    await vi.waitFor(() => expect(calls).toContain(METADATA_PATH));
+    // The mapping is read while the path is typed, so what it adds shows up
+    // at the next keystroke in the body rather than at this one.
+    await vi.waitFor(async () => {
+      await wrapper.find('#rest-body').setValue('{"query": {"match": {"c');
+      expect(completions(wrapper)).toEqual(['content', 'created']);
+    });
+  });
+
+  it('reads an index mapping once, however much is typed after it', async () => {
+    const calls = stubFetch({routes: {...okRoutes(), [METADATA_PATH]: METADATA}});
+    const wrapper = await mountAt();
+    await wrapper.find('#rest-path').setValue('test-index/_search');
+    await vi.waitFor(() => expect(calls).toContain(METADATA_PATH));
+    await wrapper.find('#rest-path').setValue('test-index/_count');
+    await wrapper.find('#rest-path').setValue('test-index/_search');
+    expect(calls.filter((path) => path === METADATA_PATH)).toHaveLength(1);
+  });
+
+  it('reads no mapping for a path that names no index', async () => {
+    const calls = stubFetch({routes: okRoutes()});
+    const wrapper = await mountAt();
+    await wrapper.find('#rest-path').setValue('_search');
+    await wrapper.find('#rest-body').setValue('{"query": {"match": {"c');
+    expect(calls.filter((path) => path.startsWith('/_cluster/state/metadata'))).toEqual([]);
+  });
+
+  it('completes the DSL even where the mapping cannot be read', async () => {
+    stubFetch({routes: okRoutes(), failing: {[METADATA_PATH]: 403}});
+    const wrapper = await mountAt();
+    await wrapper.find('#rest-path').setValue('test-index/_search');
+    await wrapper.find('#rest-body').setValue('{"que');
+    expect(completions(wrapper)).toContain('query');
+    expect(alerts.alerts.value).toEqual([]);
   });
 
   it('copies a cURL command with the body for a POST', async () => {
