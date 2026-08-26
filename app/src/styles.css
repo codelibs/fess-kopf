@@ -408,7 +408,6 @@ pre.k-pre {
    every index column and every shard, and a component that teleports its menu
    into the body would put hundreds of popovers outside the table. */
 .k-menu {
-  position: relative;
   display: inline-block;
 }
 
@@ -422,11 +421,13 @@ pre.k-pre {
   display: none;
 }
 
+/* Fixed, not absolute: the grid's horizontal scrolling clips both axes, and an
+   absolute panel is cut off by it. useDetailsMenu sets top and left. */
 .k-menu-items {
-  position: absolute;
+  position: fixed;
   z-index: 20;
   min-width: 12rem;
-  margin: 4px 0 0;
+  margin: 0;
   padding: 6px;
   list-style: none;
   background: var(--k-surface);

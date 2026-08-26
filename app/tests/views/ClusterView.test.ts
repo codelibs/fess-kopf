@@ -66,6 +66,43 @@ async function openIndexMenuAction(wrapper: ReturnType<typeof mount>, label: str
   await button!.trigger('click');
 }
 
+/** jsdom lays nothing out, so a menu's geometry has to be supplied. */
+function stubRect(element: Element, rect: Partial<DOMRect>): void {
+  vi.spyOn(element, 'getBoundingClientRect').mockReturnValue({
+    x: 0,
+    y: 0,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    width: 0,
+    height: 0,
+    toJSON: () => ({}),
+    ...rect,
+  } as DOMRect);
+}
+
+/**
+ * Opens one shard menu, having given its summary and its panel the geometry
+ * the assertion is about. The panels are placed by script, so `toggle` is
+ * what triggers placement.
+ */
+async function openShardMenu(
+  wrapper: ReturnType<typeof mount>,
+  summaryRect: Partial<DOMRect> = {},
+  panelRect: Partial<DOMRect> = {},
+  at = 0,
+) {
+  const details = wrapper.findAll('tbody details.k-menu')[at];
+  expect(details, 'no shard menu rendered').toBeTruthy();
+  const panel = details.find('.k-menu-items');
+  stubRect(details.find('summary').element, summaryRect);
+  stubRect(panel.element, panelRect);
+  (details.element as HTMLDetailsElement).open = true;
+  await details.trigger('toggle');
+  return {details, panel: panel.element as HTMLElement};
+}
+
 describe('ClusterView', () => {
   it('renders one column per index and one row per node', () => {
     const wrapper = mount(ClusterView, {global: {plugins: [router]}});
@@ -186,5 +223,80 @@ describe('ClusterView', () => {
     await vi.waitFor(() => expect(alerts.alerts.value.length).toBeGreaterThan(0));
     expect(alerts.alerts.value[0].level).toBe('error');
     expect(alerts.alerts.value[0].message).toBe('Error while deleting index');
+  });
+});
+
+/**
+ * The grid scrolls horizontally, which makes it clip on both axes: a panel
+ * laid out inside it is cut off, and on the shard row it never appears at all.
+ */
+describe('ClusterView menus escape the scrolling grid', () => {
+  it('places a shard menu against its summary', async () => {
+    const wrapper = mount(ClusterView, {global: {plugins: [router]}, attachTo: document.body});
+    const {panel} = await openShardMenu(
+      wrapper,
+      {left: 300, top: 500, bottom: 520},
+      {width: 192, height: 60},
+    );
+    expect(panel.style.left).toBe('300px');
+    expect(panel.style.top).toBe('524px');
+    wrapper.unmount();
+  });
+
+  it('flips a menu above its summary rather than off the bottom', async () => {
+    const wrapper = mount(ClusterView, {global: {plugins: [router]}, attachTo: document.body});
+    // 768 tall in jsdom: 730 + 4 + 60 would run past the bottom edge.
+    const {panel} = await openShardMenu(
+      wrapper,
+      {left: 300, top: 700, bottom: 730},
+      {width: 192, height: 60},
+    );
+    expect(panel.style.top).toBe('636px');
+    wrapper.unmount();
+  });
+
+  it('keeps a menu inside the right edge', async () => {
+    const wrapper = mount(ClusterView, {global: {plugins: [router]}, attachTo: document.body});
+    // 1024 wide in jsdom, less the 8px margin, less the panel's 192.
+    const {panel} = await openShardMenu(
+      wrapper,
+      {left: 1000, top: 100, bottom: 120},
+      {width: 192, height: 60},
+    );
+    expect(panel.style.left).toBe('824px');
+    wrapper.unmount();
+  });
+
+  it('closes the open menu when another opens', async () => {
+    const wrapper = mount(ClusterView, {global: {plugins: [router]}, attachTo: document.body});
+    const first = await openShardMenu(wrapper, {}, {}, 0);
+    const second = await openShardMenu(wrapper, {}, {}, 1);
+    expect((first.details.element as HTMLDetailsElement).open).toBe(false);
+    expect((second.details.element as HTMLDetailsElement).open).toBe(true);
+    wrapper.unmount();
+  });
+
+  it('closes the menu once one of its actions is taken', async () => {
+    const wrapper = mount(ClusterView, {global: {plugins: [router]}, attachTo: document.body});
+    const {details, panel} = await openShardMenu(wrapper);
+    panel.querySelector('button')!.click();
+    expect((details.element as HTMLDetailsElement).open).toBe(false);
+    wrapper.unmount();
+  });
+
+  it('closes the menu on a click outside it', async () => {
+    const wrapper = mount(ClusterView, {global: {plugins: [router]}, attachTo: document.body});
+    const {details} = await openShardMenu(wrapper);
+    document.body.click();
+    expect((details.element as HTMLDetailsElement).open).toBe(false);
+    wrapper.unmount();
+  });
+
+  it('closes the menu when the grid scrolls out from under it', async () => {
+    const wrapper = mount(ClusterView, {global: {plugins: [router]}, attachTo: document.body});
+    const {details} = await openShardMenu(wrapper);
+    wrapper.find('.k-scroll-x').element.dispatchEvent(new Event('scroll', {bubbles: false}));
+    expect((details.element as HTMLDetailsElement).open).toBe(false);
+    wrapper.unmount();
   });
 });

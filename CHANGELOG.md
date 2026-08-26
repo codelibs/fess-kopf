@@ -46,6 +46,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   reading them, so nothing else would
 
 ### Fixed
+- Show the cluster grid's menus in full. The grid scrolls horizontally, and a
+  box that scrolls on one axis clips the other one too, so the index, bulk and
+  shard menus were cut off by it -- a shard's menu, on the last row, never
+  appeared at all. The panels now sit above the page and are placed against
+  their own summary, and a scroll or a resize closes the open one
 - Recognize the `cluster_manager` node role, so the current-master marker,
   the node-type classification and the master filter work against
   OpenSearch 2.x and 3.x (#16)

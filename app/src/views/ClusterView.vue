@@ -17,6 +17,7 @@ import {
 } from '@/api/opensearch';
 import {useAlerts} from '@/composables/useAlerts';
 import {refresh as refreshCluster, useCluster} from '@/composables/useCluster';
+import {useDetailsMenu} from '@/composables/useDetailsMenu';
 import {confirm, showInfo} from '@/composables/useDialogs';
 import {t} from '@/i18n';
 import {bytes} from '@/model/format';
@@ -28,6 +29,7 @@ import type {Shard} from '@/model/shard';
 
 const alerts = useAlerts();
 const {cluster} = useCluster();
+const {onToggle} = useDetailsMenu();
 
 /** Columns are indices; how many fit is a function of the window width. */
 function pageSize(): number {
@@ -375,7 +377,7 @@ function shardClass(shard: Shard): string {
                   >
                     {{ indexFilter.asc ? 'A→Z' : 'Z→A' }}
                   </NButton>
-                  <details class="k-menu k-menu-button">
+                  <details class="k-menu k-menu-button" @toggle="onToggle">
                     <summary>{{ t('cluster.bulk') }}</summary>
                     <ul class="k-menu-items">
                       <li>
@@ -423,7 +425,11 @@ function shardClass(shard: Shard): string {
               </th>
               <th v-for="(index, i) in currentPage.elements" :key="i" scope="col">
                 <template v-if="index">
-                  <details class="k-menu k-index-name" :class="{'k-index-closed': index.closed}">
+                  <details
+                    class="k-menu k-index-name"
+                    :class="{'k-index-closed': index.closed}"
+                    @toggle="onToggle"
+                  >
                     <summary>{{ index.name }}</summary>
                     <ul class="k-menu-items">
                       <li>
@@ -549,6 +555,7 @@ function shardClass(shard: Shard): string {
                     v-for="shard in index ? cluster.getShards(node.id, index.name) : []"
                     :key="shard.id"
                     class="k-menu"
+                    @toggle="onToggle"
                   >
                     <summary :class="shardClass(shard)">{{ shard.shard }}</summary>
                     <ul class="k-menu-items">

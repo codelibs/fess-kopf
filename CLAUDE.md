@@ -107,7 +107,10 @@ app/
      destructive action outside the component tree
    - the cluster grid's per-index and per-shard menus are `<details>`, because
      the grid renders hundreds of them and a teleporting menu component would
-     move every popover out of the table
+     move every popover out of the table. Their panels are `position: fixed`
+     and placed by `useDetailsMenu`: the grid scrolls horizontally, and a box
+     that scrolls on one axis clips the other one too, so a panel laid out
+     inside it is cut off
    - the tables are hand-rolled: each has a composite cell and its own filter
      and sort model, so a data-grid component would mean more render functions,
      not fewer
