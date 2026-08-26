@@ -98,3 +98,43 @@ export const QUERY_SNIPPETS: {label: string; body: string}[] = [
     ),
   },
 ];
+
+/**
+ * How many indices one request path may pull a mapping for.
+ *
+ * Field completion fetches the mapping of every index the path addresses, so
+ * a pattern as wide as `*` would be one request per index on the cluster.
+ */
+const MAX_TARGET_INDICES = 5;
+
+function matchesPattern(pattern: string, index: string): boolean {
+  if (pattern === index || pattern === '*') {
+    return true;
+  }
+  if (!pattern.includes('*')) {
+    return false;
+  }
+  const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
+  return new RegExp(`^${escaped}$`).test(index);
+}
+
+/**
+ * The indices a REST path addresses, resolved against the ones the cluster
+ * has. Empty for a cluster-wide path such as `_search` or `_cat/indices`,
+ * which is what keeps the body completer from fetching anything for those.
+ */
+export function targetIndices(requestPath: string, indices: string[]): string[] {
+  const target = requestPath.replace(/^\//, '').split('/')[0];
+  if (target === '' || target.startsWith('_')) {
+    return [];
+  }
+  const patterns = target.split(',').filter((pattern) => pattern !== '');
+  const included = patterns.filter((pattern) => !pattern.startsWith('-'));
+  const excluded = patterns
+    .filter((pattern) => pattern.startsWith('-'))
+    .map((pattern) => pattern.substring(1));
+  return indices
+    .filter((index) => included.some((pattern) => matchesPattern(pattern, index)))
+    .filter((index) => !excluded.some((pattern) => matchesPattern(pattern, index)))
+    .slice(0, MAX_TARGET_INDICES);
+}

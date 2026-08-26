@@ -42,6 +42,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   API's own responses
 - Query skeletons on the REST client for the query types a Fess cluster is
   operated with: match, knn, neural, neural_sparse and hybrid
+- **Query DSL completion is back on the REST client's body editor**, rewritten
+  without an editor library: it reads the text up to the caret, works out
+  where in the request body that leaves it, and offers the keys, the closed
+  value sets and the field names that fit. It covers what the ace completer
+  covered and adds the vector and hybrid queries a Fess cluster running
+  semantic search is asked for -- `knn`, `neural`, `neural_sparse`, `hybrid`
+  -- and it now completes inside a bool clause array, which the ace one did
+  not. Field names come from the mapping of the indices the request path
+  addresses, read once per index; a cluster-wide path fetches nothing and
+  completes the DSL alone
 - A type check (`npm run typecheck`) in CI. The bundler strips types without
   reading them, so nothing else would
 
@@ -80,9 +90,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The cluster health and cluster settings screens. Nothing in the shipped
   interface linked to either one, and both failed against a default OpenSearch
   install
-- The 784-line Query DSL completer. It served the REST client alone and was
-  larger than every other controller put together; the screen offers query
-  skeletons (match, knn, neural, neural_sparse, hybrid) instead
 - Public GitHub Gist sharing of cluster state (#23)
 - The unreachable host history service, which stored credentials in
   localStorage in clear text (#24)

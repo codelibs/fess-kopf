@@ -2,7 +2,7 @@ import {beforeEach, describe, expect, it} from 'vitest';
 import {toCsv} from '@/model/csv';
 import {isExplainPath, normalizeExplainResponse} from '@/model/explain';
 import {HTTP_METHODS, Request, loadHistory, rememberRequest} from '@/model/request';
-import {QUERY_SNIPPETS, suggestPaths} from '@/model/rest-suggestions';
+import {QUERY_SNIPPETS, suggestPaths, targetIndices} from '@/model/rest-suggestions';
 
 beforeEach(() => localStorage.clear());
 
@@ -182,5 +182,41 @@ describe('QUERY_SNIPPETS', () => {
     QUERY_SNIPPETS.forEach((snippet) => {
       expect(() => JSON.parse(snippet.body)).not.toThrow();
     });
+  });
+});
+
+describe('targetIndices', () => {
+  const indices = ['fess.20260101', 'fess_config.web_config', 'logs-1', 'logs-2'];
+
+  it('is empty for a cluster-wide path', () => {
+    expect(targetIndices('_search', indices)).toEqual([]);
+    expect(targetIndices('/_cat/indices?v', indices)).toEqual([]);
+    expect(targetIndices('', indices)).toEqual([]);
+  });
+
+  it('reads the index a path names', () => {
+    expect(targetIndices('fess.20260101/_search', indices)).toEqual(['fess.20260101']);
+    expect(targetIndices('/fess.20260101/_search', indices)).toEqual(['fess.20260101']);
+  });
+
+  it('reads a comma separated list', () => {
+    expect(targetIndices('logs-1,logs-2/_count', indices)).toEqual(['logs-1', 'logs-2']);
+  });
+
+  it('expands a wildcard against the indices the cluster has', () => {
+    expect(targetIndices('logs-*/_search', indices)).toEqual(['logs-1', 'logs-2']);
+  });
+
+  it('drops what an exclusion pattern excludes', () => {
+    expect(targetIndices('logs-*,-logs-2/_search', indices)).toEqual(['logs-1']);
+  });
+
+  it('is empty when nothing matches, so no mapping is fetched for it', () => {
+    expect(targetIndices('nowhere/_search', indices)).toEqual([]);
+  });
+
+  it('stops at a handful, so a wide pattern cannot fetch a mapping per index', () => {
+    const many = Array.from({length: 20}, (_, i) => `idx-${i}`);
+    expect(targetIndices('idx-*/_search', many)).toHaveLength(5);
   });
 });

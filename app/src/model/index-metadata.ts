@@ -83,6 +83,27 @@ export class IndexMetadata {
     return fields.sort(byName);
   }
 
+  /**
+   * Every mapped field path, whatever its type, across every mapping type.
+   *
+   * `getFields` answers what the analysis screen asks -- which fields
+   * _analyze can tokenise. A query names numbers, dates and containers too,
+   * so completion needs the whole mapping.
+   */
+  getAllFields(): string[] {
+    const names = new Set<string>();
+    const walk = (parent: string, fields: Record<string, MappingField> | undefined): void => {
+      const prefix = parent !== '' ? `${parent}.` : '';
+      Object.entries(fields ?? {}).forEach(([name, field]) => {
+        names.add(prefix + name);
+        walk(prefix + name, field.properties);
+        walk(prefix + name, field.fields);
+      });
+    };
+    Object.values(this.mappings).forEach((mapping) => walk('', mapping.properties));
+    return [...names].sort(byName);
+  }
+
   getProperties(parent: string, fields: Record<string, MappingField> | undefined): string[] {
     const prefix = parent !== '' ? `${parent}.` : '';
     const valid: string[] = [];

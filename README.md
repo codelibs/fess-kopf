@@ -26,7 +26,9 @@ This project is a fork of [elasticsearch-kopf](https://github.com/lmenezes/elast
 - **Snapshots**: Create, restore, and manage snapshots
 - **Index Templates**: Create and edit index templates
 - **Analyzer Testing**: Test and validate text analysis
-- **REST Client**: Direct access to OpenSearch API
+- **REST Client**: Direct access to OpenSearch API, with query DSL completion
+  in the body editor -- keys, closed value sets, and field names from the
+  mapping of the indices the path addresses
 - **CAT API**: Browser-based interface for CAT API
 - **Hot Threads Analysis**: Node thread analysis
 - **Localized interface**: follows the language the Fess admin console

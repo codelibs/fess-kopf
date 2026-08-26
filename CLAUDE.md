@@ -100,7 +100,7 @@ app/
 
 4. **Naive UI supplies controls, not layout.** Cards, inputs, selects,
    checkboxes, buttons, tags and alerts are Naive UI. Layout is the small flex
-   and grid layer in `styles.css`; no CSS framework is bundled. Three things
+   and grid layer in `styles.css`; no CSS framework is bundled. Four things
    are deliberately *not* Naive UI components:
    - the confirmation and info dialogs are native `<dialog>` elements, because
      `NModal` teleports to `document.body` and would put the confirmation of a
@@ -114,8 +114,23 @@ app/
    - the tables are hand-rolled: each has a composite cell and its own filter
      and sort model, so a data-grid component would mean more render functions,
      not fewer
+   - the REST client's completion popup is a plain list positioned at the
+     caret, because the body editor is an `NInput` textarea and Naive UI has
+     no control that completes inside one
 
-5. **The locale comes from Fess, not from the browser.** Fess resolves the
+5. **The body editor completes without an editor library.** The REST client
+   offers query DSL completions from a scanner and a definition table
+   (`app/src/model/query-dsl.ts`, `query-dsl-completer.ts`), which take the
+   text and a caret offset and return what to offer and what the text becomes
+   when one is accepted -- no DOM, so all of it is unit-tested. The only DOM
+   part is `app/src/components/caret.ts`, which lays the text out again in a
+   hidden div to find the caret's coordinates. Reaching for CodeMirror or
+   Monaco instead would buy syntax highlighting at several hundred kB in a
+   `_site` that was deliberately cut from 3.0 MB to under 1 MB when ace was
+   dropped. `JsonEditor` takes the completer as an optional prop, so the four
+   other screens that use it stay plain textareas.
+
+6. **The locale comes from Fess, not from the browser.** Fess resolves the
    admin console's locale itself (`FessUserLocaleProcessProvider`: browser
    `Accept-Language`, overridable per request with `browser_lang`) and passes
    it to kopf as `?lang=` on the iframe URL. `app/src/i18n/locale.ts`
@@ -137,9 +152,9 @@ app/
    translated. The navigation, table headers, form field labels, status
    values, node roles, JSON keys and `_cat` API names are not.
 
-6. **OpenSearch Integration**: This tool is designed exclusively for OpenSearch 2.x and 3.x (not Elasticsearch). It connects to OpenSearch clusters via REST API and provides a web UI for cluster management.
+7. **OpenSearch Integration**: This tool is designed exclusively for OpenSearch 2.x and 3.x (not Elasticsearch). It connects to OpenSearch clusters via REST API and provides a web UI for cluster management.
 
-7. **Fess Integration**: The built application is served through Fess at
+8. **Fess Integration**: The built application is served through Fess at
    `/_plugin/kopf/`. Configuration is handled via `kopf_external_settings.json`
    which includes:
    - `location`: OpenSearch URL for local development. Empty in the
