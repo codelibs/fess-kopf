@@ -49,31 +49,56 @@ export class IndexMetadata {
   }
 
   /**
-   * Analyzer names. Reads the nested settings tree first, then falls back to
-   * flattened `index.analysis.analyzer.<name>.…` keys, which is the shape
+   * The names defined under one `index.analysis.<section>` key.
+   *
+   * Reads the nested settings tree first, then falls back to flattened
+   * `index.analysis.<section>.<name>.…` keys, which is the shape
    * ?flat_settings would produce.
    */
-  getAnalyzers(): string[] {
+  private analysisNames(section: string): string[] {
     const nested = Object.keys(
-      getProperty<Record<string, unknown>>(this.settings, 'index.analysis.analyzer', {}),
+      getProperty<Record<string, unknown>>(this.settings, `index.analysis.${section}`, {}),
     );
     if (nested.length > 0) {
       return nested.sort(byName);
     }
 
-    const prefix = 'index.analysis.analyzer.';
+    const prefix = `index.analysis.${section}.`;
     const flattened: string[] = [];
     Object.keys(this.settings).forEach((setting) => {
-      if (!setting.startsWith('index.analysis.analyzer')) {
+      if (!setting.startsWith(prefix)) {
         return;
       }
       const rest = setting.substring(prefix.length);
       const name = rest.substring(0, rest.indexOf('.'));
-      if (!flattened.includes(name)) {
+      if (name !== '' && !flattened.includes(name)) {
         flattened.push(name);
       }
     });
     return flattened.sort(byName);
+  }
+
+  getAnalyzers(): string[] {
+    return this.analysisNames('analyzer');
+  }
+
+  /**
+   * The pieces an index defines for building a chain by hand.
+   *
+   * A Fess document index carries 41 analyzers over 7 tokenizers, 143
+   * filters and 6 char filters, so offering them beats retyping a name from
+   * the settings JSON.
+   */
+  getTokenizers(): string[] {
+    return this.analysisNames('tokenizer');
+  }
+
+  getFilters(): string[] {
+    return this.analysisNames('filter');
+  }
+
+  getCharFilters(): string[] {
+    return this.analysisNames('char_filter');
   }
 
   /** Analyzable field paths under one mapping type. */
@@ -124,14 +149,4 @@ export class IndexMetadata {
     });
     return valid;
   }
-}
-
-/** One token from an _analyze response. */
-export class Token {
-  constructor(
-    readonly token: string,
-    readonly start_offset: number,
-    readonly end_offset: number,
-    readonly position: number,
-  ) {}
 }

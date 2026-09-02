@@ -28,6 +28,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   layer
 
 ### Changed
+- **The analysis screen shows the chain, not only its result.** It ran two
+  separate forms that each reported a list of token strings, which answers
+  "what are the tokens" but never "which stage changed them" -- the question
+  an operator actually has. It is now one form and one result: `explain` is
+  on by default, and every stage is listed in the order it ran, with the
+  text each char filter produced, the tokens each filter left behind, and a
+  `+2` / `−1` against the stage that changed the count. Fess's own
+  `japanese_analyzer` is six filters behind a tokenizer behind two char
+  filters, and this is the only way to see which one is responsible.
+
+  Three more things follow from the same request. A chain can be composed by
+  hand out of a tokenizer, filters and char filters, so "what if this filter
+  were not there" no longer means editing the index. Without an index the
+  request goes to the cluster-wide `/_analyze` and its built-ins. And tokens
+  now carry their type, position and offsets -- a token that exists only
+  because a synonym filter invented it is indistinguishable without them.
+
+  Two smaller things the screen no longer asks for: the mapping type, which
+  has had exactly one possible answer since indices became typeless and is
+  now chosen for you, and a second copy of the text, which the two forms used
+  to need
 - **The index templates screen reads all three endpoints, not just the
   deprecated one.** It listed `_template` alone, so a cluster whose
   templates were all made the modern way reported "no templates" -- and the

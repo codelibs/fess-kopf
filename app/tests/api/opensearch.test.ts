@@ -14,6 +14,7 @@ import {
   createTemplate,
   deleteTemplate,
   TEMPLATE_PATHS,
+  analyzeText,
 } from '@/api/opensearch';
 import {RequestError} from '@/api/client';
 import {resetSettingsForTest} from '@/api/settings';
@@ -281,5 +282,95 @@ describe('templates', () => {
     expect((fetcher.mock.calls[0][1] as RequestInit).method).toBe('PUT');
     expect(String(fetcher.mock.calls[1][0])).toContain('/_index_template/my%2Fidx');
     expect((fetcher.mock.calls[1][1] as RequestInit).method).toBe('DELETE');
+  });
+});
+
+describe('analyzeText', () => {
+  function stubAnalyze(): ReturnType<typeof vi.fn> {
+    const fetcher = vi.fn(async () => new Response(JSON.stringify({tokens: []}), {status: 200}));
+    vi.stubGlobal('fetch', fetcher);
+    return fetcher;
+  }
+
+  function sent(fetcher: ReturnType<typeof vi.fn>): Record<string, unknown> {
+    return JSON.parse((fetcher.mock.calls[0][1] as RequestInit).body as string);
+  }
+
+  it('posts a field to the index endpoint', async () => {
+    const fetcher = stubAnalyze();
+    await analyzeText({index: 'fess.20260902', field: 'content', text: 'x'});
+
+    expect(String(fetcher.mock.calls[0][0])).toContain('/fess.20260902/_analyze');
+    expect((fetcher.mock.calls[0][1] as RequestInit).method).toBe('POST');
+    expect(sent(fetcher)).toEqual({text: 'x', field: 'content'});
+  });
+
+  it('goes to the cluster endpoint when no index is named', async () => {
+    // Without an index only the built-in components exist, which is exactly
+    // what someone trying a chain out wants.
+    const fetcher = stubAnalyze();
+    await analyzeText({tokenizer: 'standard', text: 'x'});
+
+    expect(String(fetcher.mock.calls[0][0])).toMatch(/\/_analyze$/);
+    expect(sent(fetcher)).toEqual({text: 'x', tokenizer: 'standard'});
+  });
+
+  it('sends a composed chain under the names _analyze uses', async () => {
+    const fetcher = stubAnalyze();
+    await analyzeText({
+      index: 'i',
+      charFilters: ['html_strip'],
+      tokenizer: 'standard',
+      filters: ['lowercase', 'asciifolding'],
+      text: 'x',
+      explain: true,
+    });
+
+    expect(sent(fetcher)).toEqual({
+      text: 'x',
+      char_filter: ['html_strip'],
+      tokenizer: 'standard',
+      filter: ['lowercase', 'asciifolding'],
+      explain: true,
+    });
+  });
+
+  it('leaves out every part that was not asked for', async () => {
+    const fetcher = stubAnalyze();
+    await analyzeText({
+      index: '',
+      field: '',
+      analyzer: 'standard',
+      charFilters: [],
+      filters: [],
+      text: 'x',
+      explain: false,
+    });
+
+    expect(sent(fetcher)).toEqual({text: 'x', analyzer: 'standard'});
+  });
+
+  it('parses the chain out of an explained response', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () =>
+        new Response(
+          JSON.stringify({
+            detail: {
+              custom_analyzer: true,
+              tokenizer: {name: 'standard', tokens: [{token: 'a', start_offset: 0,
+                end_offset: 1, position: 0, type: 'word'}]},
+              tokenfilters: [{name: 'lowercase', tokens: []}],
+            },
+          }),
+          {status: 200},
+        ),
+      ),
+    );
+
+    const result = await analyzeText({tokenizer: 'standard', text: 'A', explain: true});
+    expect(result.explained).toBe(true);
+    expect(result.steps.map((s) => s.name)).toEqual(['standard', 'lowercase']);
+    expect(result.steps[1].delta).toBe(-1);
   });
 });
