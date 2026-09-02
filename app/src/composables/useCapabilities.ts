@@ -1,4 +1,5 @@
 import {computed, readonly, ref} from 'vue';
+import {RequestError} from '@/api/client';
 import {CAT_APIS, fetchCatApis, fetchInstalledPlugins} from '@/api/opensearch';
 
 /**
@@ -21,6 +22,23 @@ const probed = ref(false);
 
 let inFlight: Promise<void> | null = null;
 
+/**
+ * True when the request never got an HTTP response at all.
+ *
+ * A denial is an answer -- the cluster will keep denying it, and asking
+ * again on every poll would be noise. A request that did not reach the
+ * server is not an answer, and it is the common case: kopf's first render
+ * can easily precede the cluster's first response, and a page that probed
+ * once would then hide the plugin screens for as long as it stays open.
+ */
+function unanswered(result: PromiseSettledResult<unknown>): boolean {
+  return (
+    result.status === 'rejected' &&
+    result.reason instanceof RequestError &&
+    result.reason.isUnreachable
+  );
+}
+
 async function probe(): Promise<void> {
   // Each half is independent: a cluster that denies /_nodes must still get
   // its _cat list, and the other way round.
@@ -31,7 +49,7 @@ async function probe(): Promise<void> {
   if (installed.status === 'fulfilled') {
     plugins.value = new Set(installed.value);
   }
-  probed.value = true;
+  probed.value = !unanswered(cat) && !unanswered(installed);
 }
 
 /** Runs the probe once. Concurrent callers share the one round trip. */

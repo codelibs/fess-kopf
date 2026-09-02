@@ -65,6 +65,38 @@ describe('probeCapabilities', () => {
     expect(hasCat('thread_pool')).toBe(true);
   });
 
+  it('tries again after a cluster that could not be reached', async () => {
+    // kopf's first render can precede the cluster's first response. Marking
+    // the probe done there would hide the plugin screens for the life of the
+    // page.
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => Promise.reject(new TypeError('Failed to fetch'))),
+    );
+    await probeCapabilities();
+    expect(useCapabilities().probed.value).toBe(false);
+    expect(hasPlugin('opensearch-knn')).toBe(false);
+
+    const calls = stubFetch({routes: PROBE_ROUTES});
+    await probeCapabilities();
+
+    expect(useCapabilities().probed.value).toBe(true);
+    expect(hasPlugin('opensearch-knn')).toBe(true);
+    expect(calls.sort()).toEqual(['/_cat', '/_nodes/_all/plugins']);
+  });
+
+  it('does not try again after a denial, which is an answer', async () => {
+    const calls = stubFetch({
+      routes: PROBE_ROUTES,
+      failing: {'/_cat': 403, '/_nodes/_all/plugins': 403},
+    });
+    await probeCapabilities();
+    expect(useCapabilities().probed.value).toBe(true);
+
+    await probeCapabilities();
+    expect(calls).toHaveLength(2);
+  });
+
   it('reports the shipped CAT list before anything has been probed', () => {
     expect(useCapabilities().catApis.value).toEqual([...CAT_APIS]);
     expect(useCapabilities().probed.value).toBe(false);
