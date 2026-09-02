@@ -4,8 +4,8 @@ import {emptyStats, health, nodes, nodesStats, state} from '../model/fixtures';
 /** Bodies that make a full cluster poll succeed, keyed by request path. */
 export function okRoutes(): Record<string, unknown> {
   return {
-    '/_cluster/state/master_node,routing_table,blocks/': state(),
-    '/_stats/docs,store': emptyStats(),
+    '/_cluster/state/master_node,cluster_manager_node,routing_table,blocks/': state(),
+    '/_stats/docs,store,indexing,search': emptyStats(),
     '/_nodes/stats/jvm,fs,os,process': nodesStats(),
     '/_cluster/settings': {persistent: {}, transient: {}},
     '/_aliases': {},
@@ -13,7 +13,7 @@ export function okRoutes(): Record<string, unknown> {
     '/_nodes/_all/os,jvm': nodes(),
     '/': {name: 'search01', version: {number: '3.8.0'}},
     // The reduced set.
-    '/_cluster/state/master_node,blocks?local=true': state(),
+    '/_cluster/state/master_node,cluster_manager_node,blocks?local=true': state(),
     '/_nodes/stats/jvm,fs,os': nodesStats(),
     '/_cluster/settings?local=true': {persistent: {}},
     '/_cluster/health?local=true': health(),

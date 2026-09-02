@@ -525,6 +525,16 @@ function shardClass(shard: Shard): string {
                     🏷 {{ index.aliases[0] }}
                     <span v-if="index.aliases.length > 1">(+{{ index.aliases.length - 1 }})</span>
                   </div>
+                  <!-- A crawl reaching the index, at this instant. Shown
+                       only while it is happening: on a quiet cluster this
+                       line would be a zero on every column. -->
+                  <div
+                    v-if="index.indexing_current"
+                    class="k-small k-indexing"
+                    :title="`${index.indexing_total} indexed, ${index.search_query_total} queries`"
+                  >
+                    ⇅ {{ index.indexing_current }} indexing
+                  </div>
                   <!-- What this index is to Fess. The role and the two alias
                        names are Fess's own vocabulary, like a node role or a
                        cluster status, so they are not translated. -->
@@ -647,6 +657,12 @@ function shardClass(shard: Shard): string {
 </template>
 
 <style scoped>
+.k-indexing {
+  margin-top: 4px;
+  font-weight: 400;
+  color: var(--k-info);
+}
+
 .k-fess-roles {
   gap: 4px;
   margin-top: 4px;

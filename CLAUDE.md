@@ -87,7 +87,15 @@ app/
    `refresh_rate` ms and builds a `Cluster`; nine of the fourteen screens read
    from it rather than fetching their own copy. A poll that cannot be
    assembled falls back to the reduced `local=true` view instead of blanking
-   every screen.
+   every screen. Widening what a call asks for -- `/_stats` covers
+   `docs,store,indexing,search` -- is free; adding a ninth call is not, and
+   is why the capability probe lives outside the poll.
+
+   The state call asks for `master_node` *and* `cluster_manager_node`, and
+   `clusterManagerNode()` reads the current name first. OpenSearch renamed
+   the concept and answers with both (verified on 2.19.1 and 3.8.0), but
+   `master` is already absent from the list `GET /_cat` publishes, so it is
+   treated as the fallback, not the source.
 
 3. **One palette, two consumers.** kopf renders inside an iframe in the Fess
    admin dashboard, so its colours are not a free choice: the canvas

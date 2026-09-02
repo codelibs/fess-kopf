@@ -58,7 +58,7 @@ describe('useCluster', () => {
     stubFetch({
       routes: {
         ...(await import('../api/routes')).okRoutes(),
-        '/_cluster/state/master_node,routing_table,blocks/': {
+        '/_cluster/state/master_node,cluster_manager_node,routing_table,blocks/': {
           cluster_name: 'fess-search',
           master_node: 'n1',
           routing_table: {indices: {}},

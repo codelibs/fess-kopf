@@ -27,7 +27,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and is defined once, in `app/src/theme.ts`, for both Naive UI and the layout
   layer
 
+### Changed
+- **The elected node is read under its current name.** The cluster state
+  call now asks for `cluster_manager_node` alongside `master_node` and
+  prefers it. Both 2.19.1 and 3.8.0 answer with both fields, but `master` is
+  already gone from the list `GET /_cat` publishes, so the old name is the
+  fallback rather than the source
+
 ### Added
+- **A crawl reaching an index is visible while it happens.** The poll's
+  `/_stats` call now covers `indexing` and `search` as well as `docs` and
+  `store` -- the same one call -- and the overview marks an index that is
+  being written to at this instant, with the totals and the mean query time
+  behind it
 - **Two plugin-backed screens, offered only where the plugin exists.**
   `/topQueries` reads the Query Insights plugin -- the searches the cluster
   spent the most on, ranked by latency, CPU or memory, with the query DSL

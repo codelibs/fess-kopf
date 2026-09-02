@@ -5,6 +5,7 @@ import type {
   NodesResponse,
   NodesStatsResponse,
 } from './cluster';
+import {clusterManagerNode} from './opensearch-index';
 import type {Index, ClusterState} from './opensearch-index';
 import {getTimeString, isDefined, readablizeBytes} from './util';
 
@@ -60,7 +61,7 @@ export class BrokenCluster {
 
     this.fetched_at = getTimeString(new Date());
     this.name = state.cluster_name;
-    this.master_node = state.master_node;
+    this.master_node = clusterManagerNode(state);
 
     this.settings = settings;
     // Byte-identical to Cluster's predicate on purpose: a screen must not
@@ -70,7 +71,7 @@ export class BrokenCluster {
 
     this.nodes = Object.keys(nodes.nodes).map((nodeId) => {
       const node = new ClusterNode(nodeId, nodesStats.nodes[nodeId], nodes.nodes[nodeId]);
-      if (nodeId === state.master_node) {
+      if (nodeId === this.master_node) {
         node.setCurrentMaster();
       }
       return node;
