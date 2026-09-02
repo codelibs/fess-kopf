@@ -28,6 +28,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   layer
 
 ### Added
+- **The cluster overview says what each index is to Fess.** A Fess cluster is
+  forty-odd indices in six families, and the screen listed them flat. Each
+  index now carries its role -- `document`, `suggest`, `config`, `user`,
+  `log`, `crawler`, `plugin` -- and the live document index is marked
+  `search` and `update` after the aliases bound to it, which is what makes a
+  rotated-out generation, or a reindex in progress, visible without opening
+  the aliases screen. A `Fess` checkbox filters out everything else. The
+  rules were read off a running Fess 15.8.0 on OpenSearch 3.8.0: the
+  suggester's `fess.suggest.<timestamp>` shares the document family's
+  prefix, so it is classified first
 - **kopf asks the cluster what it can do, instead of assuming a version.**
   At mount it reads `GET /_cat` for the `_cat` APIs the distribution
   publishes and `GET /_nodes/_all/plugins` for what is installed, once --

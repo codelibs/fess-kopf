@@ -6,6 +6,7 @@ import {refresh, resetClusterForTest} from '@/composables/useCluster';
 import {resetDialogsForTest, resolveConfirm, useDialogs} from '@/composables/useDialogs';
 import {useAlerts} from '@/composables/useAlerts';
 import {okRoutes, stubFetch} from '../api/routes';
+import {isChecked, setCheckbox} from '../support/naive';
 import {shardRouting} from '../model/fixtures';
 import {router} from '@/router';
 
@@ -298,5 +299,80 @@ describe('ClusterView menus escape the scrolling grid', () => {
     wrapper.find('.k-scroll-x').element.dispatchEvent(new Event('scroll', {bubbles: false}));
     expect((details.element as HTMLDetailsElement).open).toBe(false);
     wrapper.unmount();
+  });
+});
+
+describe('ClusterView, on a Fess cluster', () => {
+  /** The three families a Fess cluster always has, with their real aliases. */
+  function fessRoutes(): Record<string, unknown> {
+    return {
+      ...okRoutes(),
+      '/_cluster/state/master_node,routing_table,blocks/': {
+        cluster_name: 'fess-search',
+        master_node: 'n1',
+        routing_table: {
+          indices: {
+            'fess.20260902134052541': {
+              shards: {0: [shardRouting({index: 'fess.20260902134052541'})]},
+            },
+            'fess_log.search_log': {
+              shards: {0: [shardRouting({index: 'fess_log.search_log'})]},
+            },
+            'top_queries-2026.09.02': {
+              shards: {0: [shardRouting({index: 'top_queries-2026.09.02'})]},
+            },
+          },
+        },
+        blocks: {},
+      },
+      '/_aliases': {
+        'fess.20260902134052541': {aliases: {'fess.search': {}, 'fess.update': {}}},
+      },
+    };
+  }
+
+  beforeEach(async () => {
+    resetClusterForTest();
+    stubFetch({routes: fessRoutes()});
+    await refresh();
+  });
+
+  it('names what each index is to Fess, and which one is live', () => {
+    const wrapper = mount(ClusterView, {global: {plugins: [router]}});
+    const headers = wrapper.findAll('thead th');
+
+    const fessDoc = headers.find((h) => h.text().includes('fess.20260902134052541'));
+    expect(fessDoc?.text()).toContain('document');
+    expect(fessDoc?.text()).toContain('search');
+    expect(fessDoc?.text()).toContain('update');
+
+    const log = headers.find((h) => h.text().includes('fess_log.search_log'));
+    expect(log?.text()).toContain('log');
+  });
+
+  it('says nothing about an index Fess does not own', () => {
+    const wrapper = mount(ClusterView, {global: {plugins: [router]}});
+    const other = wrapper
+      .findAll('thead th')
+      .find((h) => h.text().includes('top_queries-2026.09.02'));
+    expect(other?.find('.k-fess-roles').exists()).toBe(false);
+  });
+
+  it('hides everything but Fess when the filter is on', async () => {
+    const wrapper = mount(ClusterView, {global: {plugins: [router]}});
+    const names = () =>
+      wrapper
+        .findAll('thead th .k-index-name summary')
+        .map((s) => s.text())
+        .sort();
+    expect(names()).toEqual([
+      'fess.20260902134052541',
+      'fess_log.search_log',
+      'top_queries-2026.09.02',
+    ]);
+
+    expect(isChecked(wrapper, 'f-fess')).toBe(false);
+    await setCheckbox(wrapper, 'f-fess', true);
+    expect(names()).toEqual(['fess.20260902134052541', 'fess_log.search_log']);
   });
 });

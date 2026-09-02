@@ -125,3 +125,37 @@ describe('IndexFilter', () => {
     });
   });
 });
+
+describe('fessOnly', () => {
+  /** The screen's default has it off: everything shows. */
+  const fessOnly = () => new IndexFilter('', true, true, true, true, 0, true);
+
+  it('keeps the indices Fess owns', () => {
+    expect(fessOnly().matches(index('fess.20260902134052541', {
+      aliases: ['fess.search', 'fess.update'],
+    }))).toBe(true);
+    expect(fessOnly().matches(index('fess_config.scheduled_job'))).toBe(true);
+    expect(fessOnly().matches(index('fess_log.search_log'))).toBe(true);
+    expect(fessOnly().matches(index('configsync'))).toBe(true);
+  });
+
+  it('drops OpenSearch system indices and unrelated ones', () => {
+    expect(fessOnly().matches(index('.plugins-ml-config', {special: true}))).toBe(false);
+    expect(fessOnly().matches(index('top_queries-2026.09.02-04059'))).toBe(false);
+  });
+
+  it('is off by default, and off is not a filter', () => {
+    const filter = new IndexFilter('', true, true, true, true);
+    expect(filter.fessOnly).toBe(false);
+    expect(filter.isBlank()).toBe(true);
+    expect(filter.matches(index('top_queries-2026.09.02-04059'))).toBe(true);
+  });
+
+  it('is carried by clone and compared by equals', () => {
+    const filter = fessOnly();
+    expect(filter.clone().fessOnly).toBe(true);
+    expect(filter.equals(filter.clone())).toBe(true);
+    expect(filter.equals(new IndexFilter('', true, true, true, true))).toBe(false);
+    expect(filter.isBlank()).toBe(false);
+  });
+});

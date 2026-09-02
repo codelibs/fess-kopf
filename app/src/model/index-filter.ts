@@ -1,3 +1,4 @@
+import {isFessIndex} from './fess-index';
 import {notEmpty} from './util';
 
 export interface FilterableIndex {
@@ -22,6 +23,8 @@ export class IndexFilter {
     public healthy: boolean,
     public asc: boolean,
     public timestamp: number = 0,
+    /** Show only the indices Fess owns. Off by default, as the screen was. */
+    public fessOnly: boolean = false,
   ) {}
 
   getSorting(): ((a: FilterableIndex, b: FilterableIndex) => number) | undefined {
@@ -40,6 +43,7 @@ export class IndexFilter {
       this.healthy,
       this.asc,
       this.timestamp,
+      this.fessOnly,
     );
   }
 
@@ -51,15 +55,26 @@ export class IndexFilter {
       this.special === other.special &&
       this.healthy === other.healthy &&
       this.asc === other.asc &&
-      this.timestamp === other.timestamp
+      this.timestamp === other.timestamp &&
+      this.fessOnly === other.fessOnly
     );
   }
 
   isBlank(): boolean {
-    return !notEmpty(this.name) && this.closed && this.special && this.healthy && this.asc;
+    return (
+      !notEmpty(this.name) &&
+      this.closed &&
+      this.special &&
+      this.healthy &&
+      this.asc &&
+      !this.fessOnly
+    );
   }
 
   matches(index: FilterableIndex): boolean {
+    if (this.fessOnly && !isFessIndex(index)) {
+      return false;
+    }
     if (!this.special && index.special) {
       return false;
     }
