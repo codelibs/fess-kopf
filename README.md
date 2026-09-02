@@ -33,7 +33,12 @@ This project is a fork of [elasticsearch-kopf](https://github.com/lmenezes/elast
 - **Index Templates**: create and edit all three kinds -- `component` and
   `index`, the composable pair current OpenSearch documents, and the
   deprecated `legacy` `_template` endpoint an older cluster still carries
-- **Analyzer Testing**: Test and validate text analysis
+- **Analyzer Testing**: tokenise text by field, by named analyzer, or by a
+  chain you compose out of a tokenizer, filters and char filters -- with or
+  without an index. With `explain` on, every stage of the chain is shown in
+  the order it ran, and the stage that dropped or added tokens is the one
+  carrying a count, which is what answers "why did this query stop
+  matching". Tokens come with their type, position and offsets
 - **REST Client**: Direct access to OpenSearch API, with query DSL completion
   in the body editor -- keys, closed value sets, and field names from the
   mapping of the indices the path addresses

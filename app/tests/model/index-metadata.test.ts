@@ -168,3 +168,46 @@ describe('getAllFields', () => {
     expect(metadata().getAllFields()).toEqual([]);
   });
 });
+
+describe('IndexMetadata, the other analysis sections', () => {
+  /** What a Fess document index carries, cut to a few of each. */
+  const fess = new IndexMetadata('fess.20260902', {
+    mappings: {},
+    settings: {
+      index: {
+        analysis: {
+          analyzer: {japanese_analyzer: {}, english_analyzer: {}},
+          tokenizer: {japanese_tokenizer: {}, bigram_tokenizer: {}},
+          filter: {japanese_stop: {}, truncate10_filter: {}, lowercase: {}},
+          char_filter: {mapping_ja_filter: {}},
+        },
+      },
+    },
+  } as never);
+
+  it('offers each section, sorted', () => {
+    expect(fess.getAnalyzers()).toEqual(['english_analyzer', 'japanese_analyzer']);
+    expect(fess.getTokenizers()).toEqual(['bigram_tokenizer', 'japanese_tokenizer']);
+    expect(fess.getFilters()).toEqual(['japanese_stop', 'lowercase', 'truncate10_filter']);
+    expect(fess.getCharFilters()).toEqual(['mapping_ja_filter']);
+  });
+
+  it('reads the flattened shape ?flat_settings would produce', () => {
+    const flat = new IndexMetadata('i', {
+      mappings: {},
+      settings: {
+        'index.analysis.tokenizer.japanese_tokenizer.type': 'fess_japanese',
+        'index.analysis.tokenizer.japanese_tokenizer.mode': 'normal',
+        'index.analysis.filter.japanese_stop.type': 'ja_stop',
+      },
+    } as never);
+    expect(flat.getTokenizers()).toEqual(['japanese_tokenizer']);
+    expect(flat.getFilters()).toEqual(['japanese_stop']);
+  });
+
+  it('reports nothing for a section the index does not define', () => {
+    const bare = new IndexMetadata('i', {mappings: {}, settings: {}} as never);
+    expect(bare.getTokenizers()).toEqual([]);
+    expect(bare.getCharFilters()).toEqual([]);
+  });
+});

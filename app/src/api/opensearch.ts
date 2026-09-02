@@ -6,11 +6,12 @@ import {ShardStats} from '@/model/shard';
 import {Alias, IndexAliases} from '@/model/alias';
 import {parseTemplates, type IndexTemplate, type TemplateKind} from '@/model/index-template';
 import {Repository, Snapshot, type SnapshotInfo} from '@/model/snapshot';
+import {IndexMetadata, type IndexMetadataResponse} from '@/model/index-metadata';
 import {
-  IndexMetadata,
-  Token,
-  type IndexMetadataResponse,
-} from '@/model/index-metadata';
+  parseAnalysis,
+  type AnalysisResult,
+  type AnalyzeResponse,
+} from '@/model/analysis';
 import {BrokenCluster} from '@/model/broken-cluster';
 import {parseCatApis} from '@/model/cat-apis';
 import {KnnStats, type KnnStatsResponse} from '@/model/knn-stats';
@@ -254,38 +255,54 @@ export async function fetchIndexMetadata(
   return new IndexMetadata(index, response.metadata.indices[index]);
 }
 
-async function analyze(
-  index: string,
-  body: Record<string, string>,
-  signal?: AbortSignal,
-): Promise<Token[]> {
-  const response = await request<{tokens: Token[]}>(
-    `/${encodeURIComponent(index)}/_analyze`,
-    {method: 'POST', body, signal},
-  );
-  return response.tokens.map(
-    (t) => new Token(t.token, t.start_offset, t.end_offset, t.position),
-  );
+/**
+ * One _analyze call, however the caller wants the text analysed.
+ *
+ * `index` is optional: without one the request goes to the cluster-wide
+ * /_analyze, which knows the built-in analyzers and nothing an index
+ * defines. Everything else is a choice between naming a field, naming an
+ * analyzer, or composing a chain out of a tokenizer and filters.
+ */
+export interface AnalyzeRequest {
+  index?: string;
+  field?: string;
+  analyzer?: string;
+  charFilters?: string[];
+  tokenizer?: string;
+  filters?: string[];
+  text: string;
+  /** Ask for the chain rather than only its result. */
+  explain?: boolean;
 }
 
-/** Tokenises text with the analyzer configured for one field. */
-export function analyzeByField(
-  index: string,
-  field: string,
-  text: string,
+/** Tokenises text, and with `explain` reports every stage that touched it. */
+export async function analyzeText(
+  options: AnalyzeRequest,
   signal?: AbortSignal,
-): Promise<Token[]> {
-  return analyze(index, {text, field}, signal);
-}
+): Promise<AnalysisResult> {
+  const body: Record<string, unknown> = {text: options.text};
+  if (options.field !== undefined && options.field !== '') {
+    body.field = options.field;
+  }
+  if (options.analyzer !== undefined && options.analyzer !== '') {
+    body.analyzer = options.analyzer;
+  }
+  if (options.tokenizer !== undefined && options.tokenizer !== '') {
+    body.tokenizer = options.tokenizer;
+  }
+  if (options.charFilters !== undefined && options.charFilters.length > 0) {
+    body.char_filter = options.charFilters;
+  }
+  if (options.filters !== undefined && options.filters.length > 0) {
+    body.filter = options.filters;
+  }
+  if (options.explain === true) {
+    body.explain = true;
+  }
 
-/** Tokenises text with a named analyzer. */
-export function analyzeByAnalyzer(
-  index: string,
-  analyzer: string,
-  text: string,
-  signal?: AbortSignal,
-): Promise<Token[]> {
-  return analyze(index, {text, analyzer}, signal);
+  const index = options.index ?? '';
+  const path = index === '' ? '/_analyze' : `/${encodeURIComponent(index)}/_analyze`;
+  return parseAnalysis(await request<AnalyzeResponse>(path, {method: 'POST', body, signal}));
 }
 
 /* ---------------------------------------------------------------------------
