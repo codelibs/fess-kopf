@@ -28,6 +28,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   layer
 
 ### Changed
+- **The index templates screen reads all three endpoints, not just the
+  deprecated one.** It listed `_template` alone, so a cluster whose
+  templates were all made the modern way reported "no templates" -- and the
+  component templates the composable form is built from were invisible
+  entirely. A `kind` selector now switches between `component`, `index` and
+  `legacy`, and the list, the create form's starting document and the
+  create/delete endpoints follow it. The three shapes are not
+  interchangeable, so switching kind swaps the starting document unless the
+  editor holds edited work, and the index-pattern filter is dropped for
+  component templates, which have no patterns. An index template's
+  `composed_of` is shown beside its patterns
 - **The elected node is read under its current name.** The cluster state
   call now asks for `cluster_manager_node` alongside `master_node` and
   prefers it. Both 2.19.1 and 3.8.0 answer with both fields, but `master` is

@@ -245,6 +245,9 @@
 
   "templates.title": "Template indeks",
   "templates.sub": "Pengaturan dan mapping yang diterapkan pada indeks saat dibuat.",
+  "templates.kind.component": "Setelan dan pemetaan yang dapat dipakai ulang, sebagai penyusun templat indeks.",
+  "templates.kind.index": "Diterapkan pada indeks baru yang namanya cocok dengan pola. Bentuk yang berlaku sekarang.",
+  "templates.kind.legacy": "Endpoint _template yang usang. Masih dilayani, dan masih yang dimiliki klaster lama.",
   "templates.create": "buat template",
   "templates.list": "template",
   "templates.filterByName": "saring menurut nama",

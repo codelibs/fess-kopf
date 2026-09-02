@@ -245,6 +245,9 @@
 
   "templates.title": "Templates de índice",
   "templates.sub": "Configurações e mappings aplicados aos índices no momento da criação.",
+  "templates.kind.component": "Configurações e mapeamentos reutilizáveis que compõem os modelos de índice.",
+  "templates.kind.index": "Aplicado a novos índices cujo nome corresponde a um padrão. A forma atual.",
+  "templates.kind.legacy": "O endpoint _template, obsoleto. Ainda é atendido e é o que um cluster antigo mantém.",
   "templates.create": "criar template",
   "templates.list": "templates",
   "templates.filterByName": "filtrar por nome",

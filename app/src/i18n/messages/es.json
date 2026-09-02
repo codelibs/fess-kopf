@@ -245,6 +245,9 @@
 
   "templates.title": "Plantillas de índice",
   "templates.sub": "Ajustes y mappings que se aplican a los índices al crearse.",
+  "templates.kind.component": "Ajustes y mapeos reutilizables con los que se componen las plantillas de índice.",
+  "templates.kind.index": "Se aplica a los índices nuevos cuyo nombre coincide con un patrón. La forma actual.",
+  "templates.kind.legacy": "El endpoint _template, obsoleto. Se sigue atendiendo y es lo que conserva un clúster antiguo.",
   "templates.create": "crear plantilla",
   "templates.list": "plantillas",
   "templates.filterByName": "filtrar por nombre",

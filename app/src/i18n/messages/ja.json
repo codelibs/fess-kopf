@@ -245,6 +245,9 @@
 
   "templates.title": "インデックステンプレート",
   "templates.sub": "インデックス作成時に適用される設定とマッピングです。",
+  "templates.kind.component": "インデックステンプレートから参照される、再利用可能な設定とマッピングです。",
+  "templates.kind.index": "名前がパターンに一致する新規インデックスに適用されます。現行の方式です。",
+  "templates.kind.legacy": "非推奨の _template エンドポイントです。今も応答し、古いクラスタにはこれが残っています。",
   "templates.create": "テンプレートの作成",
   "templates.list": "テンプレート一覧",
   "templates.filterByName": "名前で絞り込み",

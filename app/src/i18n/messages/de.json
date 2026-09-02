@@ -245,6 +245,9 @@
 
   "templates.title": "Index-Templates",
   "templates.sub": "Einstellungen und Mappings, die bei der Erstellung auf Indizes angewendet werden.",
+  "templates.kind.component": "Wiederverwendbare Einstellungen und Mappings, aus denen Index-Templates aufgebaut werden.",
+  "templates.kind.index": "Wird auf neue Indizes angewendet, deren Name zu einem Muster passt. Die aktuelle Form.",
+  "templates.kind.legacy": "Der veraltete _template-Endpunkt. Wird weiterhin bedient und liegt auf älteren Clustern noch vor.",
   "templates.create": "Template erstellen",
   "templates.list": "Templates",
   "templates.filterByName": "nach Namen filtern",

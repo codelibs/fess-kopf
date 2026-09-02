@@ -30,7 +30,9 @@ This project is a fork of [elasticsearch-kopf](https://github.com/lmenezes/elast
 - **Index Management**: Create, delete, open, close indices and modify settings
 - **Alias Management**: Create and manage index aliases
 - **Snapshots**: Create, restore, and manage snapshots
-- **Index Templates**: Create and edit index templates
+- **Index Templates**: create and edit all three kinds -- `component` and
+  `index`, the composable pair current OpenSearch documents, and the
+  deprecated `legacy` `_template` endpoint an older cluster still carries
 - **Analyzer Testing**: Test and validate text analysis
 - **REST Client**: Direct access to OpenSearch API, with query DSL completion
   in the body editor -- keys, closed value sets, and field names from the

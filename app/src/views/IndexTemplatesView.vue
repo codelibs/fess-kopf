@@ -1,33 +1,63 @@
 <script setup lang="ts">
-import {computed, onMounted, ref} from 'vue';
-import {NButton, NCard, NInput, NTag} from 'naive-ui';
+import {computed, onMounted, ref, watch} from 'vue';
+import {NButton, NCard, NInput, NSelect, NTag} from 'naive-ui';
 import {RequestError} from '@/api/client';
-import {createIndexTemplate, deleteIndexTemplate, fetchIndexTemplates} from '@/api/opensearch';
+import {createTemplate, deleteTemplate, fetchTemplates} from '@/api/opensearch';
 import JsonEditor from '@/components/JsonEditor.vue';
 import {useAlerts} from '@/composables/useAlerts';
 import {confirm} from '@/composables/useDialogs';
 import {t} from '@/i18n';
-import {IndexTemplate, IndexTemplateFilter} from '@/model/index-template';
+import {
+  IndexTemplate,
+  IndexTemplateFilter,
+  TEMPLATE_KINDS,
+  type TemplateKind,
+} from '@/model/index-template';
 import {Paginator} from '@/model/paginator';
 
 const alerts = useAlerts();
 
 /**
- * The starting document. index_patterns, not template: the latter was removed
- * in Elasticsearch 7.0, and a template created from that shape always failed.
+ * The starting document for each kind. They are not interchangeable: a
+ * component template carries no index_patterns, and a composable index
+ * template puts settings and mappings under `template` rather than beside
+ * it. The legacy shape uses index_patterns, not the `template` string that
+ * Elasticsearch 7.0 removed -- a template created from that always failed.
  */
-const TEMPLATE_BASE = JSON.stringify(
-  {index_patterns: ['index*'], settings: {}, mappings: {}, aliases: {}},
-  undefined,
-  2,
-);
+const TEMPLATE_BASES: Record<TemplateKind, string> = {
+  component: JSON.stringify(
+    {template: {settings: {}, mappings: {}, aliases: {}}},
+    undefined,
+    2,
+  ),
+  index: JSON.stringify(
+    {
+      index_patterns: ['index*'],
+      composed_of: [],
+      priority: 100,
+      template: {settings: {}, mappings: {}, aliases: {}},
+    },
+    undefined,
+    2,
+  ),
+  legacy: JSON.stringify(
+    {index_patterns: ['index*'], settings: {}, mappings: {}, aliases: {}},
+    undefined,
+    2,
+  ),
+};
 
+const SKELETONS = Object.values(TEMPLATE_BASES);
+
+const kind = ref<TemplateKind>('index');
 const templates = ref<IndexTemplate[]>([]);
 const filter = ref(new IndexTemplateFilter('', ''));
 const page = ref(1);
 const name = ref('');
-const body = ref(TEMPLATE_BASE);
+const body = ref(TEMPLATE_BASES.index);
 const editor = ref<InstanceType<typeof JsonEditor> | null>(null);
+
+const kindOptions = computed(() => TEMPLATE_KINDS.map((k) => ({label: k, value: k})));
 
 const paginator = computed(() => {
   const p = new Paginator<IndexTemplate>(page.value, 10, [], filter.value);
@@ -42,13 +72,26 @@ function describe(error: unknown): unknown {
 
 async function load(): Promise<void> {
   try {
-    templates.value = await fetchIndexTemplates();
+    templates.value = await fetchTemplates(kind.value);
   } catch (error) {
+    templates.value = [];
     alerts.error(t('templates.loadFailed'), describe(error));
   }
 }
 
 onMounted(load);
+
+// Switching kind reloads the list and, unless the editor holds work, swaps
+// the starting document: the three shapes are not interchangeable, and
+// carrying one over would only produce a rejected request.
+watch(kind, () => {
+  page.value = 1;
+  filter.value = new IndexTemplateFilter('', '');
+  if (SKELETONS.includes(body.value)) {
+    body.value = TEMPLATE_BASES[kind.value];
+  }
+  void load();
+});
 
 async function create(): Promise<void> {
   if (name.value.trim() === '') {
@@ -64,7 +107,7 @@ async function create(): Promise<void> {
     return;
   }
   try {
-    const response = await createIndexTemplate(name.value, body.value);
+    const response = await createTemplate(kind.value, name.value, body.value);
     alerts.success(t('templates.created'), response);
     await load();
   } catch (error) {
@@ -82,7 +125,7 @@ async function remove(template: IndexTemplate): Promise<void> {
     return;
   }
   try {
-    const response = await deleteIndexTemplate(template.name);
+    const response = await deleteTemplate(template.kind, template.name);
     alerts.success(t('templates.deleted'), response);
     await load();
   } catch (error) {
@@ -103,6 +146,23 @@ function edit(template: IndexTemplate): void {
       <p class="k-page-sub">{{ t('templates.sub') }}</p>
     </div>
   </div>
+
+  <NCard style="margin-bottom: 16px">
+    <div class="k-row k-wrap k-gap-lg">
+      <!-- The endpoint names, so they match what the cluster and its docs
+           call these. `component` and `index` are the composable pair;
+           `legacy` is the deprecated _template endpoint. -->
+      <span id="it-kind-label" class="k-label" style="margin: 0">kind</span>
+      <NSelect
+        id="it-kind"
+        v-model:value="kind"
+        aria-labelledby="it-kind-label"
+        :options="kindOptions"
+        style="width: 12rem"
+      />
+      <span class="k-small k-muted">{{ t(`templates.kind.${kind}`) }}</span>
+    </div>
+  </NCard>
 
   <div class="k-split k-split-even">
     <NCard :title="t('templates.create')">
@@ -131,7 +191,10 @@ function edit(template: IndexTemplate): void {
           :aria-label="t('templates.filterByName')"
           :input-props="{id: 'it-f-name'}"
         />
+        <!-- A component template has no index patterns, so filtering by one
+             there could only ever empty the list. -->
         <NInput
+          v-if="kind !== 'component'"
           v-model:value="filter.template"
           class="k-grow"
           :placeholder="t('templates.filterByPattern')"
@@ -149,6 +212,16 @@ function edit(template: IndexTemplate): void {
             <div class="k-row k-wrap">
               <NTag v-for="p in template!.patterns" :key="p" size="tiny" :bordered="false">
                 {{ p }}
+              </NTag>
+              <NTag
+                v-for="c in template!.composedOf"
+                :key="c"
+                size="tiny"
+                type="info"
+                :bordered="false"
+                title="composed_of"
+              >
+                {{ c }}
               </NTag>
             </div>
           </div>

@@ -245,6 +245,9 @@
 
   "templates.title": "인덱스 템플릿",
   "templates.sub": "인덱스를 만들 때 적용되는 설정과 매핑입니다.",
+  "templates.kind.component": "인덱스 템플릿을 구성하는, 재사용 가능한 설정과 매핑입니다.",
+  "templates.kind.index": "이름이 패턴과 일치하는 새 인덱스에 적용됩니다. 현재 방식입니다.",
+  "templates.kind.legacy": "더 이상 권장되지 않는 _template 엔드포인트입니다. 여전히 응답하며 오래된 클러스터에는 이것이 남아 있습니다.",
   "templates.create": "템플릿 생성",
   "templates.list": "템플릿 목록",
   "templates.filterByName": "이름으로 필터링",

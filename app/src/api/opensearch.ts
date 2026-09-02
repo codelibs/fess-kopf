@@ -4,7 +4,7 @@ import {HotThreads, type NodeHotThreads} from '@/model/hot-threads';
 import {NodeStats} from '@/model/cluster-node';
 import {ShardStats} from '@/model/shard';
 import {Alias, IndexAliases} from '@/model/alias';
-import {IndexTemplate, type IndexTemplateBody} from '@/model/index-template';
+import {parseTemplates, type IndexTemplate, type TemplateKind} from '@/model/index-template';
 import {Repository, Snapshot, type SnapshotInfo} from '@/model/snapshot';
 import {
   IndexMetadata,
@@ -446,19 +446,39 @@ export function createIndex(name: string, body: string): Promise<unknown> {
   return request(`/${encodeURIComponent(name)}`, {method: 'PUT', body});
 }
 
-/** Every legacy index template. */
-export async function fetchIndexTemplates(signal?: AbortSignal): Promise<IndexTemplate[]> {
-  const response = await request<Record<string, IndexTemplateBody>>('/_template', {signal});
-  return Object.keys(response).map((name) => new IndexTemplate(name, response[name]));
+/**
+ * Where each kind of template lives.
+ *
+ * All three are answered by 2.19.1 and 3.8.0. The composable pair is what
+ * current OpenSearch documents; `_template` is deprecated but still served,
+ * and reading only it -- which this screen used to do -- reports "no
+ * templates" on a cluster whose templates were all made the modern way.
+ */
+export const TEMPLATE_PATHS: Record<TemplateKind, string> = {
+  component: '/_component_template',
+  index: '/_index_template',
+  legacy: '/_template',
+} as const;
+
+/** Every template of one kind. */
+export async function fetchTemplates(
+  kind: TemplateKind,
+  signal?: AbortSignal,
+): Promise<IndexTemplate[]> {
+  const response = await request<Parameters<typeof parseTemplates>[1]>(
+    TEMPLATE_PATHS[kind],
+    {signal},
+  );
+  return parseTemplates(kind, response);
 }
 
 /** Creates or replaces a template. The body is sent as the text that was typed. */
-export function createIndexTemplate(name: string, body: string): Promise<unknown> {
-  return request(`/_template/${encodeURIComponent(name)}`, {method: 'PUT', body});
+export function createTemplate(kind: TemplateKind, name: string, body: string): Promise<unknown> {
+  return request(`${TEMPLATE_PATHS[kind]}/${encodeURIComponent(name)}`, {method: 'PUT', body});
 }
 
-export function deleteIndexTemplate(name: string): Promise<unknown> {
-  return request(`/_template/${encodeURIComponent(name)}`, {method: 'DELETE'});
+export function deleteTemplate(kind: TemplateKind, name: string): Promise<unknown> {
+  return request(`${TEMPLATE_PATHS[kind]}/${encodeURIComponent(name)}`, {method: 'DELETE'});
 }
 
 /** Every registered snapshot repository. */
