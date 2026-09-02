@@ -279,6 +279,20 @@
   "tasks.cancelFailed": "Fout bij het annuleren van {id}",
   "tasks.cancelled": "Annulering aangevraagd voor {id}",
 
+  "topQueries.title": "Zwaarste query's",
+  "topQueries.sub": "De zwaarste zoekopdrachten van dit cluster, zoals Query Insights ze vastlegde.",
+  "topQueries.showSource": "query tonen",
+  "topQueries.sourceTitle": "Inhoud van de query",
+  "topQueries.empty": "geen query's vastgelegd",
+  "topQueries.notCollecting": "Of niets was traag, of het verzamelen van deze meting staat uit:",
+  "topQueries.failed": "Fout bij het ophalen van de query's",
+
+  "knn.title": "k-NN",
+  "knn.sub": "De vectorcache achter semantisch zoeken: wat is geladen, en past het nog.",
+  "knn.breakerTripped": "De circuit breaker staat open: vectorgrafen worden pas geladen als er geheugen vrijkomt.",
+  "knn.empty": "geen nodes gerapporteerd",
+  "knn.failed": "Fout bij het ophalen van de k-NN-statistieken",
+
   "hotThreads.title": "Actieve threads",
   "hotThreads.sub": "Bemonstert waar de nodes hun tijd aan besteden.",
   "hotThreads.allNodes": "alle nodes",

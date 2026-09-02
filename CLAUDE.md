@@ -65,7 +65,7 @@ app/
 ├── tests/
 └── src/
     ├── main.ts
-    ├── router/          # hash routing; 12 routes
+    ├── router/          # hash routing; 14 routes, two plugin-gated
     ├── api/             # location resolution, settings, HTTP client, endpoints
     ├── model/           # data models and formatters
     ├── composables/     # shared state (cluster poll, capabilities, alerts, dialogs)
@@ -84,7 +84,7 @@ app/
    is no store library.
 
 2. **The cluster poll is the spine.** `useCluster` issues eight calls every
-   `refresh_rate` ms and builds a `Cluster`; nine of the twelve screens read
+   `refresh_rate` ms and builds a `Cluster`; nine of the fourteen screens read
    from it rather than fetching their own copy. A poll that cannot be
    assembled falls back to the reduced `local=true` view instead of blanking
    every screen.
@@ -165,6 +165,11 @@ app/
    rather than offering something the cluster cannot answer. `Version` stays
    what it is -- the warning for anything older than 2.x -- and is not the
    place to add feature checks.
+
+   `ROUTE_PLUGINS` in `app/src/router/index.ts` is the whole of the gating:
+   it maps a route name to the plugin it needs, and `AppHeader` drops any
+   route whose plugin is absent. Adding a plugin-backed screen means adding
+   one entry there, not a condition in the header.
 
 8. **OpenSearch Integration**: This tool is designed exclusively for OpenSearch 2.x and 3.x (not Elasticsearch). It connects to OpenSearch clusters via REST API and provides a web UI for cluster management.
 

@@ -19,8 +19,23 @@ export const NAV_ROUTES = [
   'indexTemplates',
   'cat',
   'tasks',
+  'topQueries',
+  'knn',
   'hotthreads',
 ] as const;
+
+/**
+ * The routes that only exist when a plugin is installed.
+ *
+ * A screen backed by a plugin the cluster does not have would offer a page
+ * that can only 404, so the navigation asks useCapabilities first. Both
+ * plugins ship in the fess-opensearch image, and neither is in a minimal
+ * OpenSearch distribution.
+ */
+export const ROUTE_PLUGINS: Partial<Record<(typeof NAV_ROUTES)[number], string>> = {
+  topQueries: 'query-insights',
+  knn: 'opensearch-knn',
+};
 
 export const ROUTE_LABELS: Record<string, string> = {
   cluster: 'cluster',
@@ -33,6 +48,8 @@ export const ROUTE_LABELS: Record<string, string> = {
   indexTemplates: 'index templates',
   cat: 'cat',
   tasks: 'tasks',
+  topQueries: 'top queries',
+  knn: 'k-NN',
   hotthreads: 'hot threads',
   indexSettings: 'index settings',
 };
@@ -61,6 +78,12 @@ const routes: RouteRecordRaw[] = [
   },
   {path: '/cat', name: 'cat', component: () => import('@/views/CatView.vue')},
   {path: '/tasks', name: 'tasks', component: () => import('@/views/TasksView.vue')},
+  {
+    path: '/topQueries',
+    name: 'topQueries',
+    component: () => import('@/views/TopQueriesView.vue'),
+  },
+  {path: '/knn', name: 'knn', component: () => import('@/views/KnnStatsView.vue')},
   {path: '/hotthreads', name: 'hotthreads', component: () => import('@/views/HotThreadsView.vue')},
   // /clusterHealth and /clusterSettings are deliberately absent: nothing in the
   // shipped UI ever linked to them, and both failed against a default

@@ -279,6 +279,20 @@
   "tasks.cancelFailed": "{id} の取り消しに失敗しました",
   "tasks.cancelled": "{id} の取り消しを要求しました",
 
+  "topQueries.title": "上位クエリ",
+  "topQueries.sub": "Query Insights が記録した、このクラスタで最も負荷の高かった検索です。",
+  "topQueries.showSource": "クエリを表示",
+  "topQueries.sourceTitle": "クエリの内容",
+  "topQueries.empty": "記録されたクエリはありません",
+  "topQueries.notCollecting": "遅い検索が無かったか、この指標の収集が無効になっています:",
+  "topQueries.failed": "上位クエリの取得に失敗しました",
+
+  "knn.title": "k-NN",
+  "knn.sub": "セマンティック検索が使うベクトルキャッシュの状態と、まだ収まっているかを表示します。",
+  "knn.breakerTripped": "サーキットブレーカーが開いています。メモリが解放されるまでベクトルは読み込めません。",
+  "knn.empty": "報告したノードがありません",
+  "knn.failed": "k-NN 統計の取得に失敗しました",
+
   "hotThreads.title": "ホットスレッド",
   "hotThreads.sub": "各ノードが時間を費やしている箇所をサンプリングします。",
   "hotThreads.allNodes": "すべてのノード",

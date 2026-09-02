@@ -279,6 +279,20 @@
   "tasks.cancelFailed": "取消 {id} 失败",
   "tasks.cancelled": "已请求取消 {id}",
 
+  "topQueries.title": "重点查询",
+  "topQueries.sub": "Query Insights 记录的本集群开销最大的检索。",
+  "topQueries.showSource": "查看查询",
+  "topQueries.sourceTitle": "查询内容",
+  "topQueries.empty": "没有记录到查询",
+  "topQueries.notCollecting": "要么没有慢查询，要么该指标的采集已关闭：",
+  "topQueries.failed": "获取重点查询失败",
+
+  "knn.title": "k-NN",
+  "knn.sub": "语义检索所用的向量缓存：已加载了什么，以及是否还装得下。",
+  "knn.breakerTripped": "熔断器已打开：在释放内存之前无法加载向量图。",
+  "knn.empty": "没有节点返回数据",
+  "knn.failed": "获取 k-NN 统计失败",
+
   "hotThreads.title": "热点线程",
   "hotThreads.sub": "采样各节点的时间都花在了哪里。",
   "hotThreads.allNodes": "全部节点",

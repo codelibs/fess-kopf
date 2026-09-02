@@ -279,6 +279,20 @@
   "tasks.cancelFailed": "Erreur lors de l'annulation de {id}",
   "tasks.cancelled": "Annulation demandée pour {id}",
 
+  "topQueries.title": "Requêtes les plus coûteuses",
+  "topQueries.sub": "Les recherches les plus coûteuses de ce cluster, telles que Query Insights les a enregistrées.",
+  "topQueries.showSource": "voir la requête",
+  "topQueries.sourceTitle": "Contenu de la requête",
+  "topQueries.empty": "aucune requête enregistrée",
+  "topQueries.notCollecting": "Soit rien n'a été lent, soit la collecte de cette mesure est désactivée :",
+  "topQueries.failed": "Erreur lors de la récupération des requêtes",
+
+  "knn.title": "k-NN",
+  "knn.sub": "Le cache de vecteurs derrière la recherche sémantique : ce qui est chargé, et s'il tient encore.",
+  "knn.breakerTripped": "Le disjoncteur est ouvert : aucun graphe de vecteurs ne sera chargé tant que de la mémoire n'est pas libérée.",
+  "knn.empty": "aucun nœud n'a répondu",
+  "knn.failed": "Erreur lors de la récupération des statistiques k-NN",
+
   "hotThreads.title": "Threads actifs",
   "hotThreads.sub": "Échantillonne ce qui occupe le temps des nœuds.",
   "hotThreads.allNodes": "tous les nœuds",

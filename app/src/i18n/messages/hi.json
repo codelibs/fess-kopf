@@ -279,6 +279,20 @@
   "tasks.cancelFailed": "{id} को रद्द करने में विफल",
   "tasks.cancelled": "{id} के लिए रद्दीकरण का अनुरोध भेजा गया",
 
+  "topQueries.title": "शीर्ष क्वेरी",
+  "topQueries.sub": "Query Insights द्वारा दर्ज इस क्लस्टर की सबसे भारी खोजें।",
+  "topQueries.showSource": "क्वेरी देखें",
+  "topQueries.sourceTitle": "क्वेरी की सामग्री",
+  "topQueries.empty": "कोई क्वेरी दर्ज नहीं है",
+  "topQueries.notCollecting": "या तो कुछ भी धीमा नहीं था, या इस माप का संग्रह बंद है:",
+  "topQueries.failed": "शीर्ष क्वेरी प्राप्त करने में विफल",
+
+  "knn.title": "k-NN",
+  "knn.sub": "सिमेंटिक खोज के पीछे का वेक्टर कैश: क्या लोड है और क्या वह अब भी समा रहा है।",
+  "knn.breakerTripped": "सर्किट ब्रेकर खुला है: मेमोरी खाली होने तक वेक्टर ग्राफ़ लोड नहीं होंगे।",
+  "knn.empty": "किसी नोड ने रिपोर्ट नहीं की",
+  "knn.failed": "k-NN आँकड़े प्राप्त करने में विफल",
+
   "hotThreads.title": "व्यस्त थ्रेड",
   "hotThreads.sub": "नमूना लेकर देखें कि नोड अपना समय कहाँ लगा रहे हैं।",
   "hotThreads.allNodes": "सभी नोड",
