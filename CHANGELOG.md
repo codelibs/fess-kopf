@@ -28,6 +28,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   layer
 
 ### Added
+- **Two plugin-backed screens, offered only where the plugin exists.**
+  `/topQueries` reads the Query Insights plugin -- the searches the cluster
+  spent the most on, ranked by latency, CPU or memory, with the query DSL
+  each one ran. `/knn` reads the k-NN plugin: whether the circuit breaker
+  has tripped, how much graph memory each node holds, and which indices are
+  in the cache, which is the answer to "semantic search started failing and
+  nothing in the Fess log says why". Both are hidden unless
+  `useCapabilities` found the plugin, so a cluster without them is never
+  offered a page that can only 404. An empty top-queries listing is
+  ambiguous -- 3.8.0 records without any configuration while 2.19.1 records
+  nothing until `search.insights.top_queries.<metric>.enabled` is set -- so
+  the screen names the setting instead of showing a blank table
 - **A tasks screen, and a reason for an unassigned shard.** kopf could start
   a force merge but not watch one finish, and could say a cluster was red
   without saying why -- both answers were only reachable through the REST

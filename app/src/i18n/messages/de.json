@@ -279,6 +279,20 @@
   "tasks.cancelFailed": "Fehler beim Abbrechen von {id}",
   "tasks.cancelled": "Abbruch für {id} angefordert",
 
+  "topQueries.title": "Top-Abfragen",
+  "topQueries.sub": "Die aufwendigsten Suchen dieses Clusters, wie Query Insights sie aufgezeichnet hat.",
+  "topQueries.showSource": "Abfrage anzeigen",
+  "topQueries.sourceTitle": "Abfrageinhalt",
+  "topQueries.empty": "keine Abfragen aufgezeichnet",
+  "topQueries.notCollecting": "Entweder war nichts langsam, oder die Erfassung dieser Messgröße ist aus:",
+  "topQueries.failed": "Fehler beim Abrufen der Top-Abfragen",
+
+  "knn.title": "k-NN",
+  "knn.sub": "Der Vektor-Cache hinter der semantischen Suche: was geladen ist und ob es noch passt.",
+  "knn.breakerTripped": "Der Circuit Breaker ist offen: Vektorgraphen können erst nach Freigabe von Speicher geladen werden.",
+  "knn.empty": "keine Knoten gemeldet",
+  "knn.failed": "Fehler beim Abrufen der k-NN-Statistiken",
+
   "hotThreads.title": "Hot Threads",
   "hotThreads.sub": "Stichprobe, womit die Knoten ihre Zeit verbringen.",
   "hotThreads.allNodes": "alle Knoten",

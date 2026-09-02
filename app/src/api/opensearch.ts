@@ -13,6 +13,8 @@ import {
 } from '@/model/index-metadata';
 import {BrokenCluster} from '@/model/broken-cluster';
 import {parseCatApis} from '@/model/cat-apis';
+import {KnnStats, type KnnStatsResponse} from '@/model/knn-stats';
+import type {TopQueryMetric, TopQueryResponse} from '@/model/top-query';
 import {
   Cluster,
   type ClusterHealth,
@@ -638,4 +640,34 @@ export async function fetchTasks(signal?: AbortSignal): Promise<TaskResponse[]> 
 /** Asks one task to stop. Only tasks that report themselves cancellable. */
 export function cancelTask(taskId: string): Promise<unknown> {
   return request(`/_tasks/${encodeURIComponent(taskId)}/_cancel`, {method: 'POST'});
+}
+
+/* ---------------------------------------------------------------------------
+ * Plugin-backed endpoints. Each screen that uses one is only offered when
+ * useCapabilities found the plugin installed.
+ * ------------------------------------------------------------------------ */
+
+/**
+ * The searches the Query Insights plugin kept, ranked by one measurement.
+ *
+ * Collection is not on by default everywhere: 3.8.0 records without any
+ * configuration, 2.19.1 answers with an empty list until
+ * `search.insights.top_queries.<metric>.enabled` is set. An empty response
+ * is therefore not necessarily "nothing was slow", and the screen says so.
+ */
+export async function fetchTopQueries(
+  metric: TopQueryMetric,
+  signal?: AbortSignal,
+): Promise<TopQueryResponse[]> {
+  const response = await request<{top_queries?: TopQueryResponse[]}>(
+    `/_insights/top_queries?type=${encodeURIComponent(metric)}`,
+    {signal},
+  );
+  return response.top_queries ?? [];
+}
+
+/** The k-NN plugin's view of the vector cache, cluster-wide and per node. */
+export async function fetchKnnStats(signal?: AbortSignal): Promise<KnnStats> {
+  const response = await request<KnnStatsResponse>('/_plugins/_knn/stats', {signal});
+  return new KnnStats(response);
 }

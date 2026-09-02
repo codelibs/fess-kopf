@@ -279,6 +279,20 @@
   "tasks.cancelFailed": "{id} iptal edilemedi",
   "tasks.cancelled": "{id} için iptal istendi",
 
+  "topQueries.title": "En ağır sorgular",
+  "topQueries.sub": "Query Insights tarafından kaydedilen, bu kümedeki en maliyetli aramalar.",
+  "topQueries.showSource": "sorguyu göster",
+  "topQueries.sourceTitle": "Sorgu içeriği",
+  "topQueries.empty": "kaydedilmiş sorgu yok",
+  "topQueries.notCollecting": "Ya hiçbir şey yavaş değildi ya da bu ölçümün toplanması kapalı:",
+  "topQueries.failed": "Sorgular alınamadı",
+
+  "knn.title": "k-NN",
+  "knn.sub": "Anlamsal aramanın arkasındaki vektör önbelleği: ne yüklü ve hâlâ sığıyor mu.",
+  "knn.breakerTripped": "Devre kesici açık: bellek boşalmadan vektör grafları yüklenemez.",
+  "knn.empty": "rapor veren düğüm yok",
+  "knn.failed": "k-NN istatistikleri alınamadı",
+
   "hotThreads.title": "Yoğun iş parçacıkları",
   "hotThreads.sub": "Düğümlerin zamanını nereye harcadığını örnekler.",
   "hotThreads.allNodes": "tüm düğümler",

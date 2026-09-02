@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import {computed} from 'vue';
 import {RouterLink} from 'vue-router';
 import {NTag} from 'naive-ui';
-import {NAV_ROUTES, ROUTE_LABELS} from '@/router';
+import {NAV_ROUTES, ROUTE_LABELS, ROUTE_PLUGINS} from '@/router';
+import {hasPlugin} from '@/composables/useCapabilities';
 import {useCluster} from '@/composables/useCluster';
 import {t} from '@/i18n';
 
@@ -9,12 +11,22 @@ import {t} from '@/i18n';
 // dashboard, which already says whose page this is. The row is for navigation
 // and for which cluster you are pointed at.
 const {clusterName, connected} = useCluster();
+
+// A plugin-backed screen is offered only when the cluster has the plugin.
+// Before the probe answers, and if it is denied, none of them are: an
+// absent link is better than one that can only 404.
+const routes = computed(() =>
+  NAV_ROUTES.filter((name) => {
+    const plugin = ROUTE_PLUGINS[name];
+    return plugin === undefined || hasPlugin(plugin);
+  }),
+);
 </script>
 
 <template>
   <header class="k-header">
     <nav class="k-nav" :aria-label="t('header.sections')">
-      <RouterLink v-for="name in NAV_ROUTES" :key="name" :to="{name}">
+      <RouterLink v-for="name in routes" :key="name" :to="{name}">
         {{ ROUTE_LABELS[name] }}
       </RouterLink>
     </nav>

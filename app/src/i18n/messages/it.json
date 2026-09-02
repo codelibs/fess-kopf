@@ -279,6 +279,20 @@
   "tasks.cancelFailed": "Errore durante l'annullamento di {id}",
   "tasks.cancelled": "Annullamento richiesto per {id}",
 
+  "topQueries.title": "Query principali",
+  "topQueries.sub": "Le ricerche più costose di questo cluster, come registrate da Query Insights.",
+  "topQueries.showSource": "mostra la query",
+  "topQueries.sourceTitle": "Contenuto della query",
+  "topQueries.empty": "nessuna query registrata",
+  "topQueries.notCollecting": "O nulla è stato lento, o la raccolta di questa misura è disattivata:",
+  "topQueries.failed": "Errore durante il recupero delle query principali",
+
+  "knn.title": "k-NN",
+  "knn.sub": "La cache dei vettori dietro la ricerca semantica: che cosa è caricato e se ci sta ancora.",
+  "knn.breakerTripped": "Il circuit breaker è aperto: i grafi dei vettori non verranno caricati finché non si libera memoria.",
+  "knn.empty": "nessun nodo ha risposto",
+  "knn.failed": "Errore durante il recupero delle statistiche k-NN",
+
   "hotThreads.title": "Thread attivi",
   "hotThreads.sub": "Campiona come i nodi stanno impiegando il loro tempo.",
   "hotThreads.allNodes": "tutti i nodi",

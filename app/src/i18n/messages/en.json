@@ -279,6 +279,20 @@
   "tasks.cancelFailed": "Error while cancelling {id}",
   "tasks.cancelled": "Cancellation requested for {id}",
 
+  "topQueries.title": "Top queries",
+  "topQueries.sub": "The searches this cluster spent the most on, as Query Insights recorded them.",
+  "topQueries.showSource": "show query",
+  "topQueries.sourceTitle": "Query source",
+  "topQueries.empty": "no queries recorded",
+  "topQueries.notCollecting": "Nothing has been slow, or collection is off for this measurement:",
+  "topQueries.failed": "Error while fetching top queries",
+
+  "knn.title": "k-NN",
+  "knn.sub": "The vector cache behind semantic search: what is loaded, and whether it still fits.",
+  "knn.breakerTripped": "The circuit breaker is open: vector graphs cannot be loaded until memory is freed.",
+  "knn.empty": "no nodes reported",
+  "knn.failed": "Error while fetching k-NN statistics",
+
   "hotThreads.title": "Hot threads",
   "hotThreads.sub": "Sample where the nodes are spending their time.",
   "hotThreads.allNodes": "all nodes",

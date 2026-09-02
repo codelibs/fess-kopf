@@ -279,6 +279,20 @@
   "tasks.cancelFailed": "Erro ao cancelar {id}",
   "tasks.cancelled": "Cancelamento solicitado para {id}",
 
+  "topQueries.title": "Consultas principais",
+  "topQueries.sub": "As buscas mais custosas deste cluster, conforme registradas pelo Query Insights.",
+  "topQueries.showSource": "ver a consulta",
+  "topQueries.sourceTitle": "Conteúdo da consulta",
+  "topQueries.empty": "nenhuma consulta registrada",
+  "topQueries.notCollecting": "Ou nada foi lento, ou a coleta desta medida está desligada:",
+  "topQueries.failed": "Erro ao obter as consultas",
+
+  "knn.title": "k-NN",
+  "knn.sub": "O cache de vetores por trás da busca semântica: o que está carregado e se ainda cabe.",
+  "knn.breakerTripped": "O disjuntor está aberto: os grafos de vetores não serão carregados até liberar memória.",
+  "knn.empty": "nenhum nó reportou",
+  "knn.failed": "Erro ao obter as estatísticas de k-NN",
+
   "hotThreads.title": "Threads ativas",
   "hotThreads.sub": "Amostra onde os nós estão gastando seu tempo.",
   "hotThreads.allNodes": "todos os nós",

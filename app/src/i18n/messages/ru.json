@@ -279,6 +279,20 @@
   "tasks.cancelFailed": "Не удалось отменить {id}",
   "tasks.cancelled": "Запрошена отмена {id}",
 
+  "topQueries.title": "Самые тяжёлые запросы",
+  "topQueries.sub": "Самые затратные поисковые запросы этого кластера по данным Query Insights.",
+  "topQueries.showSource": "показать запрос",
+  "topQueries.sourceTitle": "Текст запроса",
+  "topQueries.empty": "записанных запросов нет",
+  "topQueries.notCollecting": "Либо ничего не было медленным, либо сбор этой метрики выключен:",
+  "topQueries.failed": "Не удалось получить список запросов",
+
+  "knn.title": "k-NN",
+  "knn.sub": "Кэш векторов семантического поиска: что загружено и хватает ли места.",
+  "knn.breakerTripped": "Предохранитель сработал: графы векторов не загрузятся, пока не освободится память.",
+  "knn.empty": "ни один узел не ответил",
+  "knn.failed": "Не удалось получить статистику k-NN",
+
   "hotThreads.title": "Активные потоки",
   "hotThreads.sub": "Выборка того, на что узлы тратят время.",
   "hotThreads.allNodes": "все узлы",

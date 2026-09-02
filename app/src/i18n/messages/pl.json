@@ -279,6 +279,20 @@
   "tasks.cancelFailed": "Błąd podczas anulowania {id}",
   "tasks.cancelled": "Zażądano anulowania {id}",
 
+  "topQueries.title": "Najcięższe zapytania",
+  "topQueries.sub": "Najbardziej kosztowne wyszukiwania w tym klastrze, zapisane przez Query Insights.",
+  "topQueries.showSource": "pokaż zapytanie",
+  "topQueries.sourceTitle": "Treść zapytania",
+  "topQueries.empty": "brak zapisanych zapytań",
+  "topQueries.notCollecting": "Albo nic nie było wolne, albo zbieranie tej miary jest wyłączone:",
+  "topQueries.failed": "Błąd podczas pobierania zapytań",
+
+  "knn.title": "k-NN",
+  "knn.sub": "Pamięć podręczna wektorów wyszukiwania semantycznego: co jest wczytane i czy się jeszcze mieści.",
+  "knn.breakerTripped": "Bezpiecznik jest otwarty: grafy wektorów nie zostaną wczytane, dopóki nie zwolni się pamięć.",
+  "knn.empty": "żaden węzeł nie odpowiedział",
+  "knn.failed": "Błąd podczas pobierania statystyk k-NN",
+
   "hotThreads.title": "Aktywne wątki",
   "hotThreads.sub": "Próbkuje, na co węzły poświęcają czas.",
   "hotThreads.allNodes": "wszystkie węzły",

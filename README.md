@@ -44,6 +44,12 @@ This project is a fork of [elasticsearch-kopf](https://github.com/lmenezes/elast
   merge started here, or the reindex behind a Fess index rotation
 - **Allocation explanations**: when shards are unassigned, the cluster
   overview can ask OpenSearch why, decider by decider
+- **Top queries**: the searches the cluster spent the most on, from the Query
+  Insights plugin, ranked by latency, CPU or memory, with the query DSL each
+  one ran. Offered only when the plugin is installed
+- **k-NN**: the vector cache behind semantic search -- whether the circuit
+  breaker has tripped, how much graph memory each node holds, and which
+  indices are loaded. Offered only when the plugin is installed
 - **Hot Threads Analysis**: Node thread analysis
 - **Localized interface**: follows the language the Fess admin console
   resolved for the request, in all sixteen locales Fess ships

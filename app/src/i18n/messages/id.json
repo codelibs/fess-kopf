@@ -279,6 +279,20 @@
   "tasks.cancelFailed": "Gagal membatalkan {id}",
   "tasks.cancelled": "Pembatalan untuk {id} telah diminta",
 
+  "topQueries.title": "Kueri teratas",
+  "topQueries.sub": "Pencarian termahal di klaster ini, sebagaimana dicatat Query Insights.",
+  "topQueries.showSource": "lihat kueri",
+  "topQueries.sourceTitle": "Isi kueri",
+  "topQueries.empty": "tidak ada kueri yang tercatat",
+  "topQueries.notCollecting": "Tidak ada yang lambat, atau pengumpulan untuk ukuran ini dimatikan:",
+  "topQueries.failed": "Gagal mengambil kueri teratas",
+
+  "knn.title": "k-NN",
+  "knn.sub": "Tembolok vektor di balik pencarian semantik: apa yang dimuat dan apakah masih muat.",
+  "knn.breakerTripped": "Pemutus sirkuit terbuka: graf vektor tidak dapat dimuat sampai memori dibebaskan.",
+  "knn.empty": "tidak ada node yang melapor",
+  "knn.failed": "Gagal mengambil statistik k-NN",
+
   "hotThreads.title": "Hot thread",
   "hotThreads.sub": "Mencuplik ke mana waktu node dihabiskan.",
   "hotThreads.allNodes": "semua node",
