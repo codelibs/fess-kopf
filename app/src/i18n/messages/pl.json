@@ -245,6 +245,9 @@
 
   "templates.title": "Szablony indeksów",
   "templates.sub": "Ustawienia i mapowania stosowane do indeksów przy ich tworzeniu.",
+  "templates.kind.component": "Wielokrotnego użytku ustawienia i mapowania, z których składa się szablony indeksów.",
+  "templates.kind.index": "Stosowany do nowych indeksów o nazwie pasującej do wzorca. Forma obowiązująca dziś.",
+  "templates.kind.legacy": "Przestarzały punkt końcowy _template. Nadal obsługiwany i wciąż obecny w starszych klastrach.",
   "templates.create": "utwórz szablon",
   "templates.list": "szablony",
   "templates.filterByName": "filtruj po nazwie",

@@ -245,6 +245,9 @@
 
   "templates.title": "Index templates",
   "templates.sub": "Settings and mappings applied to indices as they are created.",
+  "templates.kind.component": "Reusable settings and mappings that index templates are built from.",
+  "templates.kind.index": "Applied to new indices whose name matches a pattern. The current form.",
+  "templates.kind.legacy": "The deprecated _template endpoint. Still served, and still what an older cluster carries.",
   "templates.create": "create template",
   "templates.list": "templates",
   "templates.filterByName": "filter by name",

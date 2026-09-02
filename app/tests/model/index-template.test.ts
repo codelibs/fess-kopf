@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {IndexTemplate, IndexTemplateFilter} from '@/model/index-template';
+import {IndexTemplate, IndexTemplateFilter, parseTemplates} from '@/model/index-template';
 
 /** Ported from tests/models/index-template-filter.test.js. */
 
@@ -70,5 +70,75 @@ describe('IndexTemplateFilter', () => {
     const filter = new IndexTemplateFilter('a', 'b');
     filter.name = 'edited';
     expect(filter.clone().name).toBe('edited');
+  });
+});
+
+describe('parseTemplates', () => {
+  /** The three listing shapes, measured on 2.19.1 and 3.8.0 alike. */
+  const COMPONENT = {
+    component_templates: [
+      {
+        name: 'kopf-comp',
+        component_template: {
+          template: {settings: {index: {number_of_shards: '1'}}},
+          version: 3,
+          _meta: {description: 'shared settings'},
+        },
+      },
+    ],
+  };
+
+  const INDEX = {
+    index_templates: [
+      {
+        name: 'kopf-idx',
+        index_template: {
+          index_patterns: ['kopf-logs-*', 'kopf-metrics-*'],
+          template: {settings: {index: {number_of_replicas: '0'}}},
+          composed_of: ['kopf-comp'],
+          priority: 200,
+          version: 7,
+        },
+      },
+    ],
+  };
+
+  const LEGACY = {'kopf-legacy': {index_patterns: ['old-*'], settings: {}}};
+
+  it('reads a component listing, which carries no patterns', () => {
+    const [template] = parseTemplates('component', COMPONENT);
+    expect(template.name).toBe('kopf-comp');
+    expect(template.kind).toBe('component');
+    expect(template.patterns).toEqual([]);
+    expect(template.composedOf).toEqual([]);
+  });
+
+  it('does not mistake a composable template object for a legacy pattern', () => {
+    // Both shapes call the field `template`: a string on the legacy one, an
+    // object on a composable one. Reading it blindly would print [object].
+    const [template] = parseTemplates('component', COMPONENT);
+    expect(template.body.template).toBeTypeOf('object');
+    expect(template.patterns).toEqual([]);
+  });
+
+  it('reads an index listing with its patterns and components', () => {
+    const [template] = parseTemplates('index', INDEX);
+    expect(template.name).toBe('kopf-idx');
+    expect(template.kind).toBe('index');
+    expect(template.patterns).toEqual(['kopf-logs-*', 'kopf-metrics-*']);
+    expect(template.composedOf).toEqual(['kopf-comp']);
+  });
+
+  it('reads the legacy object-keyed listing', () => {
+    const [template] = parseTemplates('legacy', LEGACY);
+    expect(template.name).toBe('kopf-legacy');
+    expect(template.kind).toBe('legacy');
+    expect(template.patterns).toEqual(['old-*']);
+  });
+
+  it('returns nothing for an empty listing of any kind', () => {
+    expect(parseTemplates('component', {})).toEqual([]);
+    expect(parseTemplates('index', {})).toEqual([]);
+    expect(parseTemplates('legacy', {})).toEqual([]);
   });
 });

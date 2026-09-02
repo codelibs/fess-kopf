@@ -245,6 +245,9 @@
 
   "templates.title": "索引範本",
   "templates.sub": "建立索引時套用的設定與映射。",
+  "templates.kind.component": "可重複使用的設定與對應，索引範本由它們組合而成。",
+  "templates.kind.index": "套用於名稱符合樣式的新建索引。這是目前的做法。",
+  "templates.kind.legacy": "已淘汰的 _template 端點。它仍可使用，舊叢集裡保留的正是這種範本。",
   "templates.create": "建立範本",
   "templates.list": "範本清單",
   "templates.filterByName": "依名稱篩選",

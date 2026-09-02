@@ -245,6 +245,9 @@
 
   "templates.title": "Dizin şablonları",
   "templates.sub": "Dizinler oluşturulurken uygulanan ayarlar ve mapping'ler.",
+  "templates.kind.component": "Dizin şablonlarının kendisinden oluşturulduğu, yeniden kullanılabilir ayarlar ve eşlemeler.",
+  "templates.kind.index": "Adı bir desene uyan yeni dizinlere uygulanır. Güncel biçim budur.",
+  "templates.kind.legacy": "Kullanımdan kaldırılan _template uç noktası. Hâlâ yanıt verir ve eski kümelerde bu bulunur.",
   "templates.create": "şablon oluştur",
   "templates.list": "şablonlar",
   "templates.filterByName": "ada göre süz",

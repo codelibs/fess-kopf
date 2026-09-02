@@ -245,6 +245,9 @@
 
   "templates.title": "Modèles d'index",
   "templates.sub": "Paramètres et mappings appliqués aux index lors de leur création.",
+  "templates.kind.component": "Paramètres et mappages réutilisables à partir desquels les modèles d'index sont composés.",
+  "templates.kind.index": "S'applique aux nouveaux index dont le nom correspond à un motif. La forme actuelle.",
+  "templates.kind.legacy": "Le point de terminaison _template, déprécié. Toujours servi, et c'est ce que porte un cluster ancien.",
   "templates.create": "créer un modèle",
   "templates.list": "modèles",
   "templates.filterByName": "filtrer par nom",

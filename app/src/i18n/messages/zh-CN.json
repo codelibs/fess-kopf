@@ -245,6 +245,9 @@
 
   "templates.title": "索引模板",
   "templates.sub": "创建索引时应用的设置与映射。",
+  "templates.kind.component": "可复用的设置与映射，索引模板由它们组合而成。",
+  "templates.kind.index": "应用于名称匹配模式的新建索引。这是当前的做法。",
+  "templates.kind.legacy": "已弃用的 _template 端点。它仍然可用，旧集群里保留的正是这种模板。",
   "templates.create": "创建模板",
   "templates.list": "模板列表",
   "templates.filterByName": "按名称筛选",

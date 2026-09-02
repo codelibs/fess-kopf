@@ -245,6 +245,9 @@
 
   "templates.title": "Indextemplates",
   "templates.sub": "Instellingen en mappings die bij het aanmaken op indices worden toegepast.",
+  "templates.kind.component": "Herbruikbare instellingen en mappings waaruit indextemplates worden opgebouwd.",
+  "templates.kind.index": "Wordt toegepast op nieuwe indices waarvan de naam op een patroon past. De huidige vorm.",
+  "templates.kind.legacy": "Het verouderde _template-endpoint. Wordt nog bediend en is wat een ouder cluster bevat.",
   "templates.create": "template aanmaken",
   "templates.list": "templates",
   "templates.filterByName": "op naam filteren",

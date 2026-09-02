@@ -10,6 +10,10 @@ import {
   fetchCluster,
   fetchInstalledPlugins,
   fetchTasks,
+  fetchTemplates,
+  createTemplate,
+  deleteTemplate,
+  TEMPLATE_PATHS,
 } from '@/api/opensearch';
 import {RequestError} from '@/api/client';
 import {resetSettingsForTest} from '@/api/settings';
@@ -239,5 +243,43 @@ describe('cancelTask', () => {
       '/_tasks/rZrUM42eQ1mRLB4USOB1SA%3A32/_cancel',
     );
     expect((fetcher.mock.calls[0][1] as RequestInit).method).toBe('POST');
+  });
+});
+
+describe('templates', () => {
+  it('reads each kind from its own endpoint', async () => {
+    const calls = stubFetch({
+      routes: {
+        [TEMPLATE_PATHS.component]: {
+          component_templates: [{name: 'c', component_template: {}}],
+        },
+        [TEMPLATE_PATHS.index]: {
+          index_templates: [{name: 'i', index_template: {index_patterns: ['i-*']}}],
+        },
+        [TEMPLATE_PATHS.legacy]: {l: {index_patterns: ['l-*']}},
+      },
+    });
+
+    expect((await fetchTemplates('component')).map((t) => t.name)).toEqual(['c']);
+    expect((await fetchTemplates('index')).map((t) => t.name)).toEqual(['i']);
+    expect((await fetchTemplates('legacy')).map((t) => t.name)).toEqual(['l']);
+    expect(calls).toEqual([
+      '/_component_template',
+      '/_index_template',
+      '/_template',
+    ]);
+  });
+
+  it('creates and deletes under the endpoint for the kind', async () => {
+    const fetcher = vi.fn(async () => new Response('{"acknowledged":true}', {status: 200}));
+    vi.stubGlobal('fetch', fetcher);
+
+    await createTemplate('component', 'my comp', '{"template":{}}');
+    await deleteTemplate('index', 'my/idx');
+
+    expect(String(fetcher.mock.calls[0][0])).toContain('/_component_template/my%20comp');
+    expect((fetcher.mock.calls[0][1] as RequestInit).method).toBe('PUT');
+    expect(String(fetcher.mock.calls[1][0])).toContain('/_index_template/my%2Fidx');
+    expect((fetcher.mock.calls[1][1] as RequestInit).method).toBe('DELETE');
   });
 });
