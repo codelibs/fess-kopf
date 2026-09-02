@@ -68,7 +68,7 @@ app/
     ├── router/          # hash routing; 11 routes
     ├── api/             # location resolution, settings, HTTP client, endpoints
     ├── model/           # data models and formatters
-    ├── composables/     # shared state (cluster poll, alerts, dialogs)
+    ├── composables/     # shared state (cluster poll, capabilities, alerts, dialogs)
     ├── components/
     ├── views/           # one per route
     ├── i18n/            # locale resolution and the sixteen catalogues
@@ -152,9 +152,23 @@ app/
    translated. The navigation, table headers, form field labels, status
    values, node roles, JSON keys and `_cat` API names are not.
 
-7. **OpenSearch Integration**: This tool is designed exclusively for OpenSearch 2.x and 3.x (not Elasticsearch). It connects to OpenSearch clusters via REST API and provides a web UI for cluster management.
+7. **Capability detection, not version branching.** kopf serves OpenSearch
+   2.x and 3.x from one build, and what separates those versions is not the
+   number: it is which plugins are installed and which `_cat` APIs the
+   distribution publishes. `app/src/composables/useCapabilities.ts` asks the
+   cluster once, at mount -- `GET /_cat` for the API list and
+   `GET /_nodes/_all/plugins` for the plugins -- and screens read the answer.
+   Deliberately not part of the poll: that answer changes when a node
+   restarts, not every `refresh_rate`. Both halves fail safe. A denied
+   `GET /_cat` leaves the shipped `CAT_APIS` list in place, and a denied
+   plugin probe leaves the set empty, which hides a plugin-backed screen
+   rather than offering something the cluster cannot answer. `Version` stays
+   what it is -- the warning for anything older than 2.x -- and is not the
+   place to add feature checks.
 
-8. **Fess Integration**: The built application is served through Fess at
+8. **OpenSearch Integration**: This tool is designed exclusively for OpenSearch 2.x and 3.x (not Elasticsearch). It connects to OpenSearch clusters via REST API and provides a web UI for cluster management.
+
+9. **Fess Integration**: The built application is served through Fess at
    `/_plugin/kopf/`. Configuration is handled via `kopf_external_settings.json`
    which includes:
    - `location`: OpenSearch URL for local development. Empty in the

@@ -28,6 +28,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   layer
 
 ### Added
+- **kopf asks the cluster what it can do, instead of assuming a version.**
+  At mount it reads `GET /_cat` for the `_cat` APIs the distribution
+  publishes and `GET /_nodes/_all/plugins` for what is installed, once --
+  not on every poll. The CAT screen now offers whatever came back rather
+  than five hard-coded names, so `thread_pool` (bulk rejections during a
+  crawl), `shards`, `allocation`, `segments` and `pending_tasks` are
+  reachable, and a future OpenSearch's list arrives without a release here.
+  Measured on 2.19.1 and 3.8.0, which answer with the same thirty-one
+  entries. If the probe is denied, the previously shipped list stands in
 - **The interface follows the Fess admin console's language.** Fess passes
   the locale it resolved for the dashboard request on the iframe URL
   (`?lang=`), and kopf renders in it. All sixteen locales Fess ships a
