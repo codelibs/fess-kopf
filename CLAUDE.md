@@ -65,7 +65,7 @@ app/
 ├── tests/
 └── src/
     ├── main.ts
-    ├── router/          # hash routing; 11 routes
+    ├── router/          # hash routing; 12 routes
     ├── api/             # location resolution, settings, HTTP client, endpoints
     ├── model/           # data models and formatters
     ├── composables/     # shared state (cluster poll, capabilities, alerts, dialogs)
@@ -84,7 +84,7 @@ app/
    is no store library.
 
 2. **The cluster poll is the spine.** `useCluster` issues eight calls every
-   `refresh_rate` ms and builds a `Cluster`; nine of the eleven screens read
+   `refresh_rate` ms and builds a `Cluster`; nine of the twelve screens read
    from it rather than fetching their own copy. A poll that cannot be
    assembled falls back to the reduced `local=true` view instead of blanking
    every screen.

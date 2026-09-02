@@ -4,10 +4,14 @@ import {
   CLUSTER_PATHS,
   ClusterUnavailableError,
   fetchBrokenCluster,
+  cancelTask,
+  explainAllocation,
   fetchCatApis,
   fetchCluster,
   fetchInstalledPlugins,
+  fetchTasks,
 } from '@/api/opensearch';
+import {RequestError} from '@/api/client';
 import {resetSettingsForTest} from '@/api/settings';
 import {stubFetch} from './routes';
 
@@ -138,5 +142,102 @@ describe('fetchInstalledPlugins', () => {
   it('tolerates a node that reports no plugins', async () => {
     stubFetch({routes: {'/_nodes/_all/plugins': {nodes: {a: {}}}}});
     expect(await fetchInstalledPlugins()).toEqual([]);
+  });
+});
+
+describe('explainAllocation', () => {
+  /** The shape 2.19.1 and 3.8.0 both answer with, cut to what is read. */
+  const EXPLANATION = {
+    index: 'fess.20260902',
+    shard: 0,
+    primary: false,
+    current_state: 'unassigned',
+    unassigned_info: {reason: 'INDEX_CREATED'},
+    can_allocate: 'no',
+    allocate_explanation: 'cannot allocate because allocation is not permitted to any of the nodes',
+    node_allocation_decisions: [
+      {
+        node_id: 'n1',
+        node_name: 'search01',
+        node_decision: 'no',
+        deciders: [{decider: 'same_shard', decision: 'NO', explanation: 'a copy is here'}],
+      },
+    ],
+  };
+
+  it('posts, because naming a shard needs a body', async () => {
+    const fetcher = vi.fn(async () => new Response(JSON.stringify(EXPLANATION), {status: 200}));
+    vi.stubGlobal('fetch', fetcher);
+
+    const explanation = await explainAllocation({index: 'fess.20260902', shard: 0, primary: false});
+
+    expect(fetcher.mock.calls[0][0]).toContain('/_cluster/allocation/explain');
+    const init = fetcher.mock.calls[0][1] as RequestInit;
+    expect(init.method).toBe('POST');
+    expect(JSON.parse(init.body as string)).toEqual({
+      index: 'fess.20260902',
+      shard: 0,
+      primary: false,
+    });
+    expect(explanation?.can_allocate).toBe('no');
+  });
+
+  it('asks about any unassigned shard when given no target', async () => {
+    const fetcher = vi.fn(async () => new Response(JSON.stringify(EXPLANATION), {status: 200}));
+    vi.stubGlobal('fetch', fetcher);
+
+    await explainAllocation();
+    expect((fetcher.mock.calls[0][1] as RequestInit).body).toBeUndefined();
+  });
+
+  it('resolves null when there is nothing to explain', async () => {
+    // A green cluster answers the explain API with 400, not with a body.
+    const body = {
+      error: {
+        type: 'illegal_argument_exception',
+        reason: 'unable to find any unassigned shards to explain [ClusterAllocationExplainRequest]',
+      },
+      status: 400,
+    };
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify(body), {status: 400})));
+
+    await expect(explainAllocation()).resolves.toBeNull();
+  });
+
+  it('still reports a 400 that means something else', async () => {
+    const body = {error: {type: 'illegal_argument_exception', reason: 'index [nope] not found'}};
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(JSON.stringify(body), {status: 400})));
+
+    await expect(explainAllocation()).rejects.toBeInstanceOf(RequestError);
+  });
+});
+
+describe('fetchTasks', () => {
+  it('asks for the flat, detailed listing', async () => {
+    const calls = stubFetch({
+      routes: {'/_tasks?detailed&group_by=none': {tasks: [{node: 'n1', id: 1}]}},
+    });
+    const tasks = await fetchTasks();
+    expect(calls).toEqual(['/_tasks?detailed&group_by=none']);
+    expect(tasks).toHaveLength(1);
+  });
+
+  it('returns nothing when the cluster reports no tasks', async () => {
+    stubFetch({routes: {'/_tasks?detailed&group_by=none': {}}});
+    expect(await fetchTasks()).toEqual([]);
+  });
+});
+
+describe('cancelTask', () => {
+  it('posts to the task, with the node prefix intact', async () => {
+    const fetcher = vi.fn(async () => new Response('{}', {status: 200}));
+    vi.stubGlobal('fetch', fetcher);
+
+    await cancelTask('rZrUM42eQ1mRLB4USOB1SA:32');
+
+    expect(fetcher.mock.calls[0][0]).toContain(
+      '/_tasks/rZrUM42eQ1mRLB4USOB1SA%3A32/_cancel',
+    );
+    expect((fetcher.mock.calls[0][1] as RequestInit).method).toBe('POST');
   });
 });

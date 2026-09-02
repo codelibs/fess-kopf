@@ -376,3 +376,115 @@ describe('ClusterView, on a Fess cluster', () => {
     expect(names()).toEqual(['fess.20260902134052541', 'fess_log.search_log']);
   });
 });
+
+describe('ClusterView, explaining an unassigned shard', () => {
+  /** One unassigned replica, which is what puts the cluster in yellow. */
+  function unassignedRoutes(): Record<string, unknown> {
+    return {
+      ...okRoutes(),
+      '/_cluster/state/master_node,routing_table,blocks/': {
+        cluster_name: 'fess-search',
+        master_node: 'n1',
+        routing_table: {
+          indices: {
+            'fess.20260902': {
+              shards: {
+                0: [
+                  shardRouting({index: 'fess.20260902'}),
+                  shardRouting({
+                    index: 'fess.20260902',
+                    primary: false,
+                    state: 'UNASSIGNED',
+                    node: null,
+                  }),
+                ],
+              },
+            },
+          },
+        },
+        blocks: {},
+      },
+      '/_cluster/health': {...(okRoutes()['/_cluster/health'] as object), unassigned_shards: 1},
+    };
+  }
+
+  const EXPLANATION = {
+    index: 'fess.20260902',
+    shard: 0,
+    primary: false,
+    current_state: 'unassigned',
+    unassigned_info: {reason: 'INDEX_CREATED'},
+    can_allocate: 'no',
+    allocate_explanation: 'cannot allocate because allocation is not permitted to any of the nodes',
+    node_allocation_decisions: [
+      {
+        node_id: 'n1',
+        node_name: 'search01',
+        node_decision: 'no',
+        deciders: [{decider: 'same_shard', decision: 'NO', explanation: 'a copy is here'}],
+      },
+    ],
+  };
+
+  beforeEach(async () => {
+    resetClusterForTest();
+    stubFetch({routes: unassignedRoutes()});
+    await refresh();
+  });
+
+  /** Answers the explain call with `body`, and reports every call made. */
+  function stubExplain(body: unknown, status = 200): ReturnType<typeof vi.fn> {
+    const fetcher = vi.fn(async () => new Response(JSON.stringify(body), {status}));
+    vi.stubGlobal('fetch', fetcher);
+    return fetcher;
+  }
+
+  it('offers the explanation only while something is unassigned', () => {
+    const wrapper = mount(ClusterView, {global: {plugins: [router]}});
+    expect(wrapper.find('#explain-allocation').exists()).toBe(true);
+  });
+
+  it('shows what the cluster said, in the info dialog', async () => {
+    const wrapper = mount(ClusterView, {global: {plugins: [router]}});
+    const fetcher = stubExplain(EXPLANATION);
+
+    await wrapper.find('#explain-allocation').trigger('click');
+    await vi.waitFor(() => expect(dialogs.infoRequest.value).not.toBeNull());
+
+    expect(String(fetcher.mock.calls[0][0])).toContain('/_cluster/allocation/explain');
+    expect((fetcher.mock.calls[0][1] as RequestInit).method).toBe('POST');
+    expect(dialogs.infoRequest.value?.title).toBe('Allocation of fess.20260902 shard 0');
+    expect(dialogs.infoRequest.value?.content).toEqual(EXPLANATION);
+  });
+
+  it('treats the 400 a healthy cluster answers with as good news', async () => {
+    const wrapper = mount(ClusterView, {global: {plugins: [router]}});
+    stubExplain(
+      {
+        error: {
+          type: 'illegal_argument_exception',
+          reason: 'unable to find any unassigned shards to explain [x]',
+        },
+      },
+      400,
+    );
+
+    await wrapper.find('#explain-allocation').trigger('click');
+    await vi.waitFor(() => expect(alerts.alerts.value).toHaveLength(1));
+
+    expect(alerts.alerts.value[0].level).toBe('info');
+    expect(alerts.alerts.value[0].message).toBe('No unassigned shards to explain');
+    expect(dialogs.infoRequest.value).toBeNull();
+  });
+
+  it('reports a real failure as an error', async () => {
+    const wrapper = mount(ClusterView, {global: {plugins: [router]}});
+    stubExplain({error: 'nope'}, 500);
+
+    await wrapper.find('#explain-allocation').trigger('click');
+    await vi.waitFor(() => expect(alerts.alerts.value).toHaveLength(1));
+
+    expect(alerts.alerts.value[0].level).toBe('error');
+    expect(alerts.alerts.value[0].message).toBe('Error while explaining allocation');
+  });
+});

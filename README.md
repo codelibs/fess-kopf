@@ -39,6 +39,11 @@ This project is a fork of [elasticsearch-kopf](https://github.com/lmenezes/elast
   the cluster publishes at `GET /_cat` rather than a set pinned to one
   OpenSearch version, so `thread_pool`, `shards`, `allocation`, `segments`
   and the rest are there when the cluster has them
+- **Tasks**: what the cluster is running right now, longest-running first,
+  with a cancel for the tasks that report themselves cancellable -- a force
+  merge started here, or the reindex behind a Fess index rotation
+- **Allocation explanations**: when shards are unassigned, the cluster
+  overview can ask OpenSearch why, decider by decider
 - **Hot Threads Analysis**: Node thread analysis
 - **Localized interface**: follows the language the Fess admin console
   resolved for the request, in all sixteen locales Fess ships

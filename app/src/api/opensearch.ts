@@ -538,3 +538,104 @@ export function restRequest(
   }
   return request(encodeURI(normalized), options);
 }
+
+/* ---------------------------------------------------------------------------
+ * Diagnostics: why a shard is not allocated, and what the cluster is doing.
+ * ------------------------------------------------------------------------ */
+
+export interface AllocationDecider {
+  decider: string;
+  decision: string;
+  explanation: string;
+}
+
+export interface NodeAllocationDecision {
+  node_id: string;
+  node_name: string;
+  node_decision: string;
+  deciders?: AllocationDecider[];
+}
+
+export interface AllocationExplanation {
+  index: string;
+  shard: number;
+  primary: boolean;
+  current_state?: string;
+  unassigned_info?: {reason?: string; at?: string; details?: string};
+  can_allocate?: string;
+  allocate_explanation?: string;
+  node_allocation_decisions?: NodeAllocationDecision[];
+}
+
+/** The one shard to explain, or nothing for "any unassigned shard". */
+export interface AllocationTarget {
+  index: string;
+  shard: number;
+  primary: boolean;
+}
+
+/**
+ * A healthy cluster answers the explain API with 400, not with an empty
+ * body. Distinguishing that from a real failure is the whole reason this
+ * check exists.
+ */
+const NO_UNASSIGNED = 'unable to find any unassigned shards';
+
+function isNothingToExplain(error: RequestError): boolean {
+  if (error.status !== 400) {
+    return false;
+  }
+  const reason = (error.body as {error?: {reason?: string}} | undefined)?.error?.reason ?? '';
+  return reason.includes(NO_UNASSIGNED);
+}
+
+/**
+ * Asks why a shard is where it is -- or why it is nowhere.
+ *
+ * POST, not GET: naming a shard needs a body, and fetch() refuses to give
+ * one to a GET. Resolves null when the cluster has nothing to explain, which
+ * is what a green cluster answers with a 400.
+ */
+export async function explainAllocation(
+  target?: AllocationTarget,
+  signal?: AbortSignal,
+): Promise<AllocationExplanation | null> {
+  try {
+    return await request<AllocationExplanation>('/_cluster/allocation/explain', {
+      method: 'POST',
+      body: target,
+      signal,
+    });
+  } catch (error) {
+    if (error instanceof RequestError && isNothingToExplain(error)) {
+      return null;
+    }
+    throw error;
+  }
+}
+
+export interface TaskResponse {
+  node: string;
+  id: number;
+  action: string;
+  description?: string;
+  start_time_in_millis: number;
+  running_time_in_nanos: number;
+  cancellable: boolean;
+  cancelled?: boolean;
+  parent_task_id?: string;
+}
+
+/** Every task running anywhere in the cluster, flattened and detailed. */
+export async function fetchTasks(signal?: AbortSignal): Promise<TaskResponse[]> {
+  const response = await request<{tasks?: TaskResponse[]}>(
+    '/_tasks?detailed&group_by=none',
+    {signal},
+  );
+  return response.tasks ?? [];
+}
+
+/** Asks one task to stop. Only tasks that report themselves cancellable. */
+export function cancelTask(taskId: string): Promise<unknown> {
+  return request(`/_tasks/${encodeURIComponent(taskId)}/_cancel`, {method: 'POST'});
+}
