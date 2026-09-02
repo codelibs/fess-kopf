@@ -21,6 +21,7 @@ import {useDetailsMenu} from '@/composables/useDetailsMenu';
 import {confirm, showInfo} from '@/composables/useDialogs';
 import {t} from '@/i18n';
 import {bytes} from '@/model/format';
+import {fessIndexInfo} from '@/model/fess-index';
 import {IndexFilter} from '@/model/index-filter';
 import {NodeFilter} from '@/model/node-filter';
 import type {Index} from '@/model/opensearch-index';
@@ -337,6 +338,7 @@ function shardClass(shard: Shard): string {
           Special
           <NTag size="tiny" :bordered="false">{{ cluster.special_indices }}</NTag>
         </NCheckbox>
+        <NCheckbox id="f-fess" v-model:checked="indexFilter.fessOnly"> Fess </NCheckbox>
         <NInput
           v-model:value="nodeFilter.name"
           :placeholder="t('cluster.filterNodes')"
@@ -495,6 +497,27 @@ function shardClass(shard: Shard): string {
                     🏷 {{ index.aliases[0] }}
                     <span v-if="index.aliases.length > 1">(+{{ index.aliases.length - 1 }})</span>
                   </div>
+                  <!-- What this index is to Fess. The role and the two alias
+                       names are Fess's own vocabulary, like a node role or a
+                       cluster status, so they are not translated. -->
+                  <div
+                    v-if="fessIndexInfo(index).role !== 'other'"
+                    class="k-row k-small k-fess-roles"
+                  >
+                    <NTag size="tiny" :bordered="false">
+                      {{ fessIndexInfo(index).role }}
+                    </NTag>
+                    <NTag
+                      v-for="alias in fessIndexInfo(index).documentAliases"
+                      :key="alias"
+                      size="tiny"
+                      :bordered="false"
+                      :type="alias === 'search' ? 'success' : 'info'"
+                      :title="`fess.${alias}`"
+                    >
+                      {{ alias }}
+                    </NTag>
+                  </div>
                 </template>
               </th>
             </tr>
@@ -587,6 +610,12 @@ function shardClass(shard: Shard): string {
 </template>
 
 <style scoped>
+.k-fess-roles {
+  gap: 4px;
+  margin-top: 4px;
+  font-weight: 400;
+}
+
 .k-menu-link {
   display: block;
   padding: 2px 0;

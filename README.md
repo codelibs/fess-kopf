@@ -21,6 +21,12 @@ This project is a fork of [elasticsearch-kopf](https://github.com/lmenezes/elast
 ## Key Features
 
 - **Cluster Overview**: Real-time monitoring of cluster state, nodes, and indices
+- **Fess indices are named, not just listed**: every index carries what it is
+  to Fess -- `document`, `suggest`, `config`, `user`, `log`, `crawler`,
+  `plugin` -- and the live document index is marked `search` and `update`
+  after the aliases bound to it, so a generation that has been rotated out is
+  visible at a glance. A `Fess` filter hides everything the cluster is not
+  running Fess with
 - **Index Management**: Create, delete, open, close indices and modify settings
 - **Alias Management**: Create and manage index aliases
 - **Snapshots**: Create, restore, and manage snapshots
