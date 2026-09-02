@@ -4,7 +4,9 @@ import {
   CLUSTER_PATHS,
   ClusterUnavailableError,
   fetchBrokenCluster,
+  fetchCatApis,
   fetchCluster,
+  fetchInstalledPlugins,
 } from '@/api/opensearch';
 import {resetSettingsForTest} from '@/api/settings';
 import {stubFetch} from './routes';
@@ -97,5 +99,44 @@ describe('fetchBrokenCluster', () => {
   it('fails when health is unavailable', async () => {
     stubFetch({failing: {[BROKEN_CLUSTER_PATHS.health]: 500}});
     await expect(fetchBrokenCluster()).rejects.toBeInstanceOf(ClusterUnavailableError);
+  });
+});
+
+describe('fetchCatApis', () => {
+  it('asks GET /_cat and returns the runnable API names', async () => {
+    const calls = stubFetch({routes: {'/_cat': '=^.^=\n/_cat/health\n/_cat/shards\n'}});
+    expect(await fetchCatApis()).toEqual(['health', 'shards']);
+    expect(calls).toEqual(['/_cat']);
+  });
+
+  it('returns nothing for a body that is not the cat index', async () => {
+    // An intermediary answering with JSON, or with an error page.
+    stubFetch({routes: {'/_cat': {acknowledged: true}}});
+    expect(await fetchCatApis()).toEqual([]);
+  });
+});
+
+describe('fetchInstalledPlugins', () => {
+  it('unions the plugin names over every node', async () => {
+    stubFetch({
+      routes: {
+        '/_nodes/_all/plugins': {
+          nodes: {
+            a: {plugins: [{name: 'opensearch-knn'}, {name: 'query-insights'}]},
+            b: {plugins: [{name: 'opensearch-knn'}, {name: 'analysis-fess'}]},
+          },
+        },
+      },
+    });
+    expect(await fetchInstalledPlugins()).toEqual([
+      'analysis-fess',
+      'opensearch-knn',
+      'query-insights',
+    ]);
+  });
+
+  it('tolerates a node that reports no plugins', async () => {
+    stubFetch({routes: {'/_nodes/_all/plugins': {nodes: {a: {}}}}});
+    expect(await fetchInstalledPlugins()).toEqual([]);
   });
 });
