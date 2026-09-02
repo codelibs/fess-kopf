@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import {computed, ref} from 'vue';
+import {ref} from 'vue';
 import {NButton, NCard, NSelect} from 'naive-ui';
-import {CAT_APIS, fetchCat} from '@/api/opensearch';
+import {fetchCat} from '@/api/opensearch';
 import {RequestError} from '@/api/client';
 import {useAlerts} from '@/composables/useAlerts';
+import {useCapabilities} from '@/composables/useCapabilities';
 import {t} from '@/i18n';
 import type {CatResult} from '@/model/cat-result';
 
@@ -13,7 +14,10 @@ const api = ref('');
 const result = ref<CatResult | null>(null);
 const running = ref(false);
 
-const apiOptions = computed(() => CAT_APIS.map((name) => ({label: name, value: name})));
+// The options are whatever this cluster publishes at GET /_cat, not a list
+// pinned to one OpenSearch version. Before the probe answers, and if it
+// never does, the shipped list stands in.
+const {catApiOptions: apiOptions} = useCapabilities();
 
 async function execute(): Promise<void> {
   if (api.value === '') {
