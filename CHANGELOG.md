@@ -28,6 +28,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   layer
 
 ### Added
+- **A tasks screen, and a reason for an unassigned shard.** kopf could start
+  a force merge but not watch one finish, and could say a cluster was red
+  without saying why -- both answers were only reachable through the REST
+  client. `/tasks` lists what the cluster is running, longest-running first,
+  and cancels the ones that report themselves cancellable, behind the usual
+  confirmation; it hides its own listing call, which every `_tasks` response
+  contains. On the cluster overview, unassigned shards now come with a
+  question that asks `_cluster/allocation/explain` and shows the deciders.
+  The explain call is a POST, because naming a shard needs a body and
+  `fetch` refuses to give one to a GET, and the 400 a healthy cluster
+  answers with is reported as good news rather than as a failure
 - **The cluster overview says what each index is to Fess.** A Fess cluster is
   forty-odd indices in six families, and the screen listed them flat. Each
   index now carries its role -- `document`, `suggest`, `config`, `user`,

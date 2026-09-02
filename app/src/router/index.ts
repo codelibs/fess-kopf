@@ -18,6 +18,7 @@ export const NAV_ROUTES = [
   'snapshot',
   'indexTemplates',
   'cat',
+  'tasks',
   'hotthreads',
 ] as const;
 
@@ -31,6 +32,7 @@ export const ROUTE_LABELS: Record<string, string> = {
   snapshot: 'snapshot',
   indexTemplates: 'index templates',
   cat: 'cat',
+  tasks: 'tasks',
   hotthreads: 'hot threads',
   indexSettings: 'index settings',
 };
@@ -58,6 +60,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/IndexTemplatesView.vue'),
   },
   {path: '/cat', name: 'cat', component: () => import('@/views/CatView.vue')},
+  {path: '/tasks', name: 'tasks', component: () => import('@/views/TasksView.vue')},
   {path: '/hotthreads', name: 'hotthreads', component: () => import('@/views/HotThreadsView.vue')},
   // /clusterHealth and /clusterSettings are deliberately absent: nothing in the
   // shipped UI ever linked to them, and both failed against a default

@@ -7,6 +7,7 @@ import {
   clearIndexCache,
   closeIndex,
   deleteIndex,
+  explainAllocation,
   fetchIndexMetadata,
   fetchShardStats,
   openIndex,
@@ -45,6 +46,33 @@ const relocating = ref<Shard | null>(null);
 
 function onResize(): void {
   size.value = pageSize();
+}
+
+/**
+ * Asks the cluster why a shard has nowhere to go.
+ *
+ * Until now the screen could say a cluster was red but not why, which left
+ * the REST client as the only way to find out. A green cluster answers the
+ * explain API with a 400, so "nothing to explain" is a result, not a
+ * failure.
+ */
+async function explainUnassigned(): Promise<void> {
+  try {
+    const explanation = await explainAllocation();
+    if (explanation === null) {
+      alerts.info(t('cluster.allocationHealthy'));
+      return;
+    }
+    showInfo(
+      t('cluster.allocationTitle', {index: explanation.index, shard: explanation.shard}),
+      explanation,
+    );
+  } catch (error) {
+    alerts.error(
+      t('cluster.allocationFailed'),
+      error instanceof RequestError ? error.body : String(error),
+    );
+  }
 }
 
 onMounted(() => window.addEventListener('resize', onResize));
@@ -534,6 +562,15 @@ function shardClass(shard: Shard): string {
                 <div v-if="cluster.initializing_shards" style="color: var(--k-warning)">
                   ◌ {{ cluster.initializing_shards }} initializing shards
                 </div>
+                <NButton
+                  v-if="cluster.unassigned_shards"
+                  id="explain-allocation"
+                  text size="tiny" type="primary"
+                  style="display: block"
+                  @click="explainUnassigned()"
+                >
+                  {{ t('cluster.explainAllocation') }}
+                </NButton>
                 <NButton
                   text size="tiny" type="primary"
                   @click="indexFilter.healthy = !indexFilter.healthy"
