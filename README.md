@@ -29,7 +29,10 @@ This project is a fork of [elasticsearch-kopf](https://github.com/lmenezes/elast
 - **REST Client**: Direct access to OpenSearch API, with query DSL completion
   in the body editor -- keys, closed value sets, and field names from the
   mapping of the indices the path addresses
-- **CAT API**: Browser-based interface for CAT API
+- **CAT API**: browser interface for the `_cat` APIs. The list is whatever
+  the cluster publishes at `GET /_cat` rather than a set pinned to one
+  OpenSearch version, so `thread_pool`, `shards`, `allocation`, `segments`
+  and the rest are there when the cluster has them
 - **Hot Threads Analysis**: Node thread analysis
 - **Localized interface**: follows the language the Fess admin console
   resolved for the request, in all sixteen locales Fess ships
@@ -206,7 +209,7 @@ fess-kopf/
 │   ├── src/
 │   │   ├── api/          # location resolution, settings, HTTP, endpoints
 │   │   ├── model/        # data models and formatters
-│   │   ├── composables/  # shared state (cluster poll, alerts, dialogs)
+│   │   ├── composables/  # shared state (cluster poll, capabilities, alerts, dialogs)
 │   │   ├── components/
 │   │   ├── views/        # one per route
 │   │   ├── router/

@@ -12,6 +12,7 @@ import {
   type IndexMetadataResponse,
 } from '@/model/index-metadata';
 import {BrokenCluster} from '@/model/broken-cluster';
+import {parseCatApis} from '@/model/cat-apis';
 import {
   Cluster,
   type ClusterHealth,
@@ -157,6 +158,43 @@ export async function fetchCat(api: string, signal?: AbortSignal): Promise<CatRe
   // request() parses JSON when it can; _cat without format=json is plain text,
   // and comes back as the string it already is.
   return new CatResult(typeof text === 'string' ? text : JSON.stringify(text));
+}
+
+/**
+ * The _cat APIs this cluster publishes.
+ *
+ * GET /_cat answers with its own index, so the list does not have to be
+ * hard-coded per OpenSearch version -- 2.19.1 and 3.8.0 return the same
+ * thirty-one entries, and a later version's list arrives without a release
+ * here. A body that is not the cat index yields nothing, which the caller
+ * turns into the CAT_APIS fallback.
+ */
+export async function fetchCatApis(signal?: AbortSignal): Promise<string[]> {
+  const body = await request<string>('/_cat', {signal});
+  return typeof body === 'string' ? parseCatApis(body) : [];
+}
+
+interface NodesPluginsResponse {
+  nodes?: Record<string, {plugins?: {name: string}[]}>;
+}
+
+/**
+ * Every plugin installed anywhere in the cluster, sorted.
+ *
+ * This is what decides whether a plugin-backed screen exists at all, which
+ * is the only honest way to support 2.x and 3.x from one build: the
+ * difference between them is not a version number, it is what is installed.
+ *
+ * Deliberately not part of the cluster poll -- the answer changes when a
+ * node restarts, not every few seconds.
+ */
+export async function fetchInstalledPlugins(signal?: AbortSignal): Promise<string[]> {
+  const response = await request<NodesPluginsResponse>('/_nodes/_all/plugins', {signal});
+  const names = new Set<string>();
+  Object.values(response.nodes ?? {}).forEach((node) => {
+    (node.plugins ?? []).forEach((plugin) => names.add(plugin.name));
+  });
+  return [...names].sort();
 }
 
 export interface HotThreadsOptions {
