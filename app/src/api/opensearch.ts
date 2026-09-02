@@ -30,8 +30,8 @@ import type {ClusterState, IndexAliasesResponse} from '@/model/opensearch-index'
  * screens and the tests refer to the same paths.
  */
 export const CLUSTER_PATHS = {
-  state: '/_cluster/state/master_node,routing_table,blocks/',
-  indexStats: '/_stats/docs,store',
+  state: '/_cluster/state/master_node,cluster_manager_node,routing_table,blocks/',
+  indexStats: '/_stats/docs,store,indexing,search',
   nodesStats: '/_nodes/stats/jvm,fs,os,process',
   settings: '/_cluster/settings',
   aliases: '/_aliases',
@@ -42,7 +42,7 @@ export const CLUSTER_PATHS = {
 
 /** The reduced set used when the full poll cannot be assembled. */
 export const BROKEN_CLUSTER_PATHS = {
-  state: '/_cluster/state/master_node,blocks?local=true',
+  state: '/_cluster/state/master_node,cluster_manager_node,blocks?local=true',
   nodesStats: '/_nodes/stats/jvm,fs,os',
   settings: '/_cluster/settings?local=true',
   health: '/_cluster/health?local=true',

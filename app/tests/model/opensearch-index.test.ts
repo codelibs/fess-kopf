@@ -1,5 +1,5 @@
 import {describe, expect, it} from 'vitest';
-import {Index, type ClusterState} from '@/model/opensearch-index';
+import {clusterManagerNode, Index, type ClusterState} from '@/model/opensearch-index';
 import {shardRouting, state} from './fixtures';
 
 /** Ported from tests/opensearch/index.test.js. */
@@ -148,5 +148,55 @@ describe('Index', () => {
     it('is false against null', () => {
       expect(new Index('a', undefined, undefined, undefined).equals(null)).toBe(false);
     });
+  });
+});
+
+describe('clusterManagerNode', () => {
+  it('prefers the current name', () => {
+    // Both 2.19.1 and 3.8.0 answer with both fields, but `master` is already
+    // gone from the list GET /_cat publishes.
+    expect(clusterManagerNode({cluster_manager_node: 'new', master_node: 'old'})).toBe('new');
+  });
+
+  it('falls back to the old name, which is all an older cluster may send', () => {
+    expect(clusterManagerNode({master_node: 'old'})).toBe('old');
+  });
+
+  it('is empty when neither is present', () => {
+    expect(clusterManagerNode({})).toBe('');
+  });
+});
+
+describe('Index indexing and search stats', () => {
+  const stats = {
+    primaries: {docs: {count: 10, deleted: 0}, store: {size_in_bytes: 100}},
+    total: {
+      store: {size_in_bytes: 200},
+      indexing: {index_current: 3, index_total: 4096},
+      search: {query_total: 8, query_time_in_millis: 200},
+    },
+  };
+
+  it('reads what the poll now asks for, at no extra call', () => {
+    const index = new Index('fess.20260902', undefined, stats, undefined);
+    expect(index.indexing_current).toBe(3);
+    expect(index.indexing_total).toBe(4096);
+    expect(index.search_query_total).toBe(8);
+    expect(index.search_query_time_ms).toBe(200);
+  });
+
+  it('averages query time over the queries that ran', () => {
+    expect(new Index('i', undefined, stats, undefined).avg_query_time_ms).toBe(25);
+  });
+
+  it('reports no average rather than dividing by zero', () => {
+    const quiet = {total: {search: {query_total: 0, query_time_in_millis: 0}}};
+    expect(new Index('i', undefined, quiet, undefined).avg_query_time_ms).toBe(0);
+  });
+
+  it('defaults to zero for a cluster that reports none of it', () => {
+    const index = new Index('i', undefined, {}, undefined);
+    expect(index.indexing_current).toBe(0);
+    expect(index.search_query_total).toBe(0);
   });
 });

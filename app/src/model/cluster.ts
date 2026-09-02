@@ -1,6 +1,11 @@
 import {ClusterChanges} from './cluster-changes';
 import {ClusterNode, type NodeInfo} from './cluster-node';
-import {Index, type ClusterState, type IndexAliasesResponse} from './opensearch-index';
+import {
+  clusterManagerNode,
+  Index,
+  type ClusterState,
+  type IndexAliasesResponse,
+} from './opensearch-index';
 import {Shard} from './shard';
 import {getProperty, getTimeString, isDefined} from './util';
 
@@ -106,7 +111,7 @@ export class Cluster {
 
     this.fetched_at = getTimeString(new Date());
     this.name = state.cluster_name;
-    this.master_node = state.master_node;
+    this.master_node = clusterManagerNode(state);
 
     // A transient setting overrides a persistent one; only an explicit 'all'
     // counts as allocation being enabled.
@@ -128,7 +133,7 @@ export class Cluster {
 
     this.nodes = Object.keys(nodes.nodes).map((nodeId) => {
       const node = new ClusterNode(nodeId, nodesStats.nodes[nodeId], nodes.nodes[nodeId]);
-      if (nodeId === state.master_node) {
+      if (nodeId === this.master_node) {
         node.setCurrentMaster();
       }
       return node;

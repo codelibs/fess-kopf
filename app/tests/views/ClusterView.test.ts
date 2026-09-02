@@ -17,7 +17,7 @@ const dialogs = useDialogs();
 function twoIndexRoutes(): Record<string, unknown> {
   return {
     ...okRoutes(),
-    '/_cluster/state/master_node,routing_table,blocks/': {
+    '/_cluster/state/master_node,cluster_manager_node,routing_table,blocks/': {
       cluster_name: 'fess-search',
       master_node: 'n1',
       routing_table: {
@@ -307,7 +307,7 @@ describe('ClusterView, on a Fess cluster', () => {
   function fessRoutes(): Record<string, unknown> {
     return {
       ...okRoutes(),
-      '/_cluster/state/master_node,routing_table,blocks/': {
+      '/_cluster/state/master_node,cluster_manager_node,routing_table,blocks/': {
         cluster_name: 'fess-search',
         master_node: 'n1',
         routing_table: {
@@ -350,6 +350,34 @@ describe('ClusterView, on a Fess cluster', () => {
     expect(log?.text()).toContain('log');
   });
 
+  it('shows a crawl reaching the index, and only while it is', async () => {
+    resetClusterForTest();
+    const routes = fessRoutes();
+    stubFetch({
+      routes: {
+        ...routes,
+        '/_stats/docs,store,indexing,search': {
+          _all: {primaries: {}, total: {}},
+          indices: {
+            'fess.20260902134052541': {
+              total: {indexing: {index_current: 7, index_total: 100}},
+            },
+          },
+        },
+      },
+    });
+    await refresh();
+
+    const wrapper = mount(ClusterView, {global: {plugins: [router]}});
+    const headers = wrapper.findAll('thead th');
+    const busy = headers.find((h) => h.text().includes('fess.20260902134052541'));
+    expect(busy?.find('.k-indexing').text()).toContain('7 indexing');
+
+    // A quiet index says nothing, rather than a zero on every column.
+    const quiet = headers.find((h) => h.text().includes('fess_log.search_log'));
+    expect(quiet?.find('.k-indexing').exists()).toBe(false);
+  });
+
   it('says nothing about an index Fess does not own', () => {
     const wrapper = mount(ClusterView, {global: {plugins: [router]}});
     const other = wrapper
@@ -382,7 +410,7 @@ describe('ClusterView, explaining an unassigned shard', () => {
   function unassignedRoutes(): Record<string, unknown> {
     return {
       ...okRoutes(),
-      '/_cluster/state/master_node,routing_table,blocks/': {
+      '/_cluster/state/master_node,cluster_manager_node,routing_table,blocks/': {
         cluster_name: 'fess-search',
         master_node: 'n1',
         routing_table: {
