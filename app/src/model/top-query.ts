@@ -17,7 +17,54 @@ export interface TopQueryResponse {
   total_shards?: number;
   search_type?: string;
   source?: unknown;
+  phase_latency_map?: Record<string, number>;
   measurements?: Partial<Record<TopQueryMetric, Measurement>>;
+}
+
+/** One phase of a search, and the milliseconds it took. */
+export interface PhaseLatency {
+  phase: string;
+  ms: number;
+}
+
+/**
+ * The order the phases run in, so the breakdown reads as a sequence rather
+ * than as whatever order the map happened to serialise in. Anything the
+ * cluster reports that is not listed here follows, alphabetically.
+ */
+const PHASE_ORDER = ['can_match', 'dfs_pre_query', 'query', 'fetch', 'expand'];
+
+function orderPhases(map: Record<string, number>): PhaseLatency[] {
+  return Object.entries(map)
+    .map(([phase, ms]) => ({phase, ms}))
+    .sort((a, b) => {
+      const left = PHASE_ORDER.indexOf(a.phase);
+      const right = PHASE_ORDER.indexOf(b.phase);
+      if (left !== right) {
+        const first = left === -1 ? PHASE_ORDER.length : left;
+        const second = right === -1 ? PHASE_ORDER.length : right;
+        return first - second;
+      }
+      return a.phase.localeCompare(b.phase);
+    });
+}
+
+/**
+ * The history hands the source back as a JSON string on 3.8.0 and as an
+ * object on 2.19.1, while the in-memory listing gives an object on both.
+ * Parsing here means the dialog that shows it, and any code that reads it,
+ * only ever sees the one shape -- and a string that is not JSON is kept as
+ * it stands rather than thrown away.
+ */
+function readSource(source: unknown): unknown {
+  if (typeof source !== 'string') {
+    return source;
+  }
+  try {
+    return JSON.parse(source);
+  } catch {
+    return source;
+  }
 }
 
 /**
@@ -39,6 +86,8 @@ export class TopQuery {
   readonly totalShards: number;
   readonly searchType: string;
   readonly source: unknown;
+  /** Where the time went, in the order the phases ran. */
+  readonly phases: PhaseLatency[];
   readonly latencyMs: number;
   readonly cpuNanos: number;
   readonly memoryBytes: number;
@@ -50,7 +99,8 @@ export class TopQuery {
     this.nodeId = raw.node_id ?? '';
     this.totalShards = raw.total_shards ?? 0;
     this.searchType = raw.search_type ?? '';
-    this.source = raw.source;
+    this.source = readSource(raw.source);
+    this.phases = orderPhases(raw.phase_latency_map ?? {});
     this.latencyMs = raw.measurements?.latency?.number ?? 0;
     this.cpuNanos = raw.measurements?.cpu?.number ?? 0;
     this.memoryBytes = raw.measurements?.memory?.number ?? 0;

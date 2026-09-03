@@ -15,6 +15,7 @@ import {
 import {BrokenCluster} from '@/model/broken-cluster';
 import {parseCatApis} from '@/model/cat-apis';
 import {KnnStats, type KnnStatsResponse} from '@/model/knn-stats';
+import type {LiveQueryResponse} from '@/model/live-query';
 import type {TopQueryMetric, TopQueryResponse} from '@/model/top-query';
 import {
   Cluster,
@@ -694,13 +695,42 @@ export function cancelTask(taskId: string): Promise<unknown> {
  */
 export async function fetchTopQueries(
   metric: TopQueryMetric,
+  range?: {from: Date; to: Date},
   signal?: AbortSignal,
 ): Promise<TopQueryResponse[]> {
+  // ISO 8601 with milliseconds, which is what toISOString() already emits and
+  // the only format the endpoint accepts -- epoch millis are rejected with a
+  // 400 naming the expected pattern. Measured on 2.19.1 and 3.8.0 alike.
+  const window =
+    range === undefined
+      ? ''
+      : `&from=${encodeURIComponent(range.from.toISOString())}` +
+        `&to=${encodeURIComponent(range.to.toISOString())}`;
   const response = await request<{top_queries?: TopQueryResponse[]}>(
-    `/_insights/top_queries?type=${encodeURIComponent(metric)}`,
+    `/_insights/top_queries?type=${encodeURIComponent(metric)}${window}`,
     {signal},
   );
   return response.top_queries ?? [];
+}
+
+/**
+ * The searches running at this instant, costliest first.
+ *
+ * 3.x only: 2.19.1's Query Insights has no such route and answers
+ * `no handler found for uri [/_insights/live_queries]` with a 400, which the
+ * screen reports as "this cluster's plugin is older" rather than as a
+ * failure. There is no capability probe for it -- the plugin is installed
+ * either way, and the endpoint's own answer is the only thing that knows.
+ */
+export async function fetchLiveQueries(
+  metric: TopQueryMetric,
+  signal?: AbortSignal,
+): Promise<LiveQueryResponse[]> {
+  const response = await request<{live_queries?: LiveQueryResponse[]}>(
+    `/_insights/live_queries?sort=${encodeURIComponent(metric)}`,
+    {signal},
+  );
+  return response.live_queries ?? [];
 }
 
 /** The k-NN plugin's view of the vector cache, cluster-wide and per node. */

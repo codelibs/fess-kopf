@@ -62,3 +62,36 @@ describe('parseTopQueries', () => {
     expect(parseTopQueries([], 'latency')).toEqual([]);
   });
 });
+
+describe('TopQuery, as the history returns it', () => {
+  /**
+   * The same record read back out of the local index is not shaped quite
+   * like the in-memory one: on 3.8.0 the source comes back as a JSON string
+   * rather than an object. Measured on both -- 2.19.1's history keeps it an
+   * object -- so the reader has to take either.
+   */
+  it('parses a source the history handed back as a string', () => {
+    const parsed = new TopQuery(
+      query({source: '{"size":0,"track_total_hits":2147483647}'}),
+    );
+    expect(parsed.source).toEqual({size: 0, track_total_hits: 2147483647});
+  });
+
+  it('keeps a source string it cannot parse as it stands', () => {
+    const parsed = new TopQuery(query({source: 'not json at all'}));
+    expect(parsed.source).toBe('not json at all');
+  });
+
+  it('reads where the time went', () => {
+    const parsed = new TopQuery(query({phase_latency_map: {expand: 0, query: 29, fetch: 1}}));
+    expect(parsed.phases).toEqual([
+      {phase: 'query', ms: 29},
+      {phase: 'fetch', ms: 1},
+      {phase: 'expand', ms: 0},
+    ]);
+  });
+
+  it('has no phases when the record carries none', () => {
+    expect(new TopQuery(query()).phases).toEqual([]);
+  });
+});
