@@ -67,6 +67,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fallback rather than the source
 
 ### Added
+- **The query insights screen answers "what is slow now", not only "what was
+  slow".** `/topQueries` read one endpoint and showed the tokens of a ranking;
+  it now covers the Query Insights plugin as a whole, along one axis: *when*.
+  `live` reads `/_insights/live_queries` -- the searches running at this
+  instant, ranked by latency, CPU or memory, each with the indices it is
+  hitting, the DSL it is running, and a cancel button, because a live query's
+  id is `<node>:<taskId>` and the tasks API kills it. `top N` is the in-memory
+  listing as before, and `1h`, `24h` and `7d` read the history the local index
+  exporter writes by default and keeps for a week. Each recorded query now
+  shows where its time went -- `query 123 · fetch 8` -- which is the next
+  question after "how slow", because one blames the query and the other blames
+  the documents; and each index carries the same Fess role the cluster
+  overview gives it, so a slow `fess.search` and a slow `fess_crawler.queue`
+  are told apart at a glance. The history has no size parameter, so the table
+  keeps the hundred costliest and says how many it left out. Two things were
+  measured rather than assumed: the live queries route does not exist before
+  OpenSearch 3.0 and answers `no handler found` with a 400, which the screen
+  reports as a fact about the cluster rather than as a failure; and the
+  history hands the query source back as a JSON *string* on 3.8.0 while
+  2.19.1 keeps it an object, so it is parsed before it is shown
 - **A crawl reaching an index is visible while it happens.** The poll's
   `/_stats` call now covers `indexing` and `search` as well as `docs` and
   `store` -- the same one call -- and the overview marks an index that is
@@ -81,9 +101,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   nothing in the Fess log says why". Both are hidden unless
   `useCapabilities` found the plugin, so a cluster without them is never
   offered a page that can only 404. An empty top-queries listing is
-  ambiguous -- 3.8.0 records without any configuration while 2.19.1 records
-  nothing until `search.insights.top_queries.<metric>.enabled` is set -- so
-  the screen names the setting instead of showing a blank table
+  ambiguous -- a search is only recorded once its collection window closes,
+  five minutes by default on both versions -- so the screen says that, and
+  names `search.insights.top_queries.<metric>.enabled` for the case where
+  nothing ever arrives, instead of showing a blank table
 - **A tasks screen, and a reason for an unassigned shard.** kopf could start
   a force merge but not watch one finish, and could say a cluster was red
   without saying why -- both answers were only reachable through the REST

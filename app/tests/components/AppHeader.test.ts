@@ -35,7 +35,7 @@ afterEach(() => vi.unstubAllGlobals());
 describe('AppHeader navigation', () => {
   it('offers no plugin-backed screen before the cluster has been probed', () => {
     // An absent link is better than one that can only 404.
-    expect(links()).not.toContain('top queries');
+    expect(links()).not.toContain('query insights');
     expect(links()).not.toContain('k-NN');
     expect(links()).toContain('cluster');
     expect(links()).toContain('tasks');
@@ -45,7 +45,7 @@ describe('AppHeader navigation', () => {
     stubFetch({routes: probeRoutes(['query-insights', 'opensearch-knn'])});
     await probeCapabilities();
 
-    expect(links()).toContain('top queries');
+    expect(links()).toContain('query insights');
     expect(links()).toContain('k-NN');
   });
 
@@ -53,7 +53,7 @@ describe('AppHeader navigation', () => {
     stubFetch({routes: probeRoutes(['opensearch-knn'])});
     await probeCapabilities();
 
-    expect(links()).not.toContain('top queries');
+    expect(links()).not.toContain('query insights');
     expect(links()).toContain('k-NN');
   });
 
@@ -64,7 +64,7 @@ describe('AppHeader navigation', () => {
     });
     await probeCapabilities();
 
-    expect(links()).not.toContain('top queries');
+    expect(links()).not.toContain('query insights');
     expect(links()).not.toContain('k-NN');
     // The rest of the navigation is unaffected.
     expect(links()).toContain('cluster');

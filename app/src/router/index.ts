@@ -48,7 +48,7 @@ export const ROUTE_LABELS: Record<string, string> = {
   indexTemplates: 'index templates',
   cat: 'cat',
   tasks: 'tasks',
-  topQueries: 'top queries',
+  topQueries: 'query insights',
   knn: 'k-NN',
   hotthreads: 'hot threads',
   indexSettings: 'index settings',
