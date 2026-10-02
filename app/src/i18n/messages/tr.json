@@ -315,6 +315,7 @@
   "documents.missing": "{count} tanesinde değer yok",
   "documents.unmapped": "Bu alan dizinin eşlemesinde yok.",
   "documents.unaggregatable": "{types} olarak eşlenmiş, sayılamaz. Dizini yeniden oluşturmak geçerli eşlemeyi uygular.",
+  "documents.subfield": "{source} üzerinden sayıldı: bu dizin alanı text olarak eşliyor. Dizini yeniden oluşturmak geçerli eşlemeyi uygular.",
   "documents.createdNote": "Dosyanın oluşturulduğu zaman değil, Fess'in belgeyi dizine eklediği zaman.",
   "documents.largest": "En büyük belgeler",
 

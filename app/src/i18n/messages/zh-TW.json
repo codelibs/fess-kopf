@@ -315,6 +315,7 @@
   "documents.missing": "{count} 筆沒有值",
   "documents.unmapped": "此欄位不在索引的對應中。",
   "documents.unaggregatable": "對應為 {types}，無法統計。重建索引會套用目前的對應。",
+  "documents.subfield": "依 {source} 統計：此索引將此欄位對應為 text。重建索引會套用目前的對應。",
   "documents.createdNote": "這是 Fess 為文件建立索引的時間，而不是檔案的建立時間。",
   "documents.largest": "最大的文件",
 

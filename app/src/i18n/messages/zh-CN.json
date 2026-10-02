@@ -315,6 +315,7 @@
   "documents.missing": "{count} 个没有值",
   "documents.unmapped": "该字段不在索引的映射中。",
   "documents.unaggregatable": "映射为 {types}，无法统计。重建索引会应用当前映射。",
+  "documents.subfield": "按 {source} 统计：该索引将此字段映射为 text。重建索引会应用当前映射。",
   "documents.createdNote": "这是 Fess 索引该文档的时间，而不是文件的创建时间。",
   "documents.largest": "最大的文档",
 

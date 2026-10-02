@@ -315,6 +315,7 @@
   "documents.missing": "{count} without a value",
   "documents.unmapped": "This field is not in the index's mapping.",
   "documents.unaggregatable": "Mapped as {types}, which cannot be counted. Rebuilding the index applies the current mapping.",
+  "documents.subfield": "Counted from {source}: this index maps the field as text. Rebuilding the index applies the current mapping.",
   "documents.createdNote": "When Fess indexed the document, not when the file was created.",
   "documents.largest": "Largest documents",
 

@@ -144,7 +144,12 @@ function where(doc: {url: string; filename: string}): string {
         :total="stats.total"
       />
 
-      <NCard v-if="stats.largest.length" size="small" :title="t('documents.largest')">
+      <NCard
+        v-if="stats.largest.length"
+        class="k-doc-wide"
+        size="small"
+        :title="t('documents.largest')"
+      >
         <div class="k-scroll-x">
           <table id="ds-largest" class="k-table">
             <thead>
@@ -177,5 +182,10 @@ function where(doc: {url: string; filename: string}): string {
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 26rem), 1fr));
   gap: 16px;
   align-items: start;
+}
+
+/* Addresses need the width: in one column of three they break every line. */
+.k-doc-wide {
+  grid-column: 1 / -1;
 }
 </style>

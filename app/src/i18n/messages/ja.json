@@ -315,6 +315,7 @@
   "documents.missing": "{count} 件は値がありません",
   "documents.unmapped": "このフィールドはインデックスのマッピングにありません。",
   "documents.unaggregatable": "{types} としてマッピングされているため集計できません。インデックスを再作成すると現在のマッピングが適用されます。",
+  "documents.subfield": "{source} で集計しています。このインデックスではフィールドが text としてマッピングされています。インデックスを再作成すると現在のマッピングが適用されます。",
   "documents.createdNote": "ファイルの作成日時ではなく、Fess が文書をインデックスした日時です。",
   "documents.largest": "サイズの大きい文書",
 

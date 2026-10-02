@@ -61,9 +61,10 @@ This project is a fork of [elasticsearch-kopf](https://github.com/lmenezes/elast
   `filetype`, `mimetype`, `host`, `label`, `owner` and `last_modifier`, by
   size band, and by `last_modified` and `created` year, with the largest
   documents listed. One `size: 0` search with aggregations, read when the
-  screen is opened rather than polled. A field the index cannot aggregate,
-  such as `owner` on an index built before the field was mapped, is reported
-  rather than failing the page. Offered only when the cluster has a Fess
+  screen is opened rather than polled. A field an index built before it was
+  mapped holds as text, such as `owner`, is counted from its `keyword`
+  subfield where every index has one, and reported rather than failing the
+  page where not. Offered only when the cluster has a Fess
   document index (`fess.search`), and reachable for an older generation from
   that index's menu on the cluster overview
 - **Hot Threads Analysis**: Node thread analysis

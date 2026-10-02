@@ -61,6 +61,45 @@ describe('parseFieldCaps', () => {
     });
   });
 
+  it('counts the keyword subfield dynamic mapping added beside a text field', () => {
+    const caps = currentCaps();
+    caps.fields!.owner = {text: {type: 'text', searchable: true, aggregatable: false}};
+    caps.fields!['owner.keyword'] = {keyword: {type: 'keyword', aggregatable: true}};
+    expect(parseFieldCaps(caps).get('owner')).toEqual({
+      field: 'owner',
+      status: 'ok',
+      source: 'owner.keyword',
+    });
+  });
+
+  it('does not count a subfield only some indices behind the alias have', () => {
+    // A new generation maps owner as keyword with no subfield; counting
+    // owner.keyword would count the old generation's documents alone.
+    const caps = currentCaps();
+    caps.fields!.owner = {
+      keyword: {type: 'keyword', aggregatable: true},
+      text: {type: 'text', aggregatable: false},
+    };
+    caps.fields!['owner.keyword'] = {
+      keyword: {type: 'keyword', aggregatable: true},
+      unmapped: {type: 'unmapped', aggregatable: false},
+    };
+    expect(parseFieldCaps(caps).get('owner')).toEqual({
+      field: 'owner',
+      status: 'unaggregatable',
+      types: ['keyword', 'text'],
+    });
+  });
+
+  it('counts a field some indices lack, since their documents are only missing it', () => {
+    const caps = currentCaps();
+    caps.fields!.owner = {
+      keyword: {type: 'keyword', aggregatable: true},
+      unmapped: {type: 'unmapped', aggregatable: false},
+    };
+    expect(parseFieldCaps(caps).get('owner')?.status).toBe('ok');
+  });
+
   it('refuses a field whose type differs between the indices behind an alias', () => {
     const caps = currentCaps();
     caps.fields!.owner = {
@@ -112,6 +151,22 @@ describe('buildDocStatsQuery', () => {
     expect(aggs.size_ranges).toBeUndefined();
     expect(aggs.largest).toBeUndefined();
     expect(aggs.terms_last_modifier).toBeDefined();
+  });
+
+  it('aggregates the subfield a text field is counted from', () => {
+    const caps = currentCaps();
+    caps.fields!.owner = {text: {type: 'text', aggregatable: false}};
+    caps.fields!['owner.keyword'] = {keyword: {type: 'keyword', aggregatable: true}};
+    const aggs = aggsOf(buildDocStatsQuery(parseFieldCaps(caps), 'UTC'));
+    expect(aggs.terms_owner).toEqual({terms: {field: 'owner.keyword', size: TERMS_SIZE}});
+    expect(aggs.missing_owner).toEqual({missing: {field: 'owner.keyword'}});
+  });
+
+  it('bounds the size bands in the binary units bytes() prints', () => {
+    // A 1,000,000-byte file prints as 976.56KB, so it belongs under 1MB.
+    const band = SIZE_RANGES.find((range) => range.key === '500KB – 1MB')!;
+    expect(band.to).toBe(1048576);
+    expect(1000000).toBeLessThan(band.to!);
   });
 
   it('keeps the size bands contiguous', () => {

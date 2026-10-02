@@ -315,6 +315,7 @@
   "documents.missing": "{count} ohne Wert",
   "documents.unmapped": "Dieses Feld ist nicht im Mapping des Index enthalten.",
   "documents.unaggregatable": "Als {types} gemappt und daher nicht zählbar. Ein Neuaufbau des Index wendet das aktuelle Mapping an.",
+  "documents.subfield": "Aus {source} gezählt: Dieser Index mappt das Feld als text. Ein Neuaufbau des Index wendet das aktuelle Mapping an.",
   "documents.createdNote": "Wann Fess das Dokument indexiert hat, nicht wann die Datei erstellt wurde.",
   "documents.largest": "Größte Dokumente",
 

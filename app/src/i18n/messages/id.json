@@ -315,6 +315,7 @@
   "documents.missing": "{count} tanpa nilai",
   "documents.unmapped": "Field ini tidak ada dalam mapping indeks.",
   "documents.unaggregatable": "Dipetakan sebagai {types}, yang tidak dapat dihitung. Membangun ulang indeks akan menerapkan mapping saat ini.",
+  "documents.subfield": "Dihitung dari {source}: indeks ini memetakan field sebagai text. Membangun ulang indeks akan menerapkan mapping saat ini.",
   "documents.createdNote": "Waktu Fess mengindeks dokumen, bukan waktu berkas dibuat.",
   "documents.largest": "Dokumen terbesar",
 

@@ -315,6 +315,7 @@
   "documents.missing": "{count} sem valor",
   "documents.unmapped": "Este campo não está no mapeamento do índice.",
   "documents.unaggregatable": "Mapeado como {types}, que não pode ser contado. Recriar o índice aplica o mapeamento atual.",
+  "documents.subfield": "Contado a partir de {source}: este índice mapeia o campo como text. Recriar o índice aplica o mapeamento atual.",
   "documents.createdNote": "Quando o Fess indexou o documento, não quando o arquivo foi criado.",
   "documents.largest": "Maiores documentos",
 

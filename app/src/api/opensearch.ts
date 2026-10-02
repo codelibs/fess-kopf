@@ -16,7 +16,7 @@ import {BrokenCluster} from '@/model/broken-cluster';
 import {parseCatApis} from '@/model/cat-apis';
 import {KnnStats, type KnnStatsResponse} from '@/model/knn-stats';
 import {
-  ALL_FIELDS,
+  CAPS_FIELDS,
   DocStats,
   buildDocStatsQuery,
   parseFieldCaps,
@@ -755,7 +755,7 @@ export async function fetchKnnStats(signal?: AbortSignal): Promise<KnnStats> {
 export async function fetchDocumentStats(index: string, signal?: AbortSignal): Promise<DocStats> {
   const target = encodeURIComponent(index);
   const caps = await request<FieldCapsResponse>(
-    `/${target}/_field_caps?fields=${ALL_FIELDS.join(',')}`,
+    `/${target}/_field_caps?fields=${CAPS_FIELDS.join(',')}&include_unmapped=true`,
     {signal},
   );
   const states = parseFieldCaps(caps);

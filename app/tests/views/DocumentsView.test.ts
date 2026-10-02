@@ -57,7 +57,7 @@ interface Call {
   body: unknown;
 }
 
-function stubStats(options: {searchStatus?: number} = {}): Call[] {
+function stubStats(options: {searchStatus?: number; caps?: unknown} = {}): Call[] {
   const calls: Call[] = [];
   vi.stubGlobal(
     'fetch',
@@ -65,7 +65,7 @@ function stubStats(options: {searchStatus?: number} = {}): Call[] {
       const body = typeof init?.body === 'string' ? JSON.parse(init.body) : undefined;
       calls.push({url, method: init?.method ?? 'GET', body});
       if (url.includes('/_field_caps')) {
-        return new Response(JSON.stringify(CAPS), {status: 200});
+        return new Response(JSON.stringify(options.caps ?? CAPS), {status: 200});
       }
       if (url.includes('/_search')) {
         const status = options.searchStatus ?? 200;
@@ -103,6 +103,8 @@ describe('DocumentsView', () => {
     await vi.waitFor(() => expect(wrapper.find('#ds-total').exists()).toBe(true));
 
     expect(calls[0].url).toContain('/fess.search/_field_caps?fields=filetype,');
+    expect(calls[0].url).toContain('owner.keyword');
+    expect(calls[0].url).toContain('include_unmapped=true');
     expect(calls[1].url).toContain('/fess.search/_search');
     expect(calls[1].method).toBe('POST');
     expect((calls[1].body as {size: number}).size).toBe(0);
@@ -118,6 +120,22 @@ describe('DocumentsView', () => {
     expect(aggs.terms_owner).toBeUndefined();
     expect(aggs.terms_last_modifier).toBeDefined();
     expect(panel(wrapper, 'owner').text()).toContain('Mapped as text, which cannot be counted');
+  });
+
+  it('counts a text field from its keyword subfield, and says so', async () => {
+    const calls = stubStats({
+      caps: {
+        ...CAPS,
+        fields: {...CAPS.fields, 'owner.keyword': {keyword: {type: 'keyword', aggregatable: true}}},
+      },
+    });
+    const wrapper = mountView();
+    await vi.waitFor(() => expect(wrapper.find('#ds-total').exists()).toBe(true));
+
+    const aggs = (calls[1].body as {aggs: Record<string, {terms?: {field: string}}>}).aggs;
+    expect(aggs.terms_owner.terms?.field).toBe('owner.keyword');
+    expect(panel(wrapper, 'owner').text()).toContain('Counted from owner.keyword');
+    expect(panel(wrapper, 'filetype').text()).not.toContain('Counted from');
   });
 
   it('lists each value with its share of the index', async () => {

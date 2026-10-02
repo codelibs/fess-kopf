@@ -315,6 +315,7 @@
   "documents.missing": "값이 없는 문서 {count}건",
   "documents.unmapped": "이 필드는 인덱스 매핑에 없습니다.",
   "documents.unaggregatable": "{types}(으)로 매핑되어 집계할 수 없습니다. 인덱스를 다시 만들면 현재 매핑이 적용됩니다.",
+  "documents.subfield": "{source}(으)로 집계했습니다. 이 인덱스는 필드를 text로 매핑합니다. 인덱스를 다시 만들면 현재 매핑이 적용됩니다.",
   "documents.createdNote": "파일이 생성된 시각이 아니라 Fess가 문서를 인덱싱한 시각입니다.",
   "documents.largest": "가장 큰 문서",
 

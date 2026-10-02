@@ -35,26 +35,42 @@ export type StatsField = TermField | YearField | typeof SIZE_FIELD;
 
 export const ALL_FIELDS: readonly StatsField[] = [...TERM_FIELDS, ...YEAR_FIELDS, SIZE_FIELD];
 
+/**
+ * The `keyword` subfield OpenSearch's dynamic mapping adds beside a `text`
+ * field. An index built before Fess mapped a field holds it that way, and
+ * the subfield can still be counted.
+ */
+function subfield(field: TermField): string {
+  return `${field}.keyword`;
+}
+
+/** Everything `_field_caps` is asked about: each field, and each terms field's subfield. */
+export const CAPS_FIELDS: readonly string[] = [...ALL_FIELDS, ...TERM_FIELDS.map(subfield)];
+
 /** How many values a terms panel lists before the rest become "other". */
 export const TERMS_SIZE = 20;
 
 /** How many of the largest documents are listed. */
 export const LARGEST_SIZE = 10;
 
+const KB = 1024;
+const MB = 1024 * KB;
+
 /**
- * The size bands. The first five are the ones the Fess search page offers
- * as its size facet (`query.facet.queries` in fess_config.properties), so the
- * numbers here and there can be compared; the last two split what Fess
- * lumps together as "1MB and over", which is where a file server's weight is.
+ * The size bands. They follow the Fess size facet's steps (10KB, 100KB,
+ * 500KB, 1MB) and split what that facet lumps together as "1MB and over",
+ * which is where a file server's weight is. The bounds are binary, like
+ * every size kopf prints through `bytes()`: with decimal bounds a file
+ * shown as 976.56KB would be counted under "1MB – 10MB".
  */
 export const SIZE_RANGES: readonly {key: string; from?: number; to?: number}[] = [
-  {key: '< 10KB', to: 10000},
-  {key: '10KB – 100KB', from: 10000, to: 100000},
-  {key: '100KB – 500KB', from: 100000, to: 500000},
-  {key: '500KB – 1MB', from: 500000, to: 1000000},
-  {key: '1MB – 10MB', from: 1000000, to: 10000000},
-  {key: '10MB – 100MB', from: 10000000, to: 100000000},
-  {key: '≥ 100MB', from: 100000000},
+  {key: '< 10KB', to: 10 * KB},
+  {key: '10KB – 100KB', from: 10 * KB, to: 100 * KB},
+  {key: '100KB – 500KB', from: 100 * KB, to: 500 * KB},
+  {key: '500KB – 1MB', from: 500 * KB, to: MB},
+  {key: '1MB – 10MB', from: MB, to: 10 * MB},
+  {key: '10MB – 100MB', from: 10 * MB, to: 100 * MB},
+  {key: '≥ 100MB', from: 100 * MB},
 ];
 
 const TYPE_FAMILIES: Record<'terms' | 'date' | 'number', readonly string[]> = {
@@ -80,46 +96,72 @@ function familyOf(field: StatsField): keyof typeof TYPE_FAMILIES {
   return field === SIZE_FIELD ? 'number' : 'terms';
 }
 
+type FieldCaps = Record<string, {type?: string; aggregatable?: boolean}>;
+
 export interface FieldCapsResponse {
   indices?: string[];
-  fields?: Record<string, Record<string, {type?: string; aggregatable?: boolean}>>;
+  fields?: Record<string, FieldCaps>;
 }
 
 /**
  * Whether a field can be aggregated, and if not, why.
  *
+ * `ok`: `source` is what the aggregation reads -- the field itself, or its
+ * `keyword` subfield when the field is `text`.
  * `unmapped`: no index behind the name has the field at all.
  * `unaggregatable`: it is mapped, but as a type this page cannot count --
- * `text`, or a different type in different indices behind an alias.
+ * `text` with no subfield every index shares, or a different type in
+ * different indices behind an alias.
  */
 export type FieldState =
-  | {field: StatsField; status: 'ok'}
+  | {field: StatsField; status: 'ok'; source: string}
   | {field: StatsField; status: 'unmapped'}
   | {field: StatsField; status: 'unaggregatable'; types: string[]};
+
+/** The mapped types, leaving out the `unmapped` entry `include_unmapped` adds. */
+function mappedTypes(caps: FieldCaps | undefined): string[] {
+  return caps === undefined ? [] : Object.keys(caps).filter((type) => type !== 'unmapped');
+}
+
+/**
+ * One type, of the right family, and aggregatable. Two types behind one
+ * alias means at least one index cannot answer. An index that lacks the
+ * field altogether is fine: its documents are counted as missing a value.
+ */
+function countable(caps: FieldCaps | undefined, family: readonly string[]): boolean {
+  const types = mappedTypes(caps);
+  return types.length === 1 && family.includes(types[0]) && caps![types[0]].aggregatable === true;
+}
 
 /** Reads `_field_caps` into one verdict per field this page asks about. */
 export function parseFieldCaps(response: FieldCapsResponse): Map<StatsField, FieldState> {
   const states = new Map<StatsField, FieldState>();
   for (const field of ALL_FIELDS) {
     const caps = response.fields?.[field];
-    const types = caps === undefined ? [] : Object.keys(caps).filter((t) => t !== 'unmapped');
+    const types = mappedTypes(caps);
+    const family = TYPE_FAMILIES[familyOf(field)];
     if (types.length === 0) {
       states.set(field, {field, status: 'unmapped'});
-      continue;
+    } else if (countable(caps, family)) {
+      states.set(field, {field, status: 'ok', source: field});
+    } else if (familyOf(field) === 'terms' && sharedSubfield(response, field as TermField)) {
+      states.set(field, {field, status: 'ok', source: subfield(field as TermField)});
+    } else {
+      states.set(field, {field, status: 'unaggregatable', types: types.sort()});
     }
-    const family = TYPE_FAMILIES[familyOf(field)];
-    // One type across every index, of the right family, and aggregatable.
-    // Two types behind one alias means at least one index cannot answer.
-    const usable =
-      types.length === 1 &&
-      family.includes(types[0]) &&
-      caps![types[0]].aggregatable === true;
-    states.set(
-      field,
-      usable ? {field, status: 'ok'} : {field, status: 'unaggregatable', types: types.sort()},
-    );
   }
   return states;
+}
+
+/**
+ * Whether the `keyword` subfield can stand in for a field. Unlike the field
+ * itself it must exist in every index behind the name: an alias over a new
+ * index (field mapped as keyword, no subfield) and an old one (text plus
+ * subfield) would otherwise be counted from the old index alone.
+ */
+function sharedSubfield(response: FieldCapsResponse, field: TermField): boolean {
+  const caps = response.fields?.[subfield(field)];
+  return caps?.unmapped === undefined && countable(caps, TYPE_FAMILIES.terms);
 }
 
 /**
@@ -138,9 +180,10 @@ export function buildDocStatsQuery(
   const aggs: Record<string, unknown> = {};
 
   for (const field of TERM_FIELDS) {
-    if (usable(field)) {
-      aggs[`terms_${field}`] = {terms: {field, size: TERMS_SIZE}};
-      aggs[`missing_${field}`] = {missing: {field}};
+    const state = states.get(field);
+    if (state?.status === 'ok') {
+      aggs[`terms_${field}`] = {terms: {field: state.source, size: TERMS_SIZE}};
+      aggs[`missing_${field}`] = {missing: {field: state.source}};
     }
   }
   for (const field of YEAR_FIELDS) {

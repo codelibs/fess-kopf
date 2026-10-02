@@ -30,7 +30,13 @@ function share(count: number): number {
 
 <template>
   <NCard size="small" :title="field" :data-field="field">
-    <p v-if="note" class="k-small k-muted" style="margin: 0 0 8px">{{ note }}</p>
+    <p v-if="note" class="k-small k-muted k-doc-note">{{ note }}</p>
+    <p
+      v-if="breakdown.state.status === 'ok' && breakdown.state.source !== field"
+      class="k-small k-muted k-doc-note"
+    >
+      {{ t('documents.subfield', {source: breakdown.state.source}) }}
+    </p>
 
     <p v-if="breakdown.state.status === 'unmapped'" class="k-empty">
       {{ t('documents.unmapped') }}
@@ -78,6 +84,10 @@ function share(count: number): number {
   vertical-align: middle;
 }
 
+.k-doc-note {
+  margin: 0 0 8px;
+}
+
 .k-doc-key {
   width: 40%;
   overflow: hidden;
@@ -85,14 +95,17 @@ function share(count: number): number {
   white-space: nowrap;
 }
 
+/* Fixed widths, so that "100.0%" and a seven-digit count never wrap. */
 .k-doc-count {
-  width: 18%;
+  width: 6.5rem;
   text-align: right;
+  white-space: nowrap;
 }
 
 .k-doc-share {
-  width: 12%;
+  width: 4.5rem;
   text-align: right;
+  white-space: nowrap;
 }
 
 .k-doc-bar {

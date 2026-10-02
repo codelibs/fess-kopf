@@ -315,6 +315,7 @@
   "documents.missing": "{count} zonder waarde",
   "documents.unmapped": "Dit veld staat niet in de mapping van de index.",
   "documents.unaggregatable": "Gemapt als {types}, dat niet geteld kan worden. Het opnieuw opbouwen van de index past de huidige mapping toe.",
+  "documents.subfield": "Geteld uit {source}: deze index mapt het veld als text. Het opnieuw opbouwen van de index past de huidige mapping toe.",
   "documents.createdNote": "Wanneer Fess het document indexeerde, niet wanneer het bestand werd aangemaakt.",
   "documents.largest": "Grootste documenten",
 

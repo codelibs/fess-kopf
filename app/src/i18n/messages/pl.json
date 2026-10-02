@@ -315,6 +315,7 @@
   "documents.missing": "{count} bez wartości",
   "documents.unmapped": "Tego pola nie ma w mapowaniu indeksu.",
   "documents.unaggregatable": "Zmapowane jako {types}, czego nie da się zliczyć. Przebudowanie indeksu stosuje bieżące mapowanie.",
+  "documents.subfield": "Zliczono z {source}: ten indeks mapuje pole jako text. Przebudowanie indeksu stosuje bieżące mapowanie.",
   "documents.createdNote": "Kiedy Fess zaindeksował dokument, a nie kiedy utworzono plik.",
   "documents.largest": "Największe dokumenty",
 

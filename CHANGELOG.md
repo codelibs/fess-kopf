@@ -70,15 +70,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **A documents screen for the Fess document index.** `/documents` counts
   what the index holds in the terms a file server operator asks about:
   documents by `filetype`, `mimetype`, `host`, `label`, `owner` and
-  `last_modifier`; by size band, using the bands of the Fess size facet and
-  splitting "1MB and over" into three; by `last_modified` and `created`
+  `last_modifier`; by size band, following the steps of the Fess size facet,
+  splitting "1MB and over" into three, and bounded in the binary units every
+  size on the screen is printed in; by `last_modified` and `created`
   year, in the viewer's time zone; and the ten largest documents. It is one
   `size: 0` search with aggregations, issued when the screen is opened and
   on refresh, never by the poll. `_field_caps` decides which aggregations
   the search may carry, because a terms aggregation on a `text` field fails
   the whole request -- and an index Fess built before `owner` and
   `last_modifier` were mapped holds them as dynamic text. Such a field is
-  reported as not countable rather than blanking the page. `created` is
+  counted from the `keyword` subfield dynamic mapping put beside it when
+  every index behind the name has one, and the panel says so; otherwise it
+  is reported as not countable rather than blanking the page. `created` is
   labelled for what Fess puts there, the time the document was indexed.
   The tab is offered only when the cluster poll has seen `fess.search`; a
   previous generation can be opened from its menu on the cluster overview,
