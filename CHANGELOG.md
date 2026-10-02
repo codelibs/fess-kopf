@@ -67,6 +67,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fallback rather than the source
 
 ### Added
+- **A documents screen for the Fess document index.** `/documents` counts
+  what the index holds in the terms a file server operator asks about:
+  documents by `filetype`, `mimetype`, `host`, `label`, `owner` and
+  `last_modifier`; by size band, using the bands of the Fess size facet and
+  splitting "1MB and over" into three; by `last_modified` and `created`
+  year, in the viewer's time zone; and the ten largest documents. It is one
+  `size: 0` search with aggregations, issued when the screen is opened and
+  on refresh, never by the poll. `_field_caps` decides which aggregations
+  the search may carry, because a terms aggregation on a `text` field fails
+  the whole request -- and an index Fess built before `owner` and
+  `last_modifier` were mapped holds them as dynamic text. Such a field is
+  reported as not countable rather than blanking the page. `created` is
+  labelled for what Fess puts there, the time the document was indexed.
+  The tab is offered only when the cluster poll has seen `fess.search`; a
+  previous generation can be opened from its menu on the cluster overview,
+  or picked from the screen's index selector. The bars are CSS, not a chart
+  library
 - **The query insights screen answers "what is slow now", not only "what was
   slow".** `/topQueries` read one endpoint and showed the tokens of a ranking;
   it now covers the Query Insights plugin as a whole, along one axis: *when*.

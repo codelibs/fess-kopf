@@ -42,8 +42,8 @@ export interface FessIndexInfo {
 }
 
 export interface NamedIndex {
-  name: string;
-  aliases: string[];
+  readonly name: string;
+  readonly aliases: readonly string[];
 }
 
 function role(index: NamedIndex): FessIndexRole {
@@ -102,4 +102,9 @@ export function fessIndexInfo(index: NamedIndex): FessIndexInfo {
 export function isFessIndex(index: NamedIndex): boolean {
   const named = role(index);
   return named !== 'system' && named !== 'other';
+}
+
+/** True when an index carries `fess.search`: a Fess cluster with a live document index. */
+export function hasSearchAlias(indices: readonly NamedIndex[]): boolean {
+  return indices.some((index) => index.aliases.includes(SEARCH_ALIAS));
 }

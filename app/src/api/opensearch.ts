@@ -15,6 +15,14 @@ import {
 import {BrokenCluster} from '@/model/broken-cluster';
 import {parseCatApis} from '@/model/cat-apis';
 import {KnnStats, type KnnStatsResponse} from '@/model/knn-stats';
+import {
+  ALL_FIELDS,
+  DocStats,
+  buildDocStatsQuery,
+  parseFieldCaps,
+  type DocStatsResponse,
+  type FieldCapsResponse,
+} from '@/model/doc-stats';
 import type {LiveQueryResponse} from '@/model/live-query';
 import type {TopQueryMetric, TopQueryResponse} from '@/model/top-query';
 import {
@@ -737,4 +745,25 @@ export async function fetchLiveQueries(
 export async function fetchKnnStats(signal?: AbortSignal): Promise<KnnStats> {
   const response = await request<KnnStatsResponse>('/_plugins/_knn/stats', {signal});
   return new KnnStats(response);
+}
+
+/**
+ * Counts what a Fess document index holds. Two reads, never a write: the
+ * field capabilities decide which aggregations the search may ask for, and
+ * the search itself returns no documents, only the counts.
+ */
+export async function fetchDocumentStats(index: string, signal?: AbortSignal): Promise<DocStats> {
+  const target = encodeURIComponent(index);
+  const caps = await request<FieldCapsResponse>(
+    `/${target}/_field_caps?fields=${ALL_FIELDS.join(',')}`,
+    {signal},
+  );
+  const states = parseFieldCaps(caps);
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+  const response = await request<DocStatsResponse>(`/${target}/_search`, {
+    method: 'POST',
+    body: buildDocStatsQuery(states, timeZone),
+    signal,
+  });
+  return new DocStats(index, states, response);
 }

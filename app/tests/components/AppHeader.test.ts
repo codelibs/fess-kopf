@@ -3,9 +3,9 @@ import {mount} from '@vue/test-utils';
 import AppHeader from '@/components/AppHeader.vue';
 import {resetSettingsForTest} from '@/api/settings';
 import {probeCapabilities, resetCapabilitiesForTest} from '@/composables/useCapabilities';
-import {resetClusterForTest} from '@/composables/useCluster';
+import {refresh, resetClusterForTest} from '@/composables/useCluster';
 import {router} from '@/router';
-import {stubFetch} from '../api/routes';
+import {okRoutes, stubFetch} from '../api/routes';
 
 function probeRoutes(plugins: string[]): Record<string, unknown> {
   return {
@@ -68,5 +68,31 @@ describe('AppHeader navigation', () => {
     expect(links()).not.toContain('k-NN');
     // The rest of the navigation is unaffected.
     expect(links()).toContain('cluster');
+  });
+});
+
+describe('AppHeader Fess document routes', () => {
+  it('offers the document screen once the poll has seen fess.search', async () => {
+    stubFetch({
+      routes: {
+        ...okRoutes(),
+        '/_aliases': {'test-index': {aliases: {'fess.search': {}, 'fess.update': {}}}},
+      },
+    });
+    await refresh();
+
+    expect(links()).toContain('documents');
+  });
+
+  it('does not offer it on a cluster without a Fess document index', async () => {
+    stubFetch();
+    await refresh();
+
+    expect(links()).not.toContain('documents');
+    expect(links()).toContain('cluster');
+  });
+
+  it('does not offer it before the first poll', () => {
+    expect(links()).not.toContain('documents');
   });
 });
