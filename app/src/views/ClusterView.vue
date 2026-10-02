@@ -505,6 +505,14 @@ function shardClass(shard: Shard): string {
                           {{ t('cluster.editSettings') }}
                         </RouterLink>
                       </li>
+                      <li v-if="index.open && fessIndexInfo(index).role === 'document'">
+                        <RouterLink
+                          class="k-menu-link"
+                          :to="{name: 'documents', query: {index: index.name}}"
+                        >
+                          {{ t('cluster.documentStats') }}
+                        </RouterLink>
+                      </li>
                       <li>
                         <NButton text size="tiny" type="error" @click="promptDelete(index.name)">
                           {{ t('cluster.deleteIndex') }}

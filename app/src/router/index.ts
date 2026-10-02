@@ -15,6 +15,7 @@ export const NAV_ROUTES = [
   'createIndex',
   'aliases',
   'analysis',
+  'documents',
   'snapshot',
   'indexTemplates',
   'cat',
@@ -37,6 +38,16 @@ export const ROUTE_PLUGINS: Partial<Record<(typeof NAV_ROUTES)[number], string>>
   knn: 'opensearch-knn',
 };
 
+/**
+ * The routes that only exist when the cluster holds a Fess document index.
+ *
+ * Fess binds `fess.search` to the live document index, and the cluster poll
+ * already reads every alias, so this needs no probe of its own. On any
+ * other OpenSearch cluster the screen would only report an index that is
+ * not there, so it is not offered.
+ */
+export const FESS_DOCUMENT_ROUTES: readonly (typeof NAV_ROUTES)[number][] = ['documents'];
+
 export const ROUTE_LABELS: Record<string, string> = {
   cluster: 'cluster',
   nodes: 'nodes',
@@ -44,6 +55,7 @@ export const ROUTE_LABELS: Record<string, string> = {
   createIndex: 'create index',
   aliases: 'aliases',
   analysis: 'analysis',
+  documents: 'documents',
   snapshot: 'snapshot',
   indexTemplates: 'index templates',
   cat: 'cat',
@@ -60,6 +72,7 @@ const routes: RouteRecordRaw[] = [
   {path: '/rest', name: 'rest', component: () => import('@/views/RestView.vue')},
   {path: '/aliases', name: 'aliases', component: () => import('@/views/AliasesView.vue')},
   {path: '/analysis', name: 'analysis', component: () => import('@/views/AnalysisView.vue')},
+  {path: '/documents', name: 'documents', component: () => import('@/views/DocumentsView.vue')},
   {path: '/snapshot', name: 'snapshot', component: () => import('@/views/SnapshotView.vue')},
   {
     path: '/createIndex',

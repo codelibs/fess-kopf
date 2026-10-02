@@ -10,7 +10,9 @@ import {router} from '@/router';
 import ja from '@/i18n/messages/ja.json';
 import {resetSettingsForTest} from '@/api/settings';
 import {useAlerts} from '@/composables/useAlerts';
+import {resetClusterForTest} from '@/composables/useCluster';
 import {loadLocale, resetI18nForTest} from '@/i18n';
+import {stubFetch} from '../api/routes';
 
 /**
  * The catalogue tests prove the translations exist; these prove the wiring
@@ -27,6 +29,7 @@ beforeEach(() => {
 
 afterEach(() => {
   resetI18nForTest();
+  resetClusterForTest();
   vi.unstubAllGlobals();
 });
 
@@ -75,6 +78,10 @@ describe('a view rendered under a loaded locale', () => {
 describe("Naive UI's own strings", () => {
   it('follow the resolved locale, so a form is not half English', async () => {
     await loadLocale('ja');
+    // App starts the cluster poll on mount. Answered from the path table and
+    // unmounted below, so nothing it fetches can render after the test --
+    // left running, a failed poll raised an alert after jsdom was torn down.
+    stubFetch();
     await router.push('/cluster');
     await router.isReady();
     const wrapper = mount(App, {global: {plugins: [router]}});
@@ -82,6 +89,7 @@ describe("Naive UI's own strings", () => {
     // receiving a locale it reads "Please Input" inside a Japanese form.
     expect(NAIVE_LOCALES.ja.Input.placeholder).not.toBe(NAIVE_LOCALES.en.Input.placeholder);
     expect(wrapper.findComponent(NConfigProvider).props('locale')).toBe(NAIVE_LOCALES.ja);
+    wrapper.unmount();
   });
 
   it('covers every locale Fess ships a bundle for', () => {

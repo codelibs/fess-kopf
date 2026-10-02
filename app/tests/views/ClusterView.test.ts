@@ -213,6 +213,21 @@ describe('ClusterView', () => {
     expect(link?.attributes('href')).toContain('idx-a');
   });
 
+  it('links only a Fess document index to its statistics', async () => {
+    stubFetch({
+      routes: {
+        ...twoIndexRoutes(),
+        '/_aliases': {'idx-a': {aliases: {'fess.search': {}, 'fess.update': {}}}},
+      },
+    });
+    await refresh();
+    const wrapper = mount(ClusterView, {global: {plugins: [router]}});
+    const links = wrapper.findAll('a').filter((a) => a.text() === 'show document statistics');
+    expect(links).toHaveLength(1);
+    expect(links[0].attributes('href')).toContain('documents');
+    expect(links[0].attributes('href')).toContain('idx-a');
+  });
+
   it('reports a failed operation rather than claiming success', async () => {
     const wrapper = mount(ClusterView, {global: {plugins: [router]}});
     vi.stubGlobal(
