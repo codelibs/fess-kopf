@@ -17,7 +17,22 @@ function stubCreate(status = 200): ReturnType<typeof vi.fn> {
     if (url.includes('/_cluster/state/metadata/')) {
       return new Response(
         JSON.stringify({
-          metadata: {indices: {'test-index': {mappings: {_doc: {}}, settings: {index: {}}}}},
+          metadata: {
+            indices: {
+              'test-index': {
+                mappings: {_doc: {properties: {title: {type: 'text'}}}},
+                settings: {
+                  index: {
+                    refresh_interval: '30s',
+                    provided_name: 'test-index',
+                    creation_date: '1791364965462',
+                    uuid: 'mRMHZy3KRQmOJOQ9-QGz2Q',
+                    version: {created: '137297827'},
+                  },
+                },
+              },
+            },
+          },
         }),
         {status: 200},
       );
@@ -123,6 +138,24 @@ describe('CreateIndexView', () => {
     const body = JSON.parse((wrapper.find('#ci-body').element as HTMLTextAreaElement).value);
     expect(body).toHaveProperty('settings');
     expect(body).toHaveProperty('mappings');
+  });
+
+  it('creates a copy that a typeless create accepts', async () => {
+    const fetcher = stubCreate();
+    const wrapper = mount(CreateIndexView);
+    await chooseInSelect(wrapper, 'ci-source', 'test-index');
+    await vi.waitFor(() =>
+      expect((wrapper.find('#ci-body').element as HTMLTextAreaElement).value).toContain('settings'),
+    );
+    await wrapper.find('#ci-name').setValue('test-index-copy');
+    await wrapper.find('form').trigger('submit');
+    await vi.waitFor(() => expect(putCall(fetcher)).toBeDefined());
+
+    // Nothing nested under a type, and nothing OpenSearch assigned itself.
+    expect(JSON.parse(putCall(fetcher)![1]!.body as string)).toEqual({
+      settings: {index: {refresh_interval: '30s'}},
+      mappings: {properties: {title: {type: 'text'}}},
+    });
   });
 
   it('clears the form after a successful create', async () => {
