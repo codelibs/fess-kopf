@@ -36,11 +36,7 @@ async function loadSource(): Promise<void> {
   }
   try {
     const metadata = await fetchIndexMetadata(sourceIndex.value);
-    body.value = JSON.stringify(
-      {settings: metadata.settings, mappings: metadata.mappings},
-      null,
-      2,
-    );
+    body.value = JSON.stringify(metadata.toCreateBody(), null, 2);
   } catch (error) {
     alerts.error(t('createIndex.sourceFailed'), describe(error));
   }

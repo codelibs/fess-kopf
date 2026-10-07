@@ -22,6 +22,14 @@ function isAnalyzable(type: string): boolean {
 const byName = (a: string, b: string): number => a.localeCompare(b);
 
 /**
+ * The `index.*` settings OpenSearch assigns itself. A create request that
+ * names `provided_name` fails as an unknown setting, `uuid` and
+ * `version.created` as private ones, and `creation_date` is accepted but would
+ * stamp the copy with the source's date.
+ */
+const ASSIGNED_INDEX_SETTINGS = ['provided_name', 'creation_date', 'uuid', 'version'];
+
+/**
  * An index's mappings and settings, as the analysis screen consumes them.
  * Ported from src/kopf/opensearch/index_metadata.js.
  */
@@ -35,6 +43,26 @@ export class IndexMetadata {
   ) {
     this.mappings = metadata.mappings;
     this.settings = metadata.settings;
+  }
+
+  /**
+   * The body of a create request that makes a copy of this index.
+   *
+   * What the cluster state holds is not what create accepts: its mappings are
+   * keyed by type (`_doc` on a typeless index), which create rejects with
+   * "The mapping definition cannot be nested under a type", and its settings
+   * carry the ones OpenSearch assigned. OpenSearch 2 and later allow one
+   * mapping type per index, so there is one mapping to lift out.
+   */
+  toCreateBody(): {settings: Record<string, unknown>; mappings: unknown} {
+    const {index, ...rest} = this.settings as {index?: Record<string, unknown>};
+    const kept = Object.entries(index ?? {}).filter(
+      ([name]) => !ASSIGNED_INDEX_SETTINGS.includes(name),
+    );
+    return {
+      settings: {...rest, index: Object.fromEntries(kept)},
+      mappings: Object.values(this.mappings)[0] ?? {},
+    };
   }
 
   /**

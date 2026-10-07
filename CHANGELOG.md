@@ -183,6 +183,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   reading them, so nothing else would
 
 ### Fixed
+- Make "copy from index" on the create index screen produce an index. The
+  copy was filled in from the cluster state, whose mappings sit under a type
+  (`_doc`) that a create request rejects with "The mapping definition cannot
+  be nested under a type", and whose settings carry `provided_name`, `uuid`,
+  `version` and `creation_date`, which OpenSearch assigns itself and refuses
+  or would pin. The mapping is now lifted out of its type and those settings
+  are left out
 - Show the cluster grid's menus in full. The grid scrolls horizontally, and a
   box that scrolls on one axis clips the other one too, so the index, bulk and
   shard menus were cut off by it -- a shard's menu, on the last row, never

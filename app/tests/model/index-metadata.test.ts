@@ -169,6 +169,62 @@ describe('getAllFields', () => {
   });
 });
 
+describe('toCreateBody', () => {
+  // What GET /_cluster/state/metadata/<index> answers for an index whose
+  // refresh_interval was edited, as OpenSearch 3.9.0 serves it.
+  const source = () =>
+    metadata({
+      mappings: {
+        _doc: {properties: {size: {type: 'long'}, title: {type: 'text'}}},
+      },
+      settings: {
+        index: {
+          replication: {type: 'DOCUMENT'},
+          refresh_interval: '30s',
+          number_of_shards: '1',
+          provided_name: 'kopf_test',
+          creation_date: '1791364965462',
+          number_of_replicas: '0',
+          uuid: 'mRMHZy3KRQmOJOQ9-QGz2Q',
+          version: {created: '137297827'},
+        },
+      },
+    });
+
+  it('lifts the mapping out from under its type, which create refuses', () => {
+    expect(source().toCreateBody().mappings).toEqual({
+      properties: {size: {type: 'long'}, title: {type: 'text'}},
+    });
+  });
+
+  it('keeps what else the mapping carries beside its properties', () => {
+    const m = metadata({
+      mappings: {_doc: {dynamic: 'strict', _meta: {owner: 'fess'}, properties: {}} as never},
+    });
+    expect(m.toCreateBody().mappings).toEqual({
+      dynamic: 'strict',
+      _meta: {owner: 'fess'},
+      properties: {},
+    });
+  });
+
+  it('drops the settings OpenSearch assigned and keeps the rest', () => {
+    expect(source().toCreateBody().settings).toEqual({
+      index: {
+        replication: {type: 'DOCUMENT'},
+        refresh_interval: '30s',
+        number_of_shards: '1',
+        number_of_replicas: '0',
+      },
+    });
+  });
+
+  it('copies an index that maps nothing and sets nothing', () => {
+    const m = metadata({mappings: {}, settings: {}});
+    expect(m.toCreateBody()).toEqual({settings: {index: {}}, mappings: {}});
+  });
+});
+
 describe('IndexMetadata, the other analysis sections', () => {
   /** What a Fess document index carries, cut to a few of each. */
   const fess = new IndexMetadata('fess.20260902', {
