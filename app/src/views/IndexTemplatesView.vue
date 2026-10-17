@@ -152,7 +152,7 @@ function edit(template: IndexTemplate): void {
       <!-- The endpoint names, so they match what the cluster and its docs
            call these. `component` and `index` are the composable pair;
            `legacy` is the deprecated _template endpoint. -->
-      <span id="it-kind-label" class="k-label" style="margin: 0">kind</span>
+      <span id="it-kind-label" class="k-label" style="margin: 0">{{ t('label.kind') }}</span>
       <NSelect
         id="it-kind"
         v-model:value="kind"
@@ -168,11 +168,11 @@ function edit(template: IndexTemplate): void {
     <NCard :title="t('templates.create')">
       <form class="k-stack" @submit.prevent="create">
         <div>
-          <label class="k-label" for="it-name">name</label>
+          <label class="k-label" for="it-name">{{ t('label.name') }}</label>
           <NInput v-model:value="name" :input-props="{id: 'it-name'}" />
         </div>
         <div>
-          <label class="k-label" for="it-body">body</label>
+          <label class="k-label" for="it-body">{{ t('label.body') }}</label>
           <JsonEditor id="it-body" ref="editor" v-model="body" :rows="14" />
         </div>
         <div>

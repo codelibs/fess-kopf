@@ -35,7 +35,7 @@ const routes = computed(() =>
   <header class="k-header">
     <nav class="k-nav" :aria-label="t('header.sections')">
       <RouterLink v-for="name in routes" :key="name" :to="{name}">
-        {{ ROUTE_LABELS[name] }}
+        {{ t(ROUTE_LABELS[name]) }}
       </RouterLink>
     </nav>
     <div class="k-row k-push">

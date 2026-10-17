@@ -274,11 +274,11 @@ async function submitRestore(): Promise<void> {
       <NCard :title="t('snapshot.newRepository')">
         <form class="k-stack" @submit.prevent="submitRepository">
           <div>
-            <label class="k-label" for="sn-repo-name">name</label>
+            <label class="k-label" for="sn-repo-name">{{ t('label.name') }}</label>
             <NInput v-model:value="repositoryForm.name" :input-props="{id: 'sn-repo-name'}" />
           </div>
           <div>
-            <span id="sn-repo-type-label" class="k-label">type</span>
+            <span id="sn-repo-type-label" class="k-label">{{ t('label.type') }}</span>
             <NSelect
               id="sn-repo-type"
               v-model:value="repositoryForm.type"
@@ -353,7 +353,7 @@ async function submitRestore(): Promise<void> {
         <form class="k-stack" @submit.prevent="submitSnapshot">
           <div class="k-two">
             <div>
-              <span id="sn-new-repo-label" class="k-label">repository</span>
+              <span id="sn-new-repo-label" class="k-label">{{ t('label.repository') }}</span>
               <NSelect
                 id="sn-new-repo"
                 v-model:value="newSnapshot.repository"
@@ -363,7 +363,7 @@ async function submitRestore(): Promise<void> {
               />
             </div>
             <div>
-              <label class="k-label" for="sn-new-name">name</label>
+              <label class="k-label" for="sn-new-name">{{ t('label.name') }}</label>
               <NInput v-model:value="newSnapshot.name" :input-props="{id: 'sn-new-name'}" />
             </div>
           </div>
@@ -384,13 +384,13 @@ async function submitRestore(): Promise<void> {
           </div>
           <div class="k-row k-wrap">
             <NCheckbox id="sn-special" v-model:checked="showSpecialIndices">
-              show special indices
+              {{ t('label.showSpecialIndices') }}
             </NCheckbox>
             <NCheckbox id="sn-global" v-model:checked="newSnapshot.include_global_state">
-              include global state
+              {{ t('label.includeGlobalState') }}
             </NCheckbox>
             <NCheckbox id="sn-ignore" v-model:checked="newSnapshot.ignore_unavailable">
-              ignore unavailable
+              {{ t('label.ignoreUnavailable') }}
             </NCheckbox>
           </div>
           <div>
@@ -418,14 +418,16 @@ async function submitRestore(): Promise<void> {
           </div>
           <div class="k-two">
             <div>
-              <label class="k-label" for="sn-r-pattern">rename pattern</label>
+              <label class="k-label" for="sn-r-pattern">{{ t('label.renamePattern') }}</label>
               <NInput
                 v-model:value="restore.rename_pattern"
                 :input-props="{id: 'sn-r-pattern'}"
               />
             </div>
             <div>
-              <label class="k-label" for="sn-r-replacement">rename replacement</label>
+              <label class="k-label" for="sn-r-replacement">
+                {{ t('label.renameReplacement') }}
+              </label>
               <NInput
                 v-model:value="restore.rename_replacement"
                 :input-props="{id: 'sn-r-replacement'}"
@@ -434,13 +436,13 @@ async function submitRestore(): Promise<void> {
           </div>
           <div class="k-row k-wrap">
             <NCheckbox id="sn-r-global" v-model:checked="restore.include_global_state">
-              include global state
+              {{ t('label.includeGlobalState') }}
             </NCheckbox>
             <NCheckbox id="sn-r-aliases" v-model:checked="restore.include_aliases">
-              include aliases
+              {{ t('label.includeAliases') }}
             </NCheckbox>
             <NCheckbox id="sn-r-ignore" v-model:checked="restore.ignore_unavailable">
-              ignore unavailable
+              {{ t('label.ignoreUnavailable') }}
             </NCheckbox>
           </div>
           <div class="k-row">

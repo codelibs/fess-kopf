@@ -207,7 +207,7 @@ function role(index: string): string {
   <NCard>
     <div class="k-row k-wrap k-gap-lg">
       <div class="k-row">
-        <span id="tq-range-label" class="k-label" style="margin: 0">when</span>
+        <span id="tq-range-label" class="k-label" style="margin: 0">{{ t('label.when') }}</span>
         <NRadioGroup
           id="tq-range"
           v-model:value="range"
@@ -220,7 +220,7 @@ function role(index: string): string {
         </NRadioGroup>
       </div>
       <div class="k-row">
-        <span id="tq-metric-label" class="k-label" style="margin: 0">metric</span>
+        <span id="tq-metric-label" class="k-label" style="margin: 0">{{ t('label.metric') }}</span>
         <NSelect
           id="tq-metric"
           v-model:value="metric"
@@ -240,13 +240,13 @@ function role(index: string): string {
       <table v-if="liveRows.length" class="k-matrix">
         <thead>
           <tr>
-            <th scope="col">started</th>
-            <th scope="col">running</th>
+            <th scope="col">{{ t('label.started') }}</th>
+            <th scope="col">{{ t('label.running') }}</th>
             <th scope="col">cpu</th>
-            <th scope="col">memory</th>
-            <th scope="col">indices</th>
-            <th scope="col">shards</th>
-            <th scope="col">status</th>
+            <th scope="col">{{ t('label.memory') }}</th>
+            <th scope="col">{{ t('label.indices') }}</th>
+            <th scope="col">{{ t('label.shards') }}</th>
+            <th scope="col">{{ t('label.status') }}</th>
             <th scope="col" />
           </tr>
         </thead>
@@ -299,11 +299,11 @@ function role(index: string): string {
       <table v-if="rows.length" class="k-matrix">
         <thead>
           <tr>
-            <th scope="col">time</th>
+            <th scope="col">{{ t('label.time') }}</th>
             <th scope="col">{{ metric }}</th>
-            <th scope="col">phases</th>
-            <th scope="col">indices</th>
-            <th scope="col">shards</th>
+            <th scope="col">{{ t('label.phases') }}</th>
+            <th scope="col">{{ t('label.indices') }}</th>
+            <th scope="col">{{ t('label.shards') }}</th>
             <th scope="col">search_type</th>
             <th scope="col" />
           </tr>

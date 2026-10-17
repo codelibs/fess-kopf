@@ -96,19 +96,19 @@ async function submit(): Promise<void> {
     <form class="k-stack" @submit.prevent="submit">
       <div class="k-fields">
         <div>
-          <label class="k-label" for="ci-name">index name</label>
+          <label class="k-label" for="ci-name">{{ t('label.indexName') }}</label>
           <NInput v-model:value="name" :input-props="{id: 'ci-name'}" />
         </div>
         <div>
-          <label class="k-label" for="ci-shards">shards</label>
+          <label class="k-label" for="ci-shards">{{ t('label.shards') }}</label>
           <NInput v-model:value="shards" :input-props="{id: 'ci-shards'}" />
         </div>
         <div>
-          <label class="k-label" for="ci-replicas">replicas</label>
+          <label class="k-label" for="ci-replicas">{{ t('label.replicas') }}</label>
           <NInput v-model:value="replicas" :input-props="{id: 'ci-replicas'}" />
         </div>
         <div>
-          <span id="ci-source-label" class="k-label">copy from index</span>
+          <span id="ci-source-label" class="k-label">{{ t('label.copyFromIndex') }}</span>
           <NSelect
             id="ci-source"
             v-model:value="sourceIndex"
@@ -121,7 +121,7 @@ async function submit(): Promise<void> {
       </div>
 
       <div>
-        <label class="k-label" for="ci-body">settings and mappings</label>
+        <label class="k-label" for="ci-body">{{ t('label.settingsAndMappings') }}</label>
         <JsonEditor id="ci-body" ref="editor" v-model="body" :rows="14" />
         <p class="k-small k-muted" style="margin: 6px 0 0">
           {{ t('createIndex.bodyHint') }}

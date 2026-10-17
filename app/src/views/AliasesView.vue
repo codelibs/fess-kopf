@@ -149,7 +149,7 @@ async function save(): Promise<void> {
     <NCard :title="t('aliases.newAlias')">
       <form class="k-stack" @submit.prevent="addAlias">
         <div>
-          <span id="al-index-label" class="k-label">index</span>
+          <span id="al-index-label" class="k-label">{{ t('label.index') }}</span>
           <NSelect
             id="al-index"
             v-model:value="draft.index"
@@ -160,19 +160,19 @@ async function save(): Promise<void> {
           />
         </div>
         <div>
-          <label class="k-label" for="al-alias">alias</label>
+          <label class="k-label" for="al-alias">{{ t('label.alias') }}</label>
           <NInput v-model:value="draft.alias" :input-props="{id: 'al-alias'}" />
         </div>
         <div>
-          <label class="k-label" for="al-filter">filter</label>
+          <label class="k-label" for="al-filter">{{ t('label.filter') }}</label>
           <JsonEditor id="al-filter" ref="editor" v-model="draftFilter" :rows="4" />
         </div>
         <div>
-          <label class="k-label" for="al-irouting">index routing</label>
+          <label class="k-label" for="al-irouting">{{ t('label.indexRouting') }}</label>
           <NInput v-model:value="draft.indexRouting" :input-props="{id: 'al-irouting'}" />
         </div>
         <div>
-          <label class="k-label" for="al-srouting">search routing</label>
+          <label class="k-label" for="al-srouting">{{ t('label.searchRouting') }}</label>
           <NInput v-model:value="draft.searchRouting" :input-props="{id: 'al-srouting'}" />
         </div>
         <div>

@@ -6,7 +6,7 @@ import {fetchNodeStats} from '@/api/opensearch';
 import {useAlerts} from '@/composables/useAlerts';
 import {useCluster} from '@/composables/useCluster';
 import {showInfo} from '@/composables/useDialogs';
-import {t} from '@/i18n';
+import {t, type MessageKey} from '@/i18n';
 import type {ClusterNode} from '@/model/cluster-node';
 import {bytes, decimal, timeInterval} from '@/model/format';
 import {NodeFilter} from '@/model/node-filter';
@@ -18,13 +18,15 @@ const filter = ref(new NodeFilter('', true, true, true));
 const sortBy = ref<keyof ClusterNode>('name');
 const reverse = ref(false);
 
-const COLUMNS: {property: keyof ClusterNode; label: string}[] = [
-  {property: 'name', label: 'name'},
-  {property: 'load_average', label: 'load average'},
-  {property: 'cpu', label: 'cpu %'},
-  {property: 'heap_used_percent', label: 'heap usage %'},
-  {property: 'disk_used_percent', label: 'disk usage %'},
-  {property: 'uptime', label: 'uptime'},
+// A MessageKey, not the text: t() reads the active catalogue when it is
+// called, and this array is built once, before the catalogue has loaded.
+const COLUMNS: {property: keyof ClusterNode; label: MessageKey}[] = [
+  {property: 'name', label: 'label.name'},
+  {property: 'load_average', label: 'label.loadAverage'},
+  {property: 'cpu', label: 'label.cpuPercent'},
+  {property: 'heap_used_percent', label: 'label.heapUsagePercent'},
+  {property: 'disk_used_percent', label: 'label.diskUsagePercent'},
+  {property: 'uptime', label: 'label.uptime'},
 ];
 
 const nodes = computed(() => {
@@ -80,7 +82,9 @@ function gaugeColour(percent: number | undefined): string {
 
   <NCard>
     <div class="k-row k-wrap k-gap-lg">
-      <label class="k-label" for="node-name-filter" style="margin: 0">filter</label>
+      <label class="k-label" for="node-name-filter" style="margin: 0">
+        {{ t('label.filter') }}
+      </label>
       <NInput
         v-model:value="filter.name"
         :placeholder="t('nodes.filterPlaceholder')"
@@ -103,7 +107,9 @@ function gaugeColour(percent: number | undefined): string {
           <tr>
             <th v-for="column in COLUMNS" :key="column.property" scope="col">
               <NButton text size="tiny" @click="setSortBy(column.property)">
-                <span class="k-strong" style="color: var(--k-text-muted)">{{ column.label }}</span>
+                <span class="k-strong" style="color: var(--k-text-muted)">
+                  {{ t(column.label) }}
+                </span>
                 <span v-if="sortBy === column.property" style="margin-left: 4px">
                   {{ reverse ? '▼' : '▲' }}
                 </span>
@@ -161,8 +167,8 @@ function gaugeColour(percent: number | undefined): string {
                   }"
                 />
               </div>
-              <div class="k-small k-muted">used: {{ node.heap_used }}</div>
-              <div class="k-small k-muted">max: {{ node.heap_max }}</div>
+              <div class="k-small k-muted">{{ t('label.used') }}: {{ node.heap_used }}</div>
+              <div class="k-small k-muted">{{ t('label.max') }}: {{ node.heap_max }}</div>
             </td>
             <td>
               <template v-if="!node.client">
@@ -175,8 +181,12 @@ function gaugeColour(percent: number | undefined): string {
                     }"
                   />
                 </div>
-                <div class="k-small k-muted">free: {{ bytes(node.disk_free_in_bytes) }}</div>
-                <div class="k-small k-muted">total: {{ bytes(node.disk_total_in_bytes) }}</div>
+                <div class="k-small k-muted">
+                  {{ t('label.free') }}: {{ bytes(node.disk_free_in_bytes) }}
+                </div>
+                <div class="k-small k-muted">
+                  {{ t('label.total') }}: {{ bytes(node.disk_total_in_bytes) }}
+                </div>
               </template>
               <em v-else class="k-small k-muted">
                 {{ t('nodes.noDiskInfo') }}

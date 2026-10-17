@@ -19,31 +19,31 @@ const DOT_CLASS: Record<string, string> = {
       <span class="k-strong">{{ current.status }}</span>
     </span>
     <span class="k-stat">
-      <span class="k-stat-label">nodes</span>
+      <span class="k-stat-label">{{ t('label.nodes') }}</span>
       <span class="k-metric">{{ current.number_of_nodes }}</span>
     </span>
     <span class="k-stat">
-      <span class="k-stat-label">data nodes</span>
+      <span class="k-stat-label">{{ t('label.dataNodes') }}</span>
       <span class="k-metric">{{ current.number_of_data_nodes }}</span>
     </span>
     <span class="k-stat">
-      <span class="k-stat-label">shards</span>
+      <span class="k-stat-label">{{ t('label.shards') }}</span>
       <span class="k-metric">{{ current.shards }}</span>
     </span>
     <span v-if="current.relocating_shards" class="k-stat">
-      <span class="k-stat-label">relocating</span>
+      <span class="k-stat-label">{{ t('label.relocating') }}</span>
       <span class="k-metric">{{ current.relocating_shards }}</span>
     </span>
     <span v-if="current.initializing_shards" class="k-stat">
-      <span class="k-stat-label">initializing</span>
+      <span class="k-stat-label">{{ t('label.initializing') }}</span>
       <span class="k-metric">{{ current.initializing_shards }}</span>
     </span>
     <span v-if="current.unassigned_shards" class="k-stat">
-      <span class="k-stat-label">unassigned</span>
+      <span class="k-stat-label">{{ t('label.unassigned') }}</span>
       <span class="k-metric">{{ current.unassigned_shards }}</span>
     </span>
     <span class="k-stat">
-      <span class="k-stat-label">indices</span>
+      <span class="k-stat-label">{{ t('label.indices') }}</span>
       <span class="k-metric">{{ current.indices.length }}</span>
     </span>
     <NTag v-if="degraded" size="small" type="warning" :bordered="false">

@@ -3,6 +3,7 @@ import {mount} from '@vue/test-utils';
 import CatView from '@/views/CatView.vue';
 import CreateIndexView from '@/views/CreateIndexView.vue';
 import App from '@/App.vue';
+import AppHeader from '@/components/AppHeader.vue';
 import {NConfigProvider} from 'naive-ui';
 import {NAIVE_LOCALES} from '@/i18n/naive';
 import {SUPPORTED} from '@/i18n/locale';
@@ -48,14 +49,24 @@ describe('a view rendered under a loaded locale', () => {
     expect(wrapper.text()).toContain('execute');
   });
 
-  it('leaves the navigation and API vocabulary in the original', async () => {
+  it('renders the navigation from the active catalogue', async () => {
+    await loadLocale('ja');
+    await router.push('/cluster');
+    await router.isReady();
+    const wrapper = mount(AppHeader, {global: {plugins: [router]}});
+    const links = wrapper.findAll('nav a').map((a) => a.text());
+    expect(links).toContain(ja['nav.cluster']);
+    expect(links).toContain(ja['nav.createIndex']);
+    expect(links).not.toContain('create index');
+  });
+
+  it('renders form field labels from the active catalogue', async () => {
     await loadLocale('ja');
     const wrapper = mount(CreateIndexView);
-    // Field labels name OpenSearch parameters; translating them would break
-    // the correspondence with the API the operator is reading beside this.
-    expect(wrapper.text()).toContain('index name');
-    expect(wrapper.text()).toContain('shards');
-    expect(wrapper.text()).toContain('replicas');
+    expect(wrapper.text()).toContain(ja['label.indexName']);
+    expect(wrapper.text()).toContain(ja['label.shards']);
+    expect(wrapper.text()).toContain(ja['label.replicas']);
+    expect(wrapper.text()).not.toContain('index name');
   });
 
   it('substitutes into a translated alert', async () => {

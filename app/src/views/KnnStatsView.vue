@@ -78,14 +78,14 @@ onMounted(() => void load());
       <table v-if="stats.nodes.length" class="k-matrix">
         <thead>
           <tr>
-            <th scope="col">node</th>
-            <th scope="col">graph memory</th>
-            <th scope="col">% of limit</th>
-            <th scope="col">hit / miss</th>
-            <th scope="col">evictions</th>
-            <th scope="col">queries</th>
-            <th scope="col">errors</th>
-            <th scope="col">indices in cache</th>
+            <th scope="col">{{ t('label.node') }}</th>
+            <th scope="col">{{ t('label.graphMemory') }}</th>
+            <th scope="col">{{ t('label.percentOfLimit') }}</th>
+            <th scope="col">{{ t('label.hitMiss') }}</th>
+            <th scope="col">{{ t('label.evictions') }}</th>
+            <th scope="col">{{ t('label.queries') }}</th>
+            <th scope="col">{{ t('label.errors') }}</th>
+            <th scope="col">{{ t('label.indicesInCache') }}</th>
           </tr>
         </thead>
         <tbody>
