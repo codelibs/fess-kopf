@@ -62,7 +62,7 @@ async function execute(): Promise<void> {
   <NCard>
     <form class="k-row k-wrap k-gap-lg" style="align-items: flex-end" @submit.prevent="execute">
       <div>
-        <span id="ht-threads-label" class="k-label">number of threads</span>
+        <span id="ht-threads-label" class="k-label">{{ t('label.numberOfThreads') }}</span>
         <NSelect
           id="ht-threads"
           v-model:value="threads"
@@ -72,7 +72,7 @@ async function execute(): Promise<void> {
         />
       </div>
       <div>
-        <span id="ht-node-label" class="k-label">node</span>
+        <span id="ht-node-label" class="k-label">{{ t('label.node') }}</span>
         <NSelect
           id="ht-node"
           v-model:value="node"
@@ -83,7 +83,7 @@ async function execute(): Promise<void> {
         />
       </div>
       <div>
-        <span id="ht-type-label" class="k-label">type</span>
+        <span id="ht-type-label" class="k-label">{{ t('label.type') }}</span>
         <NSelect
           id="ht-type"
           v-model:value="type"
@@ -93,7 +93,7 @@ async function execute(): Promise<void> {
         />
       </div>
       <div>
-        <label class="k-label" for="ht-interval">sampling interval</label>
+        <label class="k-label" for="ht-interval">{{ t('label.samplingInterval') }}</label>
         <NInput
           v-model:value="interval"
           :placeholder="t('hotThreads.intervalPlaceholder')"
@@ -101,7 +101,9 @@ async function execute(): Promise<void> {
           :input-props="{id: 'ht-interval'}"
         />
       </div>
-      <NCheckbox id="ht-idle" v-model:checked="ignoreIdleThreads">ignore idle threads</NCheckbox>
+      <NCheckbox id="ht-idle" v-model:checked="ignoreIdleThreads">
+        {{ t('label.ignoreIdleThreads') }}
+      </NCheckbox>
       <NButton attr-type="submit" type="primary" :loading="running" :disabled="running">
         {{ running ? t('hotThreads.sampling') : t('common.execute') }}
       </NButton>

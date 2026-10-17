@@ -114,10 +114,10 @@ onBeforeUnmount(() => {
       <table v-if="visible.length" class="k-matrix">
         <thead>
           <tr>
-            <th scope="col">action</th>
-            <th scope="col">description</th>
-            <th scope="col">node</th>
-            <th scope="col">running</th>
+            <th scope="col">{{ t('label.action') }}</th>
+            <th scope="col">{{ t('label.description') }}</th>
+            <th scope="col">{{ t('label.node') }}</th>
+            <th scope="col">{{ t('label.running') }}</th>
             <th scope="col">task_id</th>
             <th scope="col" />
           </tr>

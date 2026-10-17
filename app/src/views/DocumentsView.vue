@@ -86,7 +86,7 @@ function where(doc: {url: string; filename: string}): string {
       <p class="k-page-sub">{{ t('documents.sub') }}</p>
     </div>
     <div class="k-row">
-      <span id="ds-index-label" class="k-label" style="margin: 0">index</span>
+      <span id="ds-index-label" class="k-label" style="margin: 0">{{ t('label.index') }}</span>
       <NSelect
         id="ds-index"
         v-model:value="index"
@@ -103,22 +103,22 @@ function where(doc: {url: string; filename: string}): string {
     <NCard size="small">
       <div class="k-row k-wrap k-gap-lg">
         <div>
-          <span class="k-label">docs</span>
+          <span class="k-label">{{ t('label.docs') }}</span>
           <span id="ds-total" class="k-metric">
             {{ stats.totalIsLowerBound ? '≥ ' : '' }}{{ stats.total.toLocaleString() }}
           </span>
         </div>
         <template v-if="stats.sizeSummary">
           <div>
-            <span class="k-label">content_length sum</span>
+            <span class="k-label">content_length {{ t('label.sum') }}</span>
             <span class="k-metric">{{ bytes(stats.sizeSummary.sum) }}</span>
           </div>
           <div>
-            <span class="k-label">content_length avg</span>
+            <span class="k-label">content_length {{ t('label.avg') }}</span>
             <span class="k-metric">{{ bytes(stats.sizeSummary.avg) }}</span>
           </div>
           <div>
-            <span class="k-label">content_length max</span>
+            <span class="k-label">content_length {{ t('label.max') }}</span>
             <span class="k-metric">{{ bytes(stats.sizeSummary.max) }}</span>
           </div>
         </template>

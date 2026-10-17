@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- **The navigation, table headers, form field labels and stat labels are now
+  translated** in all sixteen locales. Until now only prose, buttons and
+  messages followed the Fess admin console's language, so the header and the
+  forms stayed in English around a translated page. OpenSearch identifiers
+  (`char_filter`, `content_length`, `task_id`, `search_type`), node roles,
+  status values and product names are still shown as the API spells them
+
 ## [15.9.0] - 2026
 
 ### Changed

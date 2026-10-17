@@ -6,8 +6,18 @@ import {RequestError} from '@/api/client';
 import {fetchIndexMetadata, updateIndexSettings} from '@/api/opensearch';
 import {useAlerts} from '@/composables/useAlerts';
 import {refresh as refreshCluster} from '@/composables/useCluster';
-import {t} from '@/i18n';
+import {t, type MessageKey} from '@/i18n';
 import {EditableIndexSettings, SETTING_GROUPS} from '@/model/editable-index-settings';
+
+// SETTING_GROUPS[].label is the tab's identity (the active tab, the :key); the
+// words on the tab are looked up here so they follow the active catalogue.
+const GROUP_TITLES: Record<string, MessageKey> = {
+  index: 'indexSettings.group.index',
+  'block operations': 'indexSettings.group.blockOperations',
+  translog: 'indexSettings.group.translog',
+  routing: 'indexSettings.group.routing',
+  'slow log': 'indexSettings.group.slowLog',
+};
 
 const alerts = useAlerts();
 const route = useRoute();
@@ -82,7 +92,7 @@ async function save(): Promise<void> {
           block
           @click="activeGroup = group.label"
         >
-          {{ group.label }}
+          {{ t(GROUP_TITLES[group.label]) }}
         </NButton>
       </nav>
 

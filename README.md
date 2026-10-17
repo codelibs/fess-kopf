@@ -179,13 +179,16 @@ preference and then English, which is what makes the bundle usable under
 
 ### What is and is not translated
 
-Translated: page headings and their explanatory lines, buttons, menu actions,
-placeholders, empty states, and every alert and confirmation.
+Translated: page headings and their explanatory lines, the navigation, table
+headers, form field labels, stat labels, checkbox captions, tooltips, buttons,
+menu actions, placeholders, empty states, and every alert and confirmation.
 
-Not translated: the navigation, table headers, form field labels, cluster
-status values, node roles, JSON keys and `_cat` API names. kopf is a tool for
-operating OpenSearch, and an operator reads it beside the API's own responses;
-translating the protocol's vocabulary would break that correspondence.
+Not translated: names that belong to OpenSearch rather than to kopf -- JSON
+keys and identifiers (`char_filter`, `content_length`, `task_id`,
+`search_type`), `_cat` API names, HTTP methods, cluster status values, node
+roles, and product names (`OpenSearch`, `Fess`, `k-NN`). An operator reads
+kopf beside the API's own responses, and these are the words that have to
+match them.
 
 ### Editing a translation
 

@@ -193,7 +193,7 @@ function exportCsv(): void {
         <form class="k-stack" @submit.prevent="send(false)">
           <div class="k-row k-wrap" style="align-items: flex-end">
             <div>
-              <span id="rest-method-label" class="k-label">method</span>
+              <span id="rest-method-label" class="k-label">{{ t('label.method') }}</span>
               <NSelect
                 id="rest-method"
                 v-model:value="method"
@@ -203,7 +203,7 @@ function exportCsv(): void {
               />
             </div>
             <div class="k-grow">
-              <label class="k-label" for="rest-path">path</label>
+              <label class="k-label" for="rest-path">{{ t('label.path') }}</label>
               <NAutoComplete
                 v-model:value="path"
                 :options="suggestions"
@@ -214,7 +214,7 @@ function exportCsv(): void {
           </div>
 
           <div>
-            <label class="k-label" for="rest-body">body</label>
+            <label class="k-label" for="rest-body">{{ t('label.body') }}</label>
             <JsonEditor
               id="rest-body" ref="editor" v-model="body" :rows="12" :complete="complete"
             />

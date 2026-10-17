@@ -156,9 +156,17 @@ app/
 
    What gets translated is a rule, not a judgement call: **if kopf says it,
    translate it; if OpenSearch says it, leave it.** Prose, buttons, menu
-   actions, placeholders, empty states, alerts and confirmations are
-   translated. The navigation, table headers, form field labels, status
-   values, node roles, JSON keys and `_cat` API names are not.
+   actions, placeholders, empty states, alerts, confirmations, the navigation,
+   table headers, form field labels, stat labels, checkbox captions and
+   tooltips are translated. Identifiers and values that come from OpenSearch
+   are not: snake_case and dotted names (`char_filter`, `content_length`,
+   `task_id`, `search_type`), `_cat` API names, HTTP methods, status values,
+   node roles, and product names (`OpenSearch`, `Fess`, `k-NN`, `API`).
+
+   Constants that are built once (`ROUTE_LABELS`, `NodesView`'s `COLUMNS`,
+   `IndexSettingsView`'s `GROUP_TITLES`) hold a `MessageKey` and the template
+   calls `t()`; calling `t()` in a module-level constant freezes the English,
+   because the catalogue loads after the module does.
 
 7. **Capability detection, not version branching.** kopf serves OpenSearch
    2.x and 3.x from one build, and what separates those versions is not the

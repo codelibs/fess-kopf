@@ -359,11 +359,11 @@ function shardClass(shard: Shard): string {
           :input-props="{id: 'index-filter'}"
         />
         <NCheckbox id="f-closed" v-model:checked="indexFilter.closed">
-          Closed
+          {{ t('label.closed') }}
           <NTag size="tiny" :bordered="false">{{ cluster.closedIndices }}</NTag>
         </NCheckbox>
         <NCheckbox id="f-special" v-model:checked="indexFilter.special">
-          Special
+          {{ t('label.special') }}
           <NTag size="tiny" :bordered="false">{{ cluster.special_indices }}</NTag>
         </NCheckbox>
         <NCheckbox id="f-fess" v-model:checked="indexFilter.fessOnly"> Fess </NCheckbox>
@@ -522,7 +522,12 @@ function shardClass(shard: Shard): string {
                   </details>
                   <div class="k-small k-muted" style="margin-top: 4px; font-weight: 400">
                     {{ index.num_of_shards }} × {{ index.num_of_replicas + 1 }} ·
-                    {{ index.num_docs }} docs · {{ bytes(index.size_in_bytes) }}
+                    {{
+                      t('cluster.indexDocs', {
+                        docs: index.num_docs,
+                        size: bytes(index.size_in_bytes),
+                      })
+                    }}
                   </div>
                   <div
                     v-if="index.aliases.length"
@@ -539,9 +544,14 @@ function shardClass(shard: Shard): string {
                   <div
                     v-if="index.indexing_current"
                     class="k-small k-indexing"
-                    :title="`${index.indexing_total} indexed, ${index.search_query_total} queries`"
+                    :title="
+                      t('cluster.indexingTotals', {
+                        indexed: index.indexing_total,
+                        queries: index.search_query_total,
+                      })
+                    "
                   >
-                    ⇅ {{ index.indexing_current }} indexing
+                    ⇅ {{ t('cluster.indexingNow', {count: index.indexing_current}) }}
                   </div>
                   <!-- What this index is to Fess. The role and the two alias
                        names are Fess's own vocabulary, like a node role or a
@@ -572,13 +582,13 @@ function shardClass(shard: Shard): string {
             <tr v-if="moving">
               <th scope="row">
                 <div v-if="cluster.unassigned_shards" style="color: var(--k-error)">
-                  ⚠ {{ cluster.unassigned_shards }} unassigned shards
+                  ⚠ {{ t('cluster.unassignedShards', {count: cluster.unassigned_shards}) }}
                 </div>
                 <div v-if="cluster.relocating_shards" style="color: var(--k-info)">
-                  ↻ {{ cluster.relocating_shards }} relocating shards
+                  ↻ {{ t('cluster.relocatingShards', {count: cluster.relocating_shards}) }}
                 </div>
                 <div v-if="cluster.initializing_shards" style="color: var(--k-warning)">
-                  ◌ {{ cluster.initializing_shards }} initializing shards
+                  ◌ {{ t('cluster.initializingShards', {count: cluster.initializing_shards}) }}
                 </div>
                 <NButton
                   v-if="cluster.unassigned_shards"

@@ -1,4 +1,5 @@
 import {createRouter, createWebHashHistory, type RouteRecordRaw} from 'vue-router';
+import type {MessageKey} from '@/i18n';
 
 /**
  * Hash routing is not a style choice. Fess serves these files through
@@ -48,22 +49,22 @@ export const ROUTE_PLUGINS: Partial<Record<(typeof NAV_ROUTES)[number], string>>
  */
 export const FESS_DOCUMENT_ROUTES: readonly (typeof NAV_ROUTES)[number][] = ['documents'];
 
-export const ROUTE_LABELS: Record<string, string> = {
-  cluster: 'cluster',
-  nodes: 'nodes',
-  rest: 'rest',
-  createIndex: 'create index',
-  aliases: 'aliases',
-  analysis: 'analysis',
-  documents: 'documents',
-  snapshot: 'snapshot',
-  indexTemplates: 'index templates',
-  cat: 'cat',
-  tasks: 'tasks',
-  topQueries: 'query insights',
-  knn: 'k-NN',
-  hotthreads: 'hot threads',
-  indexSettings: 'index settings',
+export const ROUTE_LABELS: Record<string, MessageKey> = {
+  cluster: 'nav.cluster',
+  nodes: 'nav.nodes',
+  rest: 'nav.rest',
+  createIndex: 'nav.createIndex',
+  aliases: 'nav.aliases',
+  analysis: 'nav.analysis',
+  documents: 'nav.documents',
+  snapshot: 'nav.snapshot',
+  indexTemplates: 'nav.indexTemplates',
+  cat: 'nav.cat',
+  tasks: 'nav.tasks',
+  topQueries: 'nav.topQueries',
+  knn: 'nav.knn',
+  hotthreads: 'nav.hotThreads',
+  indexSettings: 'nav.indexSettings',
 };
 
 const routes: RouteRecordRaw[] = [

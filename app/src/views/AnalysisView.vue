@@ -149,7 +149,7 @@ function delta(step: AnalysisStep): string {
         <div>
           <!-- Three mutually exclusive choices, all short: a segmented
                control shows them at once where a dropdown hides two. -->
-          <span id="an-source-label" class="k-label">source</span>
+          <span id="an-source-label" class="k-label">{{ t('label.source') }}</span>
           <NRadioGroup
             id="an-source"
             v-model:value="source"
@@ -162,7 +162,7 @@ function delta(step: AnalysisStep): string {
           </NRadioGroup>
         </div>
         <div>
-          <span id="an-index-label" class="k-label">index</span>
+          <span id="an-index-label" class="k-label">{{ t('label.index') }}</span>
           <NSelect
             id="an-index"
             v-model:value="index"
@@ -181,7 +181,7 @@ function delta(step: AnalysisStep): string {
 
         <template v-if="source === 'field'">
           <div v-if="typeOptions.length > 1">
-            <span id="an-type-label" class="k-label">type</span>
+            <span id="an-type-label" class="k-label">{{ t('label.type') }}</span>
             <NSelect
               id="an-type"
               v-model:value="type"
@@ -191,7 +191,7 @@ function delta(step: AnalysisStep): string {
             />
           </div>
           <div>
-            <span id="an-field-label" class="k-label">field</span>
+            <span id="an-field-label" class="k-label">{{ t('label.field') }}</span>
             <NSelect
               id="an-field"
               v-model:value="field"
@@ -204,7 +204,7 @@ function delta(step: AnalysisStep): string {
         </template>
 
         <div v-else-if="source === 'analyzer'">
-          <span id="an-analyzer-label" class="k-label">analyzer</span>
+          <span id="an-analyzer-label" class="k-label">{{ t('label.analyzer') }}</span>
           <NSelect
             id="an-analyzer"
             v-model:value="analyzer"
@@ -235,7 +235,7 @@ function delta(step: AnalysisStep): string {
             />
           </div>
           <div>
-            <span id="an-tokenizer-label" class="k-label">tokenizer</span>
+            <span id="an-tokenizer-label" class="k-label">{{ t('label.tokenizer') }}</span>
             <NSelect
               id="an-tokenizer"
               v-model:value="tokenizer"
@@ -247,7 +247,7 @@ function delta(step: AnalysisStep): string {
             />
           </div>
           <div>
-            <span id="an-filters-label" class="k-label">filter</span>
+            <span id="an-filters-label" class="k-label">{{ t('label.tokenFilter') }}</span>
             <NSelect
               id="an-filters"
               v-model:value="filters"
@@ -262,7 +262,7 @@ function delta(step: AnalysisStep): string {
         </template>
 
         <div>
-          <label class="k-label" for="an-text">text</label>
+          <label class="k-label" for="an-text">{{ t('label.text') }}</label>
           <NInput
             v-model:value="text"
             type="textarea"
@@ -291,8 +291,12 @@ function delta(step: AnalysisStep): string {
             size="small"
             :bordered="false"
             :title="
-              `${token.type} · position ${token.position} · ` +
-                `${token.startOffset}-${token.endOffset}`
+              t('analysis.tokenTitle', {
+                type: token.type,
+                position: token.position,
+                start: token.startOffset,
+                end: token.endOffset,
+              })
             "
           >
             {{ token.token }}
@@ -306,10 +310,10 @@ function delta(step: AnalysisStep): string {
           <table class="k-matrix">
             <thead>
               <tr>
-                <th scope="col">token</th>
-                <th scope="col">type</th>
-                <th scope="col">position</th>
-                <th scope="col">offsets</th>
+                <th scope="col">{{ t('label.token') }}</th>
+                <th scope="col">{{ t('label.type') }}</th>
+                <th scope="col">{{ t('label.position') }}</th>
+                <th scope="col">{{ t('label.offsets') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -357,7 +361,9 @@ function delta(step: AnalysisStep): string {
                   :key="j"
                   size="tiny"
                   :bordered="false"
-                  :title="`${token.type} · position ${token.position}`"
+                  :title="
+                    t('analysis.stepTokenTitle', {type: token.type, position: token.position})
+                  "
                 >
                   {{ token.token }}
                 </NTag>
